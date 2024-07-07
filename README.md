@@ -51,12 +51,12 @@ Order of commands to get your own gamenode running:
 Clone the repository
 npm install # See https://github.com/JustinTulloss/zeromq.node/issues/283 for zmq errors on OS X
 mkdir build/server/logs
-node server/scripts/fetchdata.js
+node bin/fetchdata.js
 tsc
 node build/server/gamenode
 ```
 
-`node server/scripts/fetchdata.js` needs to be run whenever there is new card data (either new cards or updated cards).
+`node bin/fetchdata.js` needs to be run whenever there is new card data (either new cards or updated cards).
 
 `tsc` is the typescript compiler, and needs to be run before you can run the gamenode.
 

@@ -10,5 +10,6 @@ const rotate = new winston.transports.DailyRotateFile({
 
 export const logger = winston.createLogger({
     transports: [new winston.transports.Console(), rotate],
-    format: winston.format.timestamp()
+    format: winston.format.timestamp(),
+    level: 'debug'
 });

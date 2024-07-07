@@ -11,27 +11,37 @@
             "name": "Launch (Lobby Server)",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceRoot}/index.js",
-            "stopOnEntry": false,
+            "program": "${workspaceRoot}/build/index.js",
+            "stopOnEntry": true,
             "args": [],
             "cwd": "${workspaceRoot}",
-            "preLaunchTask": null,
-            "runtimeExecutable": null,
             "runtimeArgs": [
                 "--nolazy"
             ],
             "env": {
-                "NODE_ENV": "development"
+                "ENVIRONMENT": "development",
+                "DOMAIN": "localhost",
+                "HTTPS": "false",
+                "MQ_URL": "tcp://127.0.0.1:6000",
+                "DB_PATH": "mongodb://127.0.0.1:27017/starteki",
+                "GAME_NODE_HOST": "localhost",
+                "GAME_NODE_NAME": "game_node_test",
+                "SECRET": "not_a_secret",
+                "GAME_NODE_SOCKET_IO_PORT": "9500",
+                "LOBBY_PORT": "4000"
             },
             "console": "internalConsole",
-            "sourceMaps": false,
-            "outDir": null
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/build/**/*.(m|c|)js",
+                "!**/node_modules/**"
+            ]
         },
         {
             "name": "Launch (Game Server)",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceRoot}/server/gamenode/index.js",
+            "program": "${workspaceRoot}/build/server/gamenode/index.js",
             "stopOnEntry": false,
             "args": [],
             "cwd": "${workspaceRoot}",
@@ -41,7 +51,16 @@
                 "--nolazy"
             ],
             "env": {
-                "NODE_ENV": "development"
+                "ENVIRONMENT": "development",
+                "DOMAIN": "localhost",
+                "HTTPS": "false",
+                "MQ_URL": "tcp://127.0.0.1:6000",
+                "DB_PATH": "mongodb://127.0.0.1:27017/starteki",
+                "GAME_NODE_HOST": "localhost",
+                "GAME_NODE_NAME": "game_node_test",
+                "SECRET": "not_a_secret",
+                "GAME_NODE_SOCKET_IO_PORT": "9500",
+                "LOBBY_PORT": "4000"
             },
             "console": "internalConsole",
             "sourceMaps": false,
