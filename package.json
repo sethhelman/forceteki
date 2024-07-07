@@ -2,7 +2,8 @@
   "scripts": {
     "test": "tsc && npm run jasmine",
     "jasmine": "JASMINE_CONFIG_PATH=./jasmine.json jasmine",
-    "lint": "eslint server/ test/server/ --ext=js"
+    "lint": "eslint server/ test/server/ --ext=js",
+    "get-cards": "node ./bin/fetchdata.js prod"
   },
   "dependencies": {
     "axios": "^1.7.2",
