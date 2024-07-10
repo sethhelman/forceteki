@@ -26,25 +26,24 @@ function filterValues(card) {
     return filteredObj;
 }
 
+function getCardData(page) {
+    return axios.get('https://admin.starwarsunlimited.com/api/cards?pagination[page]=' + page)
+        .then(res => res.data.data)
+        .then((cards) => {
+            console.log(cards.length + ' cards fetched. on page ' + page);
+            mkdirp.sync(pathToJSON);
+            return Promise.all(
+                cards.map((card) => fs.writeFile(path.join(pathToJSON, `${card.id}.json`), JSON.stringify([filterValues(card)], null, 2)))
+            );
+        })
+        .catch((error) => console.log('error fetching: ' + error));
+}
+
 async function main() {
-    var currPage = 1;
-    var lastPage = 0;
-    do {
-        await axios.get('https://admin.starwarsunlimited.com/api/cards?pagination[page]=' + currPage)
-            .then(res => { lastPage = res.data.meta.pagination.pageCount; return res.data.data; })
-            .then((cards) => {
-                console.log(cards.length + ' cards fetched. on page ' + currPage + ' of ' + lastPage);
-                // console.log(cards);
-                mkdirp.sync(pathToJSON);
-                return Promise.all(
-                    cards.map((card) => fs.writeFile(path.join(pathToJSON, `${card.id}.json`), JSON.stringify([filterValues(card)], null, 2)))
-                );
-            })
-            .catch((error) => console.log('error fetching: ' + error));
-    
-        currPage++;
-        return;
-    } while (currPage <= lastPage);   
+    pageData = await axios.get('https://admin.starwarsunlimited.com/api/cards');
+    totalPageCount = pageData.data.meta.pagination.pageCount;
+
+    await Promise.all([...Array(totalPageCount).keys()].map(pageNumber => getCardData(pageNumber + 1)));
 }
 
 main();
