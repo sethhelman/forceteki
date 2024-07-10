@@ -6,6 +6,7 @@
     "get-cards": "node ./bin/fetchdata.js prod"
   },
   "dependencies": {
+    "@types/underscore": "^1.11.15",
     "axios": "^1.7.2",
     "events": "^3.3.0",
     "fs": "^0.0.1-security",
