@@ -36,7 +36,6 @@ export class CardAction extends CardAbility {
     abilityType = AbilityTypes.Action;
 
     anyPlayer: boolean;
-    canTriggerOutsideConflict: boolean;
     doesNotTarget: boolean;
     phase: string;
     evenDuringDynasty: boolean;
@@ -51,7 +50,6 @@ export class CardAction extends CardAbility {
         this.anyPlayer = properties.anyPlayer ?? false;
         this.condition = properties.condition;
         this.doesNotTarget = (properties as any).doesNotTarget;
-        this.canTriggerOutsideConflict = !!properties.canTriggerOutsideConflict;
     }
 
     meetsRequirements(context: AbilityContext = this.createContext(), ignoredRequirements = []) {

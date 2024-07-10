@@ -33,7 +33,7 @@ import Player from '../player.js';
 import type DeckCard = require('./deckcard');
 import type { CardEffect } from '../effects/types';
 // import type { GainAllAbilities } from './Effects/Library/gainAllAbilities';
-import { PlayUnitAction } from '../genericActions/PlayUnitAction.js';
+import { PlayUnitAction } from '../gameActions/PlayUnitAction.js';
 
 // TODO: convert enums to unions
 type PrintedKeyword =
@@ -90,7 +90,7 @@ class BaseCard extends EffectSource {
     isProvince: boolean = false;
     isConflict: boolean = false;
     isDynasty: boolean = false;
-    isStronghold: boolean = false;
+    isBase: boolean = false;
 
     upgrades = [] as DeckCard[];
     childCards = [] as DeckCard[];
@@ -111,7 +111,7 @@ class BaseCard extends EffectSource {
         this.printedName = cardData.name;
         this.printedType = cardData.type;
         this.traits = cardData.traits || [];
-        this.printedFaction = cardData.clan || cardData.faction;
+        this.aspects = cardData.aspects;
 
         this.setupCardAbilities(AbilityDsl);
         this.parseKeywords(cardData.text ? cardData.text.replace(/<[^>]*>/g, '').toLowerCase() : '');
@@ -636,7 +636,7 @@ class BaseCard extends EffectSource {
     //     }
 
     //     const menu = [{ command: 'click', text: 'Select Card' }];
-    //     if (this.location === Locations.PlayArea || this.isProvince || this.isStronghold) {
+    //     if (this.location === Locations.PlayArea || this.isProvince || this.isBase) {
     //         menu.push(...this.menu);
     //     }
     //     return menu;

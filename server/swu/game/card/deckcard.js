@@ -1,12 +1,11 @@
 const _ = require('underscore');
 
 const BaseCard = require('./basecard');
-const DuplicateUniqueAction = require('./duplicateuniqueaction.js');
-const StatModifier = require('./StatModifier');
+// const StatModifier = require('./StatModifier');
 
 const { Locations, EffectNames, CardTypes, PlayTypes, EventNames, isArena } = require('../Constants.js');
 const { GameModes } = require('../../GameModes.js');
-const { EventRegistrar } = require('./EventRegistrar');
+// const { EventRegistrar } = require('./EventRegistrar');
 
 class DeckCard extends BaseCard {
     // fromOutOfPlaySource ?: Array < DeckCard >;
@@ -681,13 +680,10 @@ class DeckCard extends BaseCard {
             return super.getActions();
         }
 
-        // TODO: figure out what this is doing
-        const actions = this.type === CardTypes.Unit ? [new DuplicateUniqueAction(this)] : [];
-
         // TODO: add base / leader actions if this doesn't already cover them
 
         // otherwise (i.e. card is in hand), return play card action(s) + other available card actions
-        return actions.concat(this.getPlayActions(), super.getActions());
+        return [this.getPlayActions(), super.getActions()];
     }
 
     /**

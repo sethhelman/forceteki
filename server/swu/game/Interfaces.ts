@@ -1,6 +1,6 @@
 import type { AbilityContext } from './AbilityContext';
 import type { TriggeredAbilityContext } from './TriggeredAbilityContext';
-import type { GameAction } from './GameActions/GameAction';
+import type { GameAction } from './gameActions/GameAction';
 import type BaseCard = require('./card/basecard');
 import type DeckCard = require('./card/deckcard');
 import type CardAbility = require('./CardAbility');

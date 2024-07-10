@@ -2,10 +2,11 @@ const { UiPrompt } = require('./UiPrompt.js');
 const { EventNames, Locations, Players, EffectNames, isArena, WildcardLocations } = require('../Constants');
 
 class ActionWindow extends UiPrompt {
-    constructor(game, activePlayer, title) {
+    constructor(game, activePlayer, title, windowName) {
         super(game);
 
         this.title = title;
+        this.windowName = windowName;
         this.activePlayer = activePlayer;
         this.activePlayerConsecutiveActions = 0;
         this.opportunityCounter = 0;

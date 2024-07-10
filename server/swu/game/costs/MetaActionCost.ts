@@ -1,7 +1,7 @@
 import type { AbilityContext } from '../AbilityContext';
 import { WildcardLocations, Players } from '../Constants';
 import type { Cost, Result } from './Costs';
-import type { GameAction } from '../GameActions/GameAction';
+import type { GameAction } from '../gameActions/GameAction';
 import type { SelectCardProperties } from '../gameActions/SelectCardAction';
 import { randomItem } from '../utils/helpers';
 import { GameActionCost } from './GameActionCost';

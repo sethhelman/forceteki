@@ -15,6 +15,7 @@
         "types": ["node"]
     },
     // "include": ["server/jigoku/**/*"],
-    "include": ["server/**/*"],
+    "include": ["server/swu/**/*"],
+    // "include": ["server/**/*"],
     "exclude": ["test/**/*"]
 }

@@ -3,7 +3,7 @@ import type BaseCard from './card/basecard';
 import { Aspects, Locations, PlayTypes, Stages } from './Constants';
 import EffectSource from './EffectSource';
 import type Game from './game';
-import type { GameAction } from './GameActions/GameAction';
+import type { GameAction } from './gameActions/GameAction';
 import type Player from './player';
 // import type { StatusToken } from './StatusToken';
 

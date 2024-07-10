@@ -54,6 +54,12 @@ interface TargetToken extends BaseTarget {
     tokenCondition?: (token: StatusToken, context?: AbilityContext) => boolean;
 }
 
+interface TargetElementSymbol extends BaseTarget {
+    mode: TargetModes.ElementSymbol;
+    location?: Locations | Locations[];
+    cardType?: CardTypes | CardTypes[];
+}
+
 interface BaseTargetCard extends BaseTarget {
     cardType?: CardTypes | CardTypes[];
     location?: Locations | Locations[];
@@ -88,7 +94,8 @@ type TargetCard =
     | TargetCardMaxStat
     | TargetCardSingleUnlimited
     | TargetAbility
-    | TargetToken;
+    | TargetToken
+    | TargetElementSymbol;
 
 interface SubTarget {
     dependsOn?: string;
@@ -98,7 +105,11 @@ interface ActionCardTarget {
     cardCondition?: (card: BaseCard, context?: AbilityContext) => boolean;
 }
 
-type ActionTarget = (TargetCard & ActionCardTarget) | TargetRing | TargetSelect | TargetAbility;
+interface ActionRingTarget {
+    ringCondition?: (ring: Ring, context?: AbilityContext) => boolean;
+}
+
+type ActionTarget = (TargetCard & ActionCardTarget) | (TargetRing & ActionRingTarget) | TargetSelect | TargetAbility;
 
 interface ActionTargets {
     [propName: string]: ActionTarget & SubTarget;
@@ -158,8 +169,13 @@ interface TriggeredAbilityCardTarget {
     cardCondition?: (card: BaseCard, context?: TriggeredAbilityContext) => boolean;
 }
 
+interface TriggeredAbilityRingTarget {
+    ringCondition?: (ring: Ring, context?: TriggeredAbilityContext) => boolean;
+}
+
 type TriggeredAbilityTarget =
     | (TargetCard & TriggeredAbilityCardTarget)
+    | (TargetRing & TriggeredAbilityRingTarget)
     | TargetSelect;
 
 interface TriggeredAbilityTargets {
@@ -216,4 +232,16 @@ export interface AttachmentConditionProps {
     cardCondition?: (card: BaseCard) => boolean;
 }
 
-// export type Token = HonoredToken | DishonoredToken;
+interface HonoredToken {
+    honored: true;
+    card: DrawCard;
+    type: 'token';
+}
+
+interface DishonoredToken {
+    dishonored: true;
+    card: DrawCard;
+    type: 'token';
+}
+
+export type Token = HonoredToken | DishonoredToken;

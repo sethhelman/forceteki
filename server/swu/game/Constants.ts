@@ -81,6 +81,7 @@ export enum EffectNames {
 export enum Durations {
     UntilEndOfPhase = 'untilendofphase',
     UntilEndOfRound = 'untilendofround',
+    Persistent = 'persistent',
     Custom = 'custom'
 }
 

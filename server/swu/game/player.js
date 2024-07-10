@@ -5,10 +5,11 @@ const { GameObject } = require('./GameObject');
 const UpgradePrompt = require('./gamesteps/upgradeprompt.js');
 const { clockFor } = require('./Clocks/ClockSelector.js');
 const { CostReducer } = require('./CostReducer');
-const GameActions = require('./GameActions/GameActions');
+const GameActions = require('./gameActions/GameActions');
 const { PlayableLocation } = require('./PlayableLocation');
 const { PlayerPromptState } = require('./PlayerPromptState.js');
-// const { StrongholdCard } = require('./StrongholdCard.js');
+const { BaseLocationCard } = require('./card/baseLocationCard');
+const { Deck } = require('./Deck');
 
 const {
     AbilityTypes,
@@ -503,9 +504,9 @@ class Player extends GameObject {
     drawCardsToHand(numCards) {
         let remainingCards = 0;
 
-        if (numCards > this.conflictDeck.size()) {
-            remainingCards = numCards - this.conflictDeck.size();
-            let cards = this.conflictDeck.toArray();
+        if (numCards > this.deck.size()) {
+            remainingCards = numCards - this.deck.size();
+            let cards = this.deck.toArray();
             // this.deckRanOutOfCards('conflict');
             this.game.queueSimpleStep(() => {
                 for (let card of cards) {
@@ -514,7 +515,7 @@ class Player extends GameObject {
             });
             this.game.queueSimpleStep(() => this.drawCardsToHand(remainingCards));
         } else {
-            for (let card of this.conflictDeck.toArray().slice(0, numCards)) {
+            for (let card of this.deck.toArray().slice(0, numCards)) {
                 this.moveCard(card, Locations.Hand);
             }
         }
@@ -606,14 +607,12 @@ class Player extends GameObject {
         var deck = new Deck(this.deck);
         var preparedDeck = deck.prepare(this);
         this.faction = preparedDeck.faction;
-        this.provinceDeck = _(preparedDeck.provinceCards);
-        if (preparedDeck.stronghold instanceof StrongholdCard) {
-            this.stronghold = preparedDeck.stronghold;
+        if (preparedDeck.base instanceof BaseLocationCard) {
+            this.base = preparedDeck.base;
         }
-        this.conflictDeck = _(preparedDeck.conflictCards);
-        this.dynastyDeck = _(preparedDeck.dynastyCards);
+        this.deck = _(preparedDeck.deckCards);
         this.preparedDeck = preparedDeck;
-        this.conflictDeck.each((card) => {
+        this.deck.each((card) => {
             // register event reactions in case event-in-deck bluff window is enabled
             if (card.type === CardTypes.Event) {
                 for (let reaction of card.abilities.reactions) {
@@ -1070,8 +1069,11 @@ class Player extends GameObject {
         this.deck.selected = false;
         this.deck = deck;
         this.deck.selected = true;
-        if (deck.stronghold.length > 0) {
-            this.stronghold = new StrongholdCard(this, deck.stronghold[0]);
+        if (deck.base.length > 0) {
+            this.base = new BaseLocationCard(this, deck.base[0]);
+        }
+        if (deck.base.length > 0) {
+            this.base = new BaseLocationCard(this, deck.base[0]);
         }
         this.faction = deck.faction;
     }
@@ -1203,8 +1205,8 @@ class Player extends GameObject {
                     this.removedFromGame = updatedPile;
                     break;
                 default:
-                    if (this.additionalPiles[source]) {
-                        this.additionalPiles[source].cards = updatedPile;
+                    if (this.additionalPiles[originalPile]) {
+                        this.additionalPiles[originalPile].cards = updatedPile;
                     }
             }
         }

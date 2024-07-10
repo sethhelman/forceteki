@@ -1,10 +1,10 @@
 import { AbilityContext } from '../AbilityContext';
 import { EventNames, Locations, Players, TargetModes } from '../Constants';
 import { Event } from '../events/Event';
-import { CardGameAction } from '../GameActions/CardGameAction';
-import { GameAction } from '../GameActions/GameAction';
-import * as GameActions from '../GameActions/GameActions';
-import { HandlerAction } from '../GameActions/HandlerAction';
+import { CardGameAction } from '../gameActions/CardGameAction';
+import { GameAction } from '../gameActions/GameAction';
+import * as GameActions from '../gameActions/GameActions';
+import { HandlerAction } from '../gameActions/HandlerAction';
 import { ReturnToDeckProperties } from '../gameActions/ReturnToDeckAction';
 import { SelectCardProperties } from '../gameActions/SelectCardAction';
 import { TriggeredAbilityContext } from '../TriggeredAbilityContext';
@@ -57,43 +57,43 @@ export interface Cost {
     pay?(context: TriggeredAbilityContext): void;
 }
 
-/**
- * Cost that will sacrifice the card that initiated the ability.
- */
-export function sacrificeSelf(): Cost {
-    return new GameActionCost(GameActions.sacrifice());
-}
+// /**
+//  * Cost that will sacrifice the card that initiated the ability.
+//  */
+// export function sacrificeSelf(): Cost {
+//     return new GameActionCost(GameActions.sacrifice());
+// }
 
-/**
- * Cost that requires sacrificing a card that matches the passed condition
- * predicate function.
- */
-export function sacrifice(properties: SelectCostProperties): Cost {
-    return getSelectCost(GameActions.sacrifice(), properties, 'Select card to sacrifice');
-}
+// /**
+//  * Cost that requires sacrificing a card that matches the passed condition
+//  * predicate function.
+//  */
+// export function sacrifice(properties: SelectCostProperties): Cost {
+//     return getSelectCost(GameActions.sacrifice(), properties, 'Select card to sacrifice');
+// }
 
-/**
- * Cost that will return a selected card to hand which matches the passed
- * condition.
- */
-export function returnToHand(properties: SelectCostProperties): Cost {
-    return getSelectCost(GameActions.returnToHand(), properties, 'Select card to return to hand');
-}
+// /**
+//  * Cost that will return a selected card to hand which matches the passed
+//  * condition.
+//  */
+// export function returnToHand(properties: SelectCostProperties): Cost {
+//     return getSelectCost(GameActions.returnToHand(), properties, 'Select card to return to hand');
+// }
 
-/**
- * Cost that will return a selected card to the appropriate deck which matches the passed
- * condition.
- */
-export function returnToDeck(properties: ReturnToDeckProperties & SelectCostProperties): Cost {
-    return getSelectCost(GameActions.returnToDeck(properties), properties, 'Select card to return to your deck');
-}
+// /**
+//  * Cost that will return a selected card to the appropriate deck which matches the passed
+//  * condition.
+//  */
+// export function returnToDeck(properties: ReturnToDeckProperties & SelectCostProperties): Cost {
+//     return getSelectCost(GameActions.returnToDeck(properties), properties, 'Select card to return to your deck');
+// }
 
-/**
- * Cost that will return to hand the card that initiated the ability.
- */
-export function returnSelfToHand(): Cost {
-    return new GameActionCost(GameActions.returnToHand());
-}
+// /**
+//  * Cost that will return to hand the card that initiated the ability.
+//  */
+// export function returnSelfToHand(): Cost {
+//     return new GameActionCost(GameActions.returnToHand());
+// }
 
 /**
  * Cost that will shuffle a selected card into the relevant deck which matches the passed
@@ -107,30 +107,30 @@ export function shuffleIntoDeck(properties: SelectCostProperties): Cost {
     );
 }
 
-/**
- * Cost that requires discarding a specific card.
- */
-export function discardCardSpecific(cardFunc: (context: AbilityContext) => DeckCard): Cost {
-    return new GameActionCost(GameActions.discardCard((context) => ({ target: cardFunc(context) })));
-}
+// /**
+//  * Cost that requires discarding a specific card.
+//  */
+// export function discardCardSpecific(cardFunc: (context: AbilityContext) => DeckCard): Cost {
+//     return new GameActionCost(GameActions.discardCard((context) => ({ target: cardFunc(context) })));
+// }
 
-/**
- * Cost that requires discarding itself from hand.
- */
-export function discardSelf(): Cost {
-    return new GameActionCost(GameActions.discardCard((context) => ({ target: context.source })));
-}
+// /**
+//  * Cost that requires discarding itself from hand.
+//  */
+// export function discardSelf(): Cost {
+//     return new GameActionCost(GameActions.discardCard((context) => ({ target: context.source })));
+// }
 
-/**
- * Cost that requires discarding a card to be selected by the player.
- */
-export function discardCard(properties?: SelectCostProperties): Cost {
-    return getSelectCost(
-        GameActions.discardCard(),
-        Object.assign({ location: Locations.Hand, mode: TargetModes.Exactly }, properties),
-        (properties?.numCards ?? 0) > 1 ? `Select ${properties.numCards} cards to discard` : 'Select card to discard'
-    );
-}
+// /**
+//  * Cost that requires discarding a card to be selected by the player.
+//  */
+// export function discardCard(properties?: SelectCostProperties): Cost {
+//     return getSelectCost(
+//         GameActions.discardCard(),
+//         Object.assign({ location: Locations.Hand, mode: TargetModes.Exactly }, properties),
+//         (properties?.numCards ?? 0) > 1 ? `Select ${properties.numCards} cards to discard` : 'Select card to discard'
+//     );
+// }
 
 export function discardTopCardsFromDeck(properties: { amount: number; }): Cost {
     return {
@@ -148,19 +148,19 @@ export function discardTopCardsFromDeck(properties: { amount: number; }): Cost {
     };
 }
 
-/**
- * Cost that requires removing a card selected by the player from the game.
- */
-export function removeFromGame(properties: SelectCostProperties): Cost {
-    return getSelectCost(GameActions.removeFromGame(), properties, 'Select card to remove from game');
-}
+// /**
+//  * Cost that requires removing a card selected by the player from the game.
+//  */
+// export function removeFromGame(properties: SelectCostProperties): Cost {
+//     return getSelectCost(GameActions.removeFromGame(), properties, 'Select card to remove from game');
+// }
 
-/**
- * Cost that requires removing a card selected by the player from the game.
- */
-export function removeSelfFromGame(properties?: { location: Array<Locations> }): Cost {
-    return new GameActionCost(GameActions.removeFromGame(properties));
-}
+// /**
+//  * Cost that requires removing a card selected by the player from the game.
+//  */
+// export function removeSelfFromGame(properties?: { location: Array<Locations> }): Cost {
+//     return new GameActionCost(GameActions.removeFromGame(properties));
+// }
 
 // export function discardStatusToken(properties: Omit<SelectCardProperties, 'gameAction' | 'subActionProperties'>): Cost {
 //     return new MetaActionCost(
@@ -177,12 +177,12 @@ export function removeSelfFromGame(properties?: { location: Array<Locations> }):
 //     );
 // }
 
-/**
- * Cost that will discard the status token on a card to be selected by the player
- */
-export function discardStatusTokenFromSelf(): Cost {
-    return new GameActionCost(GameActions.discardStatusToken());
-}
+// /**
+//  * Cost that will discard the status token on a card to be selected by the player
+//  */
+// export function discardStatusTokenFromSelf(): Cost {
+//     return new GameActionCost(GameActions.discardStatusToken());
+// }
 
 /**
  * Cost that will put into play the card that initiated the ability
@@ -191,19 +191,19 @@ export function putSelfIntoPlay(): Cost {
     return new GameActionCost(GameActions.putIntoPlay());
 }
 
-/**
- * Cost that will prompt for a card
- */
-export function selectedReveal(properties: SelectCostProperties): Cost {
-    return getSelectCost(GameActions.reveal(), properties, `Select a ${properties.cardType || 'card'} to reveal`);
-}
+// /**
+//  * Cost that will prompt for a card
+//  */
+// export function selectedReveal(properties: SelectCostProperties): Cost {
+//     return getSelectCost(GameActions.reveal(), properties, `Select a ${properties.cardType || 'card'} to reveal`);
+// }
 
-/**
- * Cost that will reveal specific cards
- */
-export function reveal(cardFunc: (context: AbilityContext) => BaseCard[]): Cost {
-    return new GameActionCost(GameActions.reveal((context) => ({ target: cardFunc(context) })));
-}
+// /**
+//  * Cost that will reveal specific cards
+//  */
+// export function reveal(cardFunc: (context: AbilityContext) => BaseCard[]): Cost {
+//     return new GameActionCost(GameActions.reveal((context) => ({ target: cardFunc(context) })));
+// }
 
 // /**
 //  * Cost that will pay the exact printed fate cost for the card.
@@ -367,62 +367,62 @@ export function payReduceableResourceCost(ignoreType = false): Cost {
 //     };
 // }
 
-export function discardCardsExactlyVariableX(amountDerivable: Derivable<number, TriggeredAbilityContext>): Cost {
-    return {
-        promptsPlayer: true,
-        canPay(context: TriggeredAbilityContext) {
-            return (
-                derive(amountDerivable, context) > 0 &&
-                context.game.actions.chosenDiscard().canAffect(context.player, context)
-            );
-        },
-        resolve(context: TriggeredAbilityContext, result) {
-            const amount = derive(amountDerivable, context);
-            context.game.promptForSelect(context.player, {
-                activePromptTitle: 'Choose ' + amount + ' card' + (amount === 1 ? '' : 's') + ' to discard',
-                context: context,
-                mode: TargetModes.Exactly,
-                numCards: amount,
-                ordered: false,
-                location: Locations.Hand,
-                controller: Players.Self,
-                onSelect: (player, cards) => {
-                    if (cards.length === 0) {
-                        context.costs.discardCardsExactlyVariableX = [];
-                        result.cancelled = true;
-                    } else {
-                        context.costs.discardCardsExactlyVariableX = cards;
-                    }
-                    return true;
-                },
-                onCancel: () => {
-                    result.cancelled = true;
-                    return true;
-                }
-            });
-        },
-        payEvent(context: TriggeredAbilityContext) {
-            const action = context.game.actions.discardCard({ target: context.costs.discardCardsExactlyVariableX });
-            return action.getEvent(context.costs.discardCardsExactlyVariableX, context);
-        }
-    };
-}
+// export function discardCardsExactlyVariableX(amountDerivable: Derivable<number, TriggeredAbilityContext>): Cost {
+//     return {
+//         promptsPlayer: true,
+//         canPay(context: TriggeredAbilityContext) {
+//             return (
+//                 derive(amountDerivable, context) > 0 &&
+//                 context.game.actions.chosenDiscard().canAffect(context.player, context)
+//             );
+//         },
+//         resolve(context: TriggeredAbilityContext, result) {
+//             const amount = derive(amountDerivable, context);
+//             context.game.promptForSelect(context.player, {
+//                 activePromptTitle: 'Choose ' + amount + ' card' + (amount === 1 ? '' : 's') + ' to discard',
+//                 context: context,
+//                 mode: TargetModes.Exactly,
+//                 numCards: amount,
+//                 ordered: false,
+//                 location: Locations.Hand,
+//                 controller: Players.Self,
+//                 onSelect: (player, cards) => {
+//                     if (cards.length === 0) {
+//                         context.costs.discardCardsExactlyVariableX = [];
+//                         result.cancelled = true;
+//                     } else {
+//                         context.costs.discardCardsExactlyVariableX = cards;
+//                     }
+//                     return true;
+//                 },
+//                 onCancel: () => {
+//                     result.cancelled = true;
+//                     return true;
+//                 }
+//             });
+//         },
+//         payEvent(context: TriggeredAbilityContext) {
+//             const action = context.game.actions.discardCard({ target: context.costs.discardCardsExactlyVariableX });
+//             return action.getEvent(context.costs.discardCardsExactlyVariableX, context);
+//         }
+//     };
+// }
 
-export function discardHand(): Cost {
-    return {
-        promptsPlayer: true,
-        canPay(context: TriggeredAbilityContext) {
-            return context.game.actions.chosenDiscard().canAffect(context.player, context);
-        },
-        resolve(context: TriggeredAbilityContext, result) {
-            context.costs.discardHand = context.player.hand.value();
-        },
-        payEvent(context: TriggeredAbilityContext) {
-            const action = context.game.actions.discardCard({ target: context.costs.discardHand });
-            return action.getEvent(context.costs.discardHand, context);
-        }
-    };
-}
+// export function discardHand(): Cost {
+//     return {
+//         promptsPlayer: true,
+//         canPay(context: TriggeredAbilityContext) {
+//             return context.game.actions.chosenDiscard().canAffect(context.player, context);
+//         },
+//         resolve(context: TriggeredAbilityContext, result) {
+//             context.costs.discardHand = context.player.hand.value();
+//         },
+//         payEvent(context: TriggeredAbilityContext) {
+//             const action = context.game.actions.discardCard({ target: context.costs.discardHand });
+//             return action.getEvent(context.costs.discardHand, context);
+//         }
+//     };
+// }
 
 export function optional(cost: Cost): Cost {
     const getActionName = (context: TriggeredAbilityContext) =>

@@ -1,17 +1,17 @@
-const ExactlyXCardSelector = require('./CardSelectors/ExactlyXCardSelector');
-const ExactlyVariableXCardSelector = require('./CardSelectors/ExactlyVariableXCardSelector');
-const MaxStatCardSelector = require('./CardSelectors/MaxStatCardSelector');
-const SingleCardSelector = require('./CardSelectors/SingleCardSelector');
-const UnlimitedCardSelector = require('./CardSelectors/UnlimitedCardSelector');
-const UpToXCardSelector = require('./CardSelectors/UpToXCardSelector');
-const UpToVariableXCardSelector = require('./CardSelectors/UpToVariableXCardSelector');
-const { TargetModes, CardTypes } = require('./Constants');
+const ExactlyXCardSelector = require('./ExactlyXCardSelector');
+const ExactlyVariableXCardSelector = require('./ExactlyVariableXCardSelector');
+const MaxStatCardSelector = require('./MaxStatCardSelector');
+const SingleCardSelector = require('./SingleCardSelector');
+const UnlimitedCardSelector = require('./UnlimitedCardSelector');
+const UpToXCardSelector = require('./UpToXCardSelector');
+const UpToVariableXCardSelector = require('./UpToVariableXCardSelector');
+const { TargetModes, CardTypes } = require('../Constants');
 
 const defaultProperties = {
     numCards: 1,
     cardCondition: () => true,
     numCardsFunc: () => 1,
-    cardType: [CardTypes.Attachment, CardTypes.Character, CardTypes.Event, CardTypes.Holding, CardTypes.Stronghold, CardTypes.Role, CardTypes.Province],
+    cardType: [CardTypes.Upgrade, CardTypes.Unit, CardTypes.Event, CardTypes.Leader, CardTypes.Base],
     multiSelect: false,
     sameDiscardPile: false
 };

@@ -35,7 +35,7 @@ import { MoveCardAction, MoveCardProperties } from './MoveCardAction';
 // import { PlaceCardUnderneathAction, PlaceCardUnderneathProperties } from './PlaceCardUnderneathAction';
 // import { PlayCardAction, PlayCardProperties } from './PlayCardAction';
 import { PutIntoPlayAction, PutIntoPlayProperties } from './PutIntoPlayAction';
-// import { RandomDiscardAction, RandomDiscardProperties } from './RandomDiscardAction';
+import { RandomDiscardAction, RandomDiscardProperties } from './RandomDiscardAction';
 // import { ReadyAction, ReadyProperties } from './ReadyAction';
 // import { RemoveFromGameAction, RemoveFromGameProperties } from './RemoveFromGameAction';
 // import { ResolveAbilityAction, ResolveAbilityProperties } from './ResolveAbilityAction';
@@ -180,12 +180,12 @@ export function putIntoPlay(propertyFactory: PropsFactory<PutIntoPlayProperties>
 // export function deckSearch(propertyFactory: PropsFactory<DeckSearchProperties>): GameAction {
 //     return new DeckSearchAction(propertyFactory);
 // }
-// /**
-//  * default amount = 1
-//  */
-// export function discardAtRandom(propertyFactory: PropsFactory<RandomDiscardProperties> = {}): GameAction {
-//     return new RandomDiscardAction(propertyFactory);
-// }
+/**
+ * default amount = 1
+ */
+export function discardAtRandom(propertyFactory: PropsFactory<RandomDiscardProperties> = {}): GameAction {
+    return new RandomDiscardAction(propertyFactory);
+}
 // /**
 //  * default amount = 1
 //  */

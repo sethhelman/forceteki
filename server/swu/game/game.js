@@ -426,23 +426,23 @@ class Game extends EventEmitter {
     //     }
     // }
 
-    /**
-     * This function is called from the client whenever a card is dragged from
-     * one place to another
-     * @param {String} playerName
-     * @param {String} cardId - uuid of card
-     * @param {String} source - area where the card was dragged from
-     * @param {String} target - area where the card was dropped
-     */
-    drop(playerName, cardId, source, target) {
-        var player = this.getPlayerByName(playerName);
+    // /**
+    //  * This function is called from the client whenever a card is dragged from
+    //  * one place to another
+    //  * @param {String} playerName
+    //  * @param {String} cardId - uuid of card
+    //  * @param {String} source - area where the card was dragged from
+    //  * @param {String} target - area where the card was dropped
+    //  */
+    // drop(playerName, cardId, source, target) {
+    //     var player = this.getPlayerByName(playerName);
 
-        if (!player) {
-            return;
-        }
+    //     if (!player) {
+    //         return;
+    //     }
 
-        player.drop(cardId, source, target);
-    }
+    //     player.drop(cardId, source, target);
+    // }
 
     // /**
     //  * Check to see if either player has won/lost the game due to honor (NB: this
@@ -1192,103 +1192,103 @@ class Game extends EventEmitter {
     //     };
     // }
 
-    /*
-     * This information is sent to the client
-     */
-    getState(notInactivePlayerName) {
-        let activePlayer = this.playersAndSpectators[notInactivePlayerName] || new AnonymousSpectator();
-        let playerState = {};
-        let ringState = {};
-        let conflictState = {};
+    // /*
+    //  * This information is sent to the client
+    //  */
+    // getState(notInactivePlayerName) {
+    //     let activePlayer = this.playersAndSpectators[notInactivePlayerName] || new AnonymousSpectator();
+    //     let playerState = {};
+    //     let ringState = {};
+    //     let conflictState = {};
 
-        if (this.started) {
-            for (const player of this.getPlayers()) {
-                playerState[player.name] = player.getState(activePlayer);
-            }
+    //     if (this.started) {
+    //         for (const player of this.getPlayers()) {
+    //             playerState[player.name] = player.getState(activePlayer);
+    //         }
 
-            if (this.currentPhase === 'conflict' && this.currentConflict) {
-                conflictState = this.currentConflict.getSummary();
-            }
+    //         if (this.currentPhase === 'conflict' && this.currentConflict) {
+    //             conflictState = this.currentConflict.getSummary();
+    //         }
 
-            return {
-                id: this.id,
-                manualMode: this.manualMode,
-                name: this.name,
-                owner: _.omit(this.owner, ['blocklist', 'email', 'emailHash', 'promptedActionWindows', 'settings']),
-                players: playerState,
-                rings: ringState,
-                conflict: conflictState,
-                phase: this.currentPhase,
-                messages: this.gameChat.messages,
-                spectators: this.getSpectators().map((spectator) => {
-                    return {
-                        id: spectator.id,
-                        name: spectator.name
-                    };
-                }),
-                started: this.started,
-                gameMode: this.gameMode,
-                winner: this.winner ? this.winner.name : undefined
-            };
-        }
+    //         return {
+    //             id: this.id,
+    //             manualMode: this.manualMode,
+    //             name: this.name,
+    //             owner: _.omit(this.owner, ['blocklist', 'email', 'emailHash', 'promptedActionWindows', 'settings']),
+    //             players: playerState,
+    //             rings: ringState,
+    //             conflict: conflictState,
+    //             phase: this.currentPhase,
+    //             messages: this.gameChat.messages,
+    //             spectators: this.getSpectators().map((spectator) => {
+    //                 return {
+    //                     id: spectator.id,
+    //                     name: spectator.name
+    //                 };
+    //             }),
+    //             started: this.started,
+    //             gameMode: this.gameMode,
+    //             winner: this.winner ? this.winner.name : undefined
+    //         };
+    //     }
 
-        return this.getSummary(notInactivePlayerName);
-    }
+    //     return this.getSummary(notInactivePlayerName);
+    // }
 
-    /*
-     * This is used for debugging?
-     */
-    getSummary(notInactivePlayerName) {
-        var playerSummaries = {};
+    // /*
+    //  * This is used for debugging?
+    //  */
+    // getSummary(notInactivePlayerName) {
+    //     var playerSummaries = {};
 
-        for (const player of this.getPlayers()) {
-            var deck = undefined;
-            if (player.left) {
-                return;
-            }
+    //     for (const player of this.getPlayers()) {
+    //         var deck = undefined;
+    //         if (player.left) {
+    //             return;
+    //         }
 
-            if (notInactivePlayerName === player.name && player.deck) {
-                deck = { name: player.deck.name, selected: player.deck.selected };
-            } else if (player.deck) {
-                deck = { selected: player.deck.selected };
-            } else {
-                deck = {};
-            }
+    //         if (notInactivePlayerName === player.name && player.deck) {
+    //             deck = { name: player.deck.name, selected: player.deck.selected };
+    //         } else if (player.deck) {
+    //             deck = { selected: player.deck.selected };
+    //         } else {
+    //             deck = {};
+    //         }
 
-            playerSummaries[player.name] = {
-                deck: deck,
-                emailHash: player.emailHash,
-                faction: player.faction.value,
-                id: player.id,
-                lobbyId: player.lobbyId,
-                left: player.left,
-                name: player.name,
-                owner: player.owner
-            };
-        }
+    //         playerSummaries[player.name] = {
+    //             deck: deck,
+    //             emailHash: player.emailHash,
+    //             faction: player.faction.value,
+    //             id: player.id,
+    //             lobbyId: player.lobbyId,
+    //             left: player.left,
+    //             name: player.name,
+    //             owner: player.owner
+    //         };
+    //     }
 
-        return {
-            allowSpectators: this.allowSpectators,
-            createdAt: this.createdAt,
-            gameType: this.gameType,
-            id: this.id,
-            manualMode: this.manualMode,
-            messages: this.gameChat.messages,
-            name: this.name,
-            owner: _.omit(this.owner, ['blocklist', 'email', 'emailHash', 'promptedActionWindows', 'settings']),
-            players: playerSummaries,
-            started: this.started,
-            startedAt: this.startedAt,
-            gameMode: this.gameMode,
-            spectators: this.getSpectators().map((spectator) => {
-                return {
-                    id: spectator.id,
-                    lobbyId: spectator.lobbyId,
-                    name: spectator.name
-                };
-            })
-        };
-    }
+    //     return {
+    //         allowSpectators: this.allowSpectators,
+    //         createdAt: this.createdAt,
+    //         gameType: this.gameType,
+    //         id: this.id,
+    //         manualMode: this.manualMode,
+    //         messages: this.gameChat.messages,
+    //         name: this.name,
+    //         owner: _.omit(this.owner, ['blocklist', 'email', 'emailHash', 'promptedActionWindows', 'settings']),
+    //         players: playerSummaries,
+    //         started: this.started,
+    //         startedAt: this.startedAt,
+    //         gameMode: this.gameMode,
+    //         spectators: this.getSpectators().map((spectator) => {
+    //             return {
+    //                 id: spectator.id,
+    //                 lobbyId: spectator.lobbyId,
+    //                 name: spectator.name
+    //             };
+    //         })
+    //     };
+    // }
 }
 
 module.exports = Game;
