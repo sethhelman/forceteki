@@ -1,7 +1,7 @@
-const AbilityTargetAbility = require('./AbilityTargets/AbilityTargetAbility.js');
-const AbilityTargetCard = require('./AbilityTargets/AbilityTargetCard.js');
-const AbilityTargetSelect = require('./AbilityTargets/AbilityTargetSelect.js');
-const AbilityTargetToken = require('./AbilityTargets/AbilityTargetToken.js');
+const AbilityTargetAbility = require('./abilityTargets/AbilityTargetAbility.js');
+const AbilityTargetCard = require('./abilityTargets/AbilityTargetCard.js');
+const AbilityTargetSelect = require('./abilityTargets/AbilityTargetSelect.js');
+const AbilityTargetToken = require('./abilityTargets/AbilityTargetToken.js');
 const { Stages, TargetModes } = require('./Constants.js');
 
 /**

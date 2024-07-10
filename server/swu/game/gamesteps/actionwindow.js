@@ -1,5 +1,5 @@
 const { UiPrompt } = require('./UiPrompt.js');
-const { EventNames, Locations, Players, EffectNames } = require('../Constants');
+const { EventNames, Locations, Players, EffectNames, isArena, WildcardLocations } = require('../Constants');
 
 class ActionWindow extends UiPrompt {
     constructor(game, activePlayer, title) {
@@ -36,7 +36,7 @@ class ActionWindow extends UiPrompt {
             }
         }
         this.game.promptWithHandlerMenu(player, {
-            activePromptTitle: (card.location === Locations.PlayArea ? 'Choose an ability:' : 'Play ' + card.name + ':'),
+            activePromptTitle: (isArena(card.location) ? 'Choose an ability:' : 'Play ' + card.name + ':'),
             source: card,
             choices: legalActions.map(action => action.title).concat('Cancel'),
             handlers: legalActions.map(action => (() => this.resolveAbility(action.createContext(player)))).concat(() => true)
@@ -115,7 +115,7 @@ class ActionWindow extends UiPrompt {
             this.game.promptForSelect(this.activePlayer, {
                 source: 'Manual Action',
                 activePrompt: 'Which ability are you using?',
-                location: Locations.Any,
+                location: WildcardLocations.Any,
                 controller: Players.Self,
                 cardCondition: card => card.isFaceup() || card.canBeSmuggled(),
                 onSelect: (player, card) => {
@@ -193,7 +193,7 @@ class ActionWindow extends UiPrompt {
             }
         }
 
-        const player1 = this.game.getInitiativePlayer();
+        const player1 = this.game.initiativePlayer();
         const player2 = player1.opponent;
 
         const p1 = this.bonusActions[player1.uuid];
@@ -228,7 +228,7 @@ class ActionWindow extends UiPrompt {
     }
 
     setupBonusActions() {
-        const player1 = this.game.getInitiativePlayer();
+        const player1 = this.game.initiativePlayer;
         const player2 = player1.opponent;
         let p1ActionsPostWindow = player1.sumEffects(EffectNames.AdditionalActionAfterWindowCompleted);
         let p2ActionsPostWindow = player2.sumEffects(EffectNames.AdditionalActionAfterWindowCompleted);
@@ -262,11 +262,6 @@ class ActionWindow extends UiPrompt {
         let otherPlayer = this.game.getOtherPlayer(this.activePlayer);
 
         this.activePlayer.actionPhasePriority = false;
-
-        if(this.activePlayer.anyEffect(EffectNames.ResolveConflictEarly) || this.bonusActions) {
-            this.attemptComplete();
-            return;
-        }
 
         if(otherPlayer) {
             this.game.raiseEvent(

@@ -58,15 +58,15 @@ export class ReturnToDeckAction extends CardGameAction {
         );
     }
 
-    updateEvent(event, card: DeckCard, context: AbilityContext, additionalProperties): void {
-        let { shuffle, target, bottom } = this.getProperties(context, additionalProperties) as ReturnToDeckProperties;
-        this.updateLeavesPlayEvent(event, card, context, additionalProperties);
-        event.destination = Locations.Deck;
-        event.options = { bottom };
-        if (shuffle && (target.length === 0 || card === target[target.length - 1])) {
-            event.shuffle = true;
-        }
-    }
+    // updateEvent(event, card: DeckCard, context: AbilityContext, additionalProperties): void {
+    //     let { shuffle, target, bottom } = this.getProperties(context, additionalProperties) as ReturnToDeckProperties;
+    //     this.updateLeavesPlayEvent(event, card, context, additionalProperties);
+    //     event.destination = Locations.Deck;
+    //     event.options = { bottom };
+    //     if (shuffle && (target.length === 0 || card === target[target.length - 1])) {
+    //         event.shuffle = true;
+    //     }
+    // }
 
     eventHandler(event, additionalProperties = {}): void {
         this.leavesPlayEventHandler(event, additionalProperties);

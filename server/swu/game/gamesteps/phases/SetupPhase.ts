@@ -1,6 +1,6 @@
 import { GameModes } from '../../../GameModes';
 import { Locations } from '../../Constants';
-import { randomItem } from '../Utils/helpers';
+import { randomItem } from '../../utils/helpers';
 import type BaseCard from '../../card/basecard';
 import type Game from '../../game';
 import { Phase } from '../Phase';
@@ -42,18 +42,13 @@ export class SetupPhase extends Phase {
     chooseFirstPlayer() {
         const coinTossWinner = randomItem(this.game.getPlayers());
         if (coinTossWinner) {
-            coinTossWinner.firstPlayer = true;
-        }
-
-        const firstPlayer = this.game.initiativePlayer;
-        if (!firstPlayer.opponent) {
-            return;
+            var firstPlayer = coinTossWinner;
         }
 
         this.game.promptWithHandlerMenu(firstPlayer, {
-            activePromptTitle: 'You won the flip. Do you want to be:',
+            activePromptTitle: 'You won the flip. Do you want to start with initiative:',
             source: 'Choose First Player',
-            choices: ['First Player', 'Second Player'],
+            choices: ['Yes', 'No'],
             handlers: [
                 () => {
                     this.game.initiativePlayer = firstPlayer;

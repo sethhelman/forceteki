@@ -1,7 +1,7 @@
 import { GameModes } from '../../../GameModes';
 import { Phases } from '../../Constants';
 import { Locations } from '../../Constants';
-import { randomItem } from '../Utils/helpers';
+import { randomItem } from '../../utils/helpers';
 import type BaseCard from '../../card/basecard';
 import type Game from '../../game';
 import { Phase } from '../Phase';

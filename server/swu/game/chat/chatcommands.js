@@ -1,30 +1,16 @@
 const _ = require('underscore');
-const GameActions = require('./GameActions/GameActions');
-const HonorBidPrompt = require('./gamesteps/honorbidprompt.js');
-const { Locations, CardTypes, Players } = require('../Constants.js');
+const GameActions = require('../gameActions/GameActions');
+const { Locations, CardTypes, Players, WildcardLocations, isArena } = require('../Constants.js');
 
 class ChatCommands {
     constructor(game) {
         this.game = game;
         this.commands = {
             '/draw': this.draw,
-            '/honor': this.honor,
-            '/dishonor': this.dishonor,
             '/discard': this.discard,
-            '/token': this.setToken,
-            '/reveal': this.reveal,
-            '/duel': this.duel,
-            '/move-to-conflict': this.moveToConflict,
+            // '/token': this.setToken,
+            // '/reveal': this.reveal,
             '/move-to-bottom-deck': this.moveCardToDeckBottom,
-            '/send-home': this.sendHome,
-            '/claim-favor': this.claimFavor,
-            '/discard-favor': this.discardFavor,
-            '/add-fate': this.addFate,
-            '/rem-fate': this.remFate,
-            '/add-fate-ring': this.addRingFate,
-            '/rem-fate-ring': this.remRingFate,
-            '/claim-ring' : this.claimRing,
-            '/unclaim-ring': this.unclaimRing,
             '/stop-clocks': this.stopClocks,
             '/start-clocks': this.startClocks,
             '/modify-clock': this.modifyClock,
@@ -32,9 +18,6 @@ class ChatCommands {
             '/disconnectme': this.disconnectMe,
             '/manual': this.manual
         };
-        this.tokens = [
-            'fate'
-        ];
     }
 
     executeCommand(player, command, args) {
@@ -88,55 +71,54 @@ class ChatCommands {
         this.game.promptForSelect(player, {
             activePromptTitle: 'Select a card to send to the bottom of one of their decks',
             waitingPromptTitle: 'Waiting for opponent to send a card to the bottom of one of their decks',
-            location: Locations.Any,
+            location: WildcardLocations.Any,
             controller: Players.Self,
             onSelect: (p, card) => {
                 const cardInitialLocation = card.location;
-                const cardNewLocation = card.isConflict ? Locations.ConflictDeck : Locations.DynastyDeck;
-                GameActions.moveCard({ target: card, bottom: true, destination: cardNewLocation }).resolve(player, this.game.getFrameworkContext());
+                GameActions.moveCard({ target: card, bottom: true, destination: Locations.Deck }).resolve(player, this.game.getFrameworkContext());
                 this.game.addMessage('{0} uses a command to move {1} from their {2} to the bottom of their {3}.', player, card, cardInitialLocation);
                 return true;
             }
         });
     }
 
-    setToken(player, args) {
-        var token = args[1];
-        var num = this.getNumberOrDefault(args[2], 1);
+    // setToken(player, args) {
+    //     var token = args[1];
+    //     var num = this.getNumberOrDefault(args[2], 1);
 
-        if(!this.isValidToken(token)) {
-            return false;
-        }
+    //     if(!this.isValidToken(token)) {
+    //         return false;
+    //     }
 
-        this.game.promptForSelect(player, {
-            activePromptTitle: 'Select a card',
-            waitingPromptTitle: 'Waiting for opponent to set token',
-            cardCondition: card => (card.location === Locations.PlayArea || card.location === 'plot') && card.controller === player,
-            onSelect: (p, card) => {
-                var numTokens = card.tokens[token] || 0;
+    //     this.game.promptForSelect(player, {
+    //         activePromptTitle: 'Select a card',
+    //         waitingPromptTitle: 'Waiting for opponent to set token',
+    //         cardCondition: card => (isArena(card.location) || card.location === 'plot') && card.controller === player,
+    //         onSelect: (p, card) => {
+    //             var numTokens = card.tokens[token] || 0;
 
-                card.addToken(token, num - numTokens);
-                this.game.addMessage('{0} uses the /token command to set the {1} token count of {2} to {3}', p, token, card, num - numTokens);
+    //             card.addToken(token, num - numTokens);
+    //             this.game.addMessage('{0} uses the /token command to set the {1} token count of {2} to {3}', p, token, card, num - numTokens);
 
-                return true;
-            }
-        });
-    }
+    //             return true;
+    //         }
+    //     });
+    // }
 
-    reveal(player) {
-        this.game.promptForSelect(player, {
-            activePromptTitle: 'Select a card to reveal',
-            waitingPromptTitle: 'Waiting for opponent to reveal a facedown card',
-            location: Locations.Provinces,
-            controller: Players.Self,
-            cardCondition: card => card.isFacedown(),
-            onSelect: (player, card) => {
-                GameActions.reveal({ target: card }).resolve(player, this.game.getFrameworkContext());
-                this.game.addMessage('{0} reveals {1}', player, card);
-                return true;
-            }
-        });
-    }
+    // reveal(player) {
+    //     this.game.promptForSelect(player, {
+    //         activePromptTitle: 'Select a card to reveal',
+    //         waitingPromptTitle: 'Waiting for opponent to reveal a facedown card',
+    //         location: Locations.Provinces,
+    //         controller: Players.Self,
+    //         cardCondition: card => card.isFacedown(),
+    //         onSelect: (player, card) => {
+    //             GameActions.reveal({ target: card }).resolve(player, this.game.getFrameworkContext());
+    //             this.game.addMessage('{0} reveals {1}', player, card);
+    //             return true;
+    //         }
+    //     });
+    // }
 
     // TODO: add some SWU stuff in here like add shields
 
@@ -178,15 +160,15 @@ class ChatCommands {
         return lowerIcon === 'military' || lowerIcon === 'intrigue' || lowerIcon === 'power';
     }
 
-    isValidToken(token) {
-        if(!token) {
-            return false;
-        }
+    // isValidToken(token) {
+    //     if(!token) {
+    //         return false;
+    //     }
 
-        var lowerToken = token.toLowerCase();
+    //     var lowerToken = token.toLowerCase();
 
-        return _.contains(this.tokens, lowerToken);
-    }
+    //     return _.contains(this.tokens, lowerToken);
+    // }
 }
 
 module.exports = ChatCommands;

@@ -5,7 +5,7 @@ import EffectSource from './EffectSource';
 import type Game from './game';
 import type { GameAction } from './GameActions/GameAction';
 import type Player from './player';
-import type { StatusToken } from './StatusToken';
+// import type { StatusToken } from './StatusToken';
 
 export interface AbilityContextProperties {
     game: Game;
@@ -36,7 +36,7 @@ export class AbilityContext<S = any> {
     targetAbility: any;
     target: any;
     select: string;
-    token: StatusToken;
+    // token: StatusToken;
     subResolution = false;
     choosingPlayerOverride: Player = null;
     gameActionsResolutionChain: GameAction[] = [];
@@ -61,7 +61,7 @@ export class AbilityContext<S = any> {
     copy(newProps: Partial<AbilityContextProperties>): AbilityContext<this> {
         let copy = this.createCopy(newProps);
         copy.target = this.target;
-        copy.token = this.token;
+        // copy.token = this.token;
         copy.select = this.select;
         copy.subResolution = this.subResolution;
         copy.choosingPlayerOverride = this.choosingPlayerOverride;

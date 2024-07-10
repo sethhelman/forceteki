@@ -3,9 +3,10 @@ import type BaseCard from '../card/basecard';
 import { CardTypes, EventNames, Stages } from '../Constants';
 import { Event } from '../events/Event';
 import type Player from '../player';
-import type { StatusToken } from '../StatusToken';
+// import type { StatusToken } from '../StatusToken';
 
-type PlayerOrCardOrToken = Player | BaseCard | StatusToken;
+// type PlayerOrCardOrToken = Player | BaseCard | StatusToken;
+type PlayerOrCardOrToken = Player | BaseCard;
 
 export interface GameActionProperties {
     target?: PlayerOrCardOrToken | PlayerOrCardOrToken[];

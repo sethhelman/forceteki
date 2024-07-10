@@ -62,6 +62,20 @@ export enum EffectNames {
     EntersPlayForOpponent = 'entersPlayForOpponent',
     CostReducer = 'costReducer',
     CanPlayFromOutOfPlay = 'canPlayFromOutOfPlay',
+    DoesNotReady = 'doesnotready',
+    Blank = 'blank',
+    AddKeyword = 'addkeyword',
+    LoseKeyword = 'losekeyword',
+    CopyCharacter = 'copycharacter',
+    GainAbility = 'gainability',
+    CanBeTriggeredByOpponent = 'canbetriggeredbyopponent',
+    UnlessActionCost = 'unlessactioncost',
+    MustBeChosen = 'mustbechosen',
+    TakeControl = 'takecontrol',
+    AdditionalAction = 'additionalaction',
+    AdditionalActionAfterWindowCompleted = 'additionalactionafterwindowcompleted',
+    AdditionalTriggerCost = 'additionaltriggercost',
+    AdditionalPlayCost = 'additionalplaycost',
 }
 
 export enum Durations {

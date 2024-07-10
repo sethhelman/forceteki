@@ -1,7 +1,7 @@
 import type { AbilityContext } from '../AbilityContext';
 import type BaseCard from '../card/basecard';
-import CardSelector from '../CardSelector';
-import type BaseCardSelector from '../CardSelectors/BaseCardSelector';
+import CardSelector from '../cardSelector/CardSelector';
+import type BaseCardSelector from '../cardSelector/BaseCardSelector';
 import { CardTypes, EffectNames, Locations, Players, TargetModes } from '../Constants';
 import type Player from '../player';
 import { type CardActionProperties, CardGameAction } from './CardGameAction';
