@@ -149,7 +149,7 @@ class DeckCard extends BaseCard {
             this.game.allCards.any(
                 (card) =>
                     card.isInPlay() &&
-                    card.printedName === this.printedName &&
+                    card.printedName === this.printedTitle &&
                     card !== this &&
                     (card.owner === player || card.controller === player || card.owner === this.owner)
             )
@@ -162,7 +162,7 @@ class DeckCard extends BaseCard {
             this.game.allCards.any(
                 (card) =>
                     card.isInPlay() &&
-                    card.printedName === this.printedName &&
+                    card.printedName === this.printedTitle &&
                     card !== this &&
                     card.controller === player
             )

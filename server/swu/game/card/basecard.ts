@@ -73,7 +73,7 @@ class BaseCard extends EffectSource {
     game: Game;
 
     id: string;
-    printedName: string;
+    printedTitle: string;
     type: CardTypes;
     facedown: boolean;
 
@@ -87,18 +87,15 @@ class BaseCard extends EffectSource {
     printedFaction: string;
     location: Locations;
 
-    isProvince: boolean = false;
-    isConflict: boolean = false;
-    isDynasty: boolean = false;
     isBase: boolean = false;
+    isLeader: boolean = false;
 
     upgrades = [] as DeckCard[];
     childCards = [] as DeckCard[];
     // statusTokens = [] as StatusToken[];
     allowedAttachmentTraits = [] as string[];
-    printedKeywords: Array<PrintedKeyword> = [];
+    printedKeywords: Array<string> = [];
     aspects: Array<Aspects> = [];
-    disguisedKeywordTraits = [] as string[];
 
     constructor(
         public owner: Player,
@@ -107,11 +104,15 @@ class BaseCard extends EffectSource {
         super(owner.game);
         this.controller = owner;
 
-        this.id = cardData.id;
-        this.printedName = cardData.name;
-        this.printedType = cardData.type;
-        this.traits = cardData.traits || [];
-        this.aspects = cardData.aspects;
+        this.id = cardData.cardId;
+        this.unique = cardData.unique;
+
+        this.printedTitle = cardData.title;
+        this.printedSubtitle = cardData.subtitle;
+        this.printedType = this.#checkConvertToEnum([cardData.type], CardTypes)[0]; // TODO: does this work for leader consistently, since it has two types?
+        this.traits = cardData.traits;  // TODO: enum for these
+        this.aspects = this.#checkConvertToEnum(cardData.aspects, Aspects);
+        this.printedKeywords = cardData.keywords;   // TODO: enum for these
 
         this.setupCardAbilities(AbilityDsl);
         this.parseKeywords(cardData.text ? cardData.text.replace(/<[^>]*>/g, '').toLowerCase() : '');
@@ -120,11 +121,26 @@ class BaseCard extends EffectSource {
 
     get name(): string {
         let copyEffect = this.mostRecentEffect(EffectNames.CopyCharacter);
-        return copyEffect ? copyEffect.printedName : this.printedName;
+        return copyEffect ? copyEffect.printedName : this.printedTitle;
     }
 
     set name(name: string) {
-        this.printedName = name;
+        this.printedTitle = name;
+    }
+
+    // convert a set of strings to map to an enum type, throw if any of them is not a legal value
+    #checkConvertToEnum<T>(values: string[], enumObj: T): Array<T[keyof T]> {
+        let result: Array<T[keyof T]> = [];
+    
+        for (const value of values) {
+            if (Object.values(enumObj).indexOf(value.toLowerCase()) >= 0) {
+                result.push(value as T[keyof T]);
+            } else {
+                throw new Error(`Invalid value for enum: ${value}`);
+            }
+        }
+    
+        return result;
     }
 
     #mostRecentEffect(predicate: (effect: CardEffect) => boolean): CardEffect | undefined {
