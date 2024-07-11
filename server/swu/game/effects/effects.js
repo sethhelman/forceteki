@@ -26,7 +26,7 @@ const { EffectNames, PlayTypes, CardTypes, Players } = require('../Constants');
 const Effects = {
     // Card effects
     // addFaction: (faction) => EffectBuilder.card.static(EffectNames.AddFaction, faction),
-    // addKeyword: (keyword) => EffectBuilder.card.static(EffectNames.AddKeyword, keyword),
+    addKeyword: (keyword) => EffectBuilder.card.static(EffectNames.AddKeyword, keyword),
     // addTrait: (trait) => EffectBuilder.card.static(EffectNames.AddTrait, trait),
     // additionalTriggerCostForCard: (func) => EffectBuilder.card.static(EffectNames.AdditionalTriggerCost, func),
     // attachmentCardCondition: (func) => EffectBuilder.card.static(EffectNames.AttachmentCardCondition, func),

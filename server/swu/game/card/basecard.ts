@@ -15,7 +15,7 @@ import {
     EffectNames,
     EventNames,
     Locations,
-    Players,
+    isArena,
     Aspects,
     cardLocationMatches,
     WildcardLocations
@@ -119,7 +119,7 @@ class BaseCard extends EffectSource {
 
         this.setupCardAbilities(AbilityDsl);
         this.parseKeywords(cardData.text ? cardData.text.replace(/<[^>]*>/g, '').toLowerCase() : '');
-        this.applyAttachmentBonus();
+        // this.applyAttachmentBonus();
     }
 
     get name(): string {
@@ -345,7 +345,7 @@ class BaseCard extends EffectSource {
     //         stronghold: Locations.Provinces
     //     };
 
-    //     let location = properties.location || defaultLocationForType[this.getType()] || Locations.PlayArea;
+    //     let location = properties.location || defaultLocationForType[this.getType()] || isArena(properties.location);
     //     if (!allowedLocations.includes(location)) {
     //         throw new Error(`'${location}' is not a supported effect location.`);
     //     }
@@ -591,8 +591,8 @@ class BaseCard extends EffectSource {
         }
 
         if (originalLocation !== targetLocation) {
-            this.updateAbilityEvents(originalLocation, targetLocation, !sameLocation);
-            this.updateEffects(originalLocation, targetLocation);
+            // this.updateAbilityEvents(originalLocation, targetLocation, !sameLocation);
+            // this.updateEffects(originalLocation, targetLocation);
             this.game.emitEvent(EventNames.OnCardMoved, {
                 card: this,
                 originalLocation: originalLocation,
@@ -771,9 +771,10 @@ class BaseCard extends EffectSource {
             }
         }
 
-        for (const keyword of this.printedKeywords) {
-            this.persistentEffect({ effect: AbilityDsl.effects.addKeyword(keyword) });
-        }
+        // TODO: uncomment
+        // for (const keyword of this.printedKeywords) {
+        //     this.persistentEffect({ effect: AbilityDsl.effects.addKeyword(keyword) });
+        // }
     }
 
     // isAttachmentBonusModifierSwitchActive() {

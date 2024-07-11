@@ -101,7 +101,7 @@ class DeckBuilder {
         return {
             leader: _.filter(cardCounts, count => count.card.type === 'leader'),
             base: _.filter(cardCounts, count => count.card.type === 'base'),
-            drawCards: _.filter(cardCounts, count => count.card.type !== 'leader' && count.card.type !== 'base')
+            deckCards: _.filter(cardCounts, count => count.card.type !== 'leader' && count.card.type !== 'base')
         };
     }
 

@@ -33,10 +33,6 @@ export class SetupPhase extends Phase {
         for (const player of this.game.getPlayers()) {
             player.moveCard(player.leader, Locations.Leader);
         }
-
-        for (const card of this.game.allCards.toArray() as BaseCard[]) {
-            card.applyAnyLocationPersistentEffects();
-        }
     }
 
     chooseFirstPlayer() {

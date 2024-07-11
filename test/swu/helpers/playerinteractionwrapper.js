@@ -478,7 +478,7 @@ class PlayerInteractionWrapper {
 
         this.game.menuButton(this.player.name, promptButton.arg, promptButton.uuid, promptButton.method);
         this.game.continue();
-        this.checkUnserializableGameState();
+        // this.checkUnserializableGameState();
     }
 
     clickPromptButtonIndex(index) {

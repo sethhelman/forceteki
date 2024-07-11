@@ -7,7 +7,7 @@ import type { GameAction, GameActionProperties } from '../gameActions/GameAction
 import type { WhenType } from '../Interfaces';
 import type Player from '../player';
 // import type { StatusToken } from '../StatusToken';
-// import CardEffect from './CardEffect';
+import CardEffect from './CardEffect';
 // import ConflictEffect from './ConflictEffect';
 import DetachedEffect from './DetachedEffect';
 import DynamicEffect from './DynamicEffect';
@@ -32,18 +32,18 @@ type Props = {
 };
 
 export const EffectBuilder = {
-    // card: {
-    //     static: (type: EffectNames, value) => (game: Game, source: BaseCard, props: Props) =>
-    //         new CardEffect(game, source, props, new StaticEffect(type, value)),
-    //     dynamic: (type: EffectNames, value) => (game: Game, source: BaseCard, props: Props) =>
-    //         new CardEffect(game, source, props, new DynamicEffect(type, value)),
-    //     detached: (type: EffectNames, value) => (game: Game, source: BaseCard, props: Props) =>
-    //         new CardEffect(game, source, props, new DetachedEffect(type, value.apply, value.unapply)),
-    //     flexible: (type: EffectNames, value?: unknown) =>
-    //         typeof value === 'function'
-    //             ? EffectBuilder.card.dynamic(type, value)
-    //             : EffectBuilder.card.static(type, value)
-    // },
+    card: {
+        static: (type: EffectNames, value) => (game: Game, source: BaseCard, props: Props) =>
+            new CardEffect(game, source, props, new StaticEffect(type, value)),
+        dynamic: (type: EffectNames, value) => (game: Game, source: BaseCard, props: Props) =>
+            new CardEffect(game, source, props, new DynamicEffect(type, value)),
+        detached: (type: EffectNames, value) => (game: Game, source: BaseCard, props: Props) =>
+            new CardEffect(game, source, props, new DetachedEffect(type, value.apply, value.unapply)),
+        flexible: (type: EffectNames, value?: unknown) =>
+            typeof value === 'function'
+                ? EffectBuilder.card.dynamic(type, value)
+                : EffectBuilder.card.static(type, value)
+    },
     player: {
         static: (type: EffectNames, value) => (game: Game, source: BaseCard, props: Props) =>
             new PlayerEffect(game, source, props, new StaticEffect(type, value)),

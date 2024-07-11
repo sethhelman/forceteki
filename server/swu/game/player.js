@@ -9,6 +9,7 @@ const GameActions = require('./gameActions/GameActions');
 const { PlayableLocation } = require('./PlayableLocation');
 const { PlayerPromptState } = require('./PlayerPromptState.js');
 const { BaseLocationCard } = require('./card/baseLocationCard');
+const { LeaderCard } = require('./card/leaderCard');
 
 const {
     AbilityTypes,
@@ -504,15 +505,18 @@ class Player extends GameObject {
         let remainingCards = 0;
 
         if (numCards > this.deck.size()) {
-            remainingCards = numCards - this.deck.size();
-            let cards = this.deck.toArray();
+            // remainingCards = numCards - this.deck.size();
+            // let cards = this.deck.toArray();
             // this.deckRanOutOfCards('conflict');
-            this.game.queueSimpleStep(() => {
-                for (let card of cards) {
-                    this.moveCard(card, Locations.Hand);
-                }
-            });
-            this.game.queueSimpleStep(() => this.drawCardsToHand(remainingCards));
+            // this.game.queueSimpleStep(() => {
+            //     for (let card of cards) {
+            //         this.moveCard(card, Locations.Hand);
+            //     }
+            // });
+            // this.game.queueSimpleStep(() => this.drawCardsToHand(remainingCards));
+
+            // TODO: fill out this implementation
+            throw new Error('Deck ran out of cards');
         } else {
             for (let card of this.deck.toArray().slice(0, numCards)) {
                 this.moveCard(card, Locations.Hand);
@@ -1072,12 +1076,11 @@ class Player extends GameObject {
         this.deck = deck;
         this.deck.selected = true;
         if (deck.base.length > 0) {
-            this.base = new BaseLocationCard(this, deck.base[0]);
+            this.base = new BaseLocationCard(this, deck.base[0].card);
         }
-        if (deck.base.length > 0) {
-            this.base = new BaseLocationCard(this, deck.base[0]);
+        if (deck.leader.length > 0) {
+            this.leader = new LeaderCard(this, deck.leader[0].card);
         }
-        this.faction = deck.faction;
     }
 
     /**
