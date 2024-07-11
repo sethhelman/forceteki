@@ -14,12 +14,11 @@ const deckBuilder = new DeckBuilder();
 const ProxiedGameFlowWrapperMethods = [
     'eachPlayerInFirstPlayerOrder',
     'startGame',
-    'keepDynasty',
+    'keepStartingHand',
     'keepConflict',
     'skipSetupPhase',
-    'selectFirstPlayer',
+    'selectInitiativePlayer',
     'noMoreActions',
-    'selectStrongholdProvinces',
     'advancePhases',
     'getPromptedPlayer',
     'nextPhase',
@@ -114,26 +113,6 @@ var customMatchers = {
                 return result;
             }
         };
-    },
-    toBeAbleToSelectRing: function () {
-        return {
-            compare: function (player, ring) {
-                if (_.isString(ring)) {
-                    ring = player.game.rings[ring];
-                }
-                let result = {};
-
-                result.pass = player.currentActionRingTargets.includes(ring);
-
-                if (result.pass) {
-                    result.message = `Expected ${ring.element} not to be selectable by ${player.name} but it was.`;
-                } else {
-                    result.message = `Expected ${ring.element} to be selectable by ${player.name} but it wasn't.`;
-                }
-
-                return result;
-            }
-        };
     }
 };
 
@@ -172,41 +151,29 @@ global.integration = function (definitions) {
                 if (!options.player2) {
                     options.player2 = {};
                 }
-                this.game.gameMode = GameModes.Stronghold;
-                if (options.gameMode) {
-                    this.game.gameMode = options.gameMode;
-                }
+                this.game.gameMode = GameModes.Premier;
 
                 //Build decks
-                this.player1.selectDeck(deckBuilder.customDeck(options.player1, this.game.gameMode));
-                this.player2.selectDeck(deckBuilder.customDeck(options.player2, this.game.gameMode));
+                this.player1.selectDeck(deckBuilder.customDeck(options.player1));
+                this.player2.selectDeck(deckBuilder.customDeck(options.player2));
 
                 this.startGame();
 
+                // TODO: do we need this?
                 //Setup phase
                 if (!options.skipAutoSetup) {
                     if (!options.skipAutoFirstPlayer) {
-                        this.selectFirstPlayer(this.player1);
+                        this.selectInitiativePlayer(this.player1);
                     }
                 }
 
                 if (options.phase !== 'setup') {
-                    if (['draw', 'fate'].includes(options.phase)) {
-                        this.player1.player.promptedActionWindows[options.phase] = true;
-                        this.player2.player.promptedActionWindows[options.phase] = true;
-                    }
-                    this.keepDynasty();
-                    //Set dynastydiscard now to avoid provinces triggering too soon
-                    this.player1.dynastyDiscard = options.player1.dynastyDiscard;
-                    this.player2.dynastyDiscard = options.player2.dynastyDiscard;
-
-                    this.keepConflict();
+                    this.player1.player.promptedActionWindows[options.phase] = true;
+                    this.player2.player.promptedActionWindows[options.phase] = true;
+                    this.keepStartingHand();
 
                     //Advance the phases to the specified
                     this.advancePhases(options.phase);
-                } else {
-                    this.player1.dynastyDiscard = options.player1.dynastyDiscard;
-                    this.player2.dynastyDiscard = options.player2.dynastyDiscard;
                 }
 
                 //Set state
@@ -217,6 +184,7 @@ global.integration = function (definitions) {
                     _.each(options.player2.rings, (ring) => this.player2.claimRing(ring));
                 }
                 //Player stats
+                // TODO: base damage
                 this.player1.fate = options.player1.fate;
                 this.player2.fate = options.player2.fate;
                 this.player1.honor = options.player1.honor;
@@ -227,22 +195,13 @@ global.integration = function (definitions) {
                 //Conflict deck related
                 this.player1.hand = options.player1.hand;
                 this.player2.hand = options.player2.hand;
-                this.player1.conflictDiscard = options.player1.conflictDiscard;
-                this.player2.conflictDiscard = options.player2.conflictDiscard;
-                //Dynsaty deck related
-                if (!options.skipAutoSetup) {
-                    this.player1.provinces = options.player1.provinces;
-                    this.player2.provinces = options.player2.provinces;
-                }
-                if (options.phase !== 'setup') {
-                    for (const location of ['province 1', 'province 2', 'province 3', 'province 4']) {
-                        this.player1.player.replaceDynastyCard(location);
-                        this.player2.player.replaceDynastyCard(location);
-                    }
-                }
-                if (options.phase !== 'setup') {
-                    this.game.checkGameState(true);
-                }
+                this.player1.discard = options.player1.discard;
+                this.player2.discard = options.player2.discard;
+
+                // TODO: re-enable
+                // if (options.phase !== 'setup') {
+                //     this.game.checkGameState(true);
+                // }
             };
 
             this.initiateConflict = function (options = {}) {

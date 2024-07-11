@@ -55,40 +55,18 @@ class GameFlowWrapper {
     }
 
     /**
-     * Selects stronghold provinces for both players
-     * @param {Object} [strongholds = {}] - names of provinces to select for each player
-     * @param {String} strongholds.player1 - stronghold province for player 1
-     * @param {String} strongholds.player2 - stronghold province for player 2
-     */
-    selectStrongholdProvinces(strongholds = {}) {
-        this.guardCurrentPhase('setup');
-        //Select the fillers, so that province cards specified for province setup aren't used
-        this.player1.selectStrongholdProvince(strongholds.player1 || 'shameful-display');
-        this.player2.selectStrongholdProvince(strongholds.player2 || 'shameful-display');
-    }
-
-    /**
-     * Keeps provinces during prompts for dynasty mulligan
-     */
-    keepDynasty() {
-        this.guardCurrentPhase('setup');
-        this.eachPlayerInFirstPlayerOrder(player => player.clickPrompt('Done'));
-    }
-    /**
      * Keeps hand during prompt for conflict mulligan
      */
-    keepConflict() {
+    keepStartingHand() {
         this.guardCurrentPhase('setup');
-        this.eachPlayerInFirstPlayerOrder(player => player.clickPrompt('Done'));
+        this.eachPlayerInFirstPlayerOrder(player => player.clickPrompt('No'));
     }
     /**
      * Skips setup phase with defaults
      */
     skipSetupPhase() {
-        this.selectFirstPlayer(this.player1);
-        this.selectStrongholdProvinces();
-        this.keepDynasty();
-        this.keepConflict();
+        this.selectInitiativePlayer(this.player1);
+        this.keepStartingHand();
     }
 
     /**
@@ -175,20 +153,8 @@ class GameFlowWrapper {
             case 'setup':
                 this.skipSetupPhase();
                 break;
-            case 'dynasty':
-                this.noMoreActions();
-                phaseChange = -1;
-                break;
-            case 'draw':
-                this.bidHonor();
-                phaseChange = -1;
-                break;
-            case 'conflict':
+            case 'action':
                 this.finishConflictPhase();
-                phaseChange = -1;
-                break;
-            case 'fate':
-                this.finishFatePhase();
                 phaseChange = -1;
                 break;
             case 'regroup':
@@ -254,12 +220,12 @@ class GameFlowWrapper {
         return promptedPlayer;
     }
 
-    selectFirstPlayer(player) {
-        var promptedPlayer = this.getPromptedPlayer('You won the flip. Do you want to be:');
+    selectInitiativePlayer(player) {
+        var promptedPlayer = this.getPromptedPlayer('You won the flip. Do you want to start with initiative:');
         if(player === promptedPlayer) {
-            promptedPlayer.clickPrompt('First Player');
+            promptedPlayer.clickPrompt('Yes');
         } else {
-            promptedPlayer.clickPrompt('Second Player');
+            promptedPlayer.clickPrompt('No');
         }
     }
 

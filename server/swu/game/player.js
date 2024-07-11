@@ -609,6 +609,9 @@ class Player extends GameObject {
         if (preparedDeck.base instanceof BaseLocationCard) {
             this.base = preparedDeck.base;
         }
+        if (preparedDeck.leader instanceof BaseLocationCard) {
+            this.leader = preparedDeck.leader;
+        }
         this.deck = _(preparedDeck.deckCards);
         this.preparedDeck = preparedDeck;
         this.deck.each((card) => {

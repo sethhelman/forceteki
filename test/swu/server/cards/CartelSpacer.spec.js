@@ -3,14 +3,13 @@ describe('Cartel Spacer', function() {
         describe('Cartel Spacer\'s ability', function() {
             beforeEach(function () {
                 this.setupTest({
-                    phase: 'conflict',
+                    phase: 'action',
                     player1: {
                         hand: ['cartel-spacer']
                     },
                     player2: {
                         inPlay: ['wampa']
-                    },
-                    skipAutoSetup: true
+                    }
                 });
                 this.cartelSpacer = this.player1.findCardByName('cartel-spacer');
                 this.wampa = this.player1.findCardByName('wampa');

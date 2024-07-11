@@ -8,17 +8,16 @@ const path = require('path');
 const pathToJSON = path.join(__dirname, '../test/swu/json/');
 
 function getAttributeNames(attributeList) {
-    return attributeList.data.map((attr) => attr.attributes.name);
+    if (Array.isArray(attributeList.data)) {
+        return attributeList.data.map((attr) => attr.attributes.name.toLowerCase());
+    } else {
+        return attributeList.data.attributes.name.toLowerCase();
+    }
 }
 
 function filterValues(card) {
     // just filter out variants for now
     // TODO: add some map for variants
-    // if (card.attributes.cardUid === "3445221668")
-    // {
-    //     return null;
-    // }
-
     if (card.attributes.variantOf.data != null)
     {
         return null;
@@ -32,7 +31,7 @@ function filterValues(card) {
     filteredObj.id = card.attributes.cardId || card.attributes.cardUid;
 
     filteredObj.aspects = getAttributeNames(card.attributes.aspects);
-    filteredObj.type = getAttributeNames(card.attributes.arenas)[0];
+    filteredObj.type = getAttributeNames(card.attributes.type);
     filteredObj.traits = getAttributeNames(card.attributes.traits);
     filteredObj.arenas = getAttributeNames(card.attributes.arenas);
     filteredObj.keywords = getAttributeNames(card.attributes.keywords);

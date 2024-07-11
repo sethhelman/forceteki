@@ -686,15 +686,14 @@ class Game extends EventEmitter {
      * @returns {undefined}
      */
     initialise() {
-        var players = {};
-
+        // // check if player has left the game
+        // var players = {};
         // _.each(this.playersAndSpectators, (player) => {
         //     if (!player.left) {
         //         players[player.name] = player;
         //     }
         // });
-
-        this.playersAndSpectators = players;
+        // this.playersAndSpectators = players;
 
         // TODO: turn this check into a base + leader check (or merge with deck check somewhere else?)
         let playerWithNoStronghold = null;
