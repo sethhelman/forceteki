@@ -84,6 +84,15 @@
             "program": "${workspaceRoot}/node_modules/jasmine/bin/jasmine.js",
             "env": { "JASMINE_CONFIG_PATH": "./jasmine.json" },
             "cwd": "${workspaceRoot}"
+        },
+        {
+            "type": "node", 
+            "request": "launch", 
+            "name": "Debug Open Jasmine Test", 
+            "program": "${workspaceFolder}/node_modules/jasmine/bin/jasmine.js",
+            "args": ["--config=./jasmine.json", "${file}"],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
         }
     ]
 }

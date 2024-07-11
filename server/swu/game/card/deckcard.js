@@ -7,6 +7,7 @@ const { Locations, EffectNames, CardTypes, PlayTypes, EventNames, isArena } = re
 const { GameModes } = require('../../GameModes.js');
 // const { EventRegistrar } = require('./EventRegistrar');
 
+// TODO: rename back to DrawCard
 class DeckCard extends BaseCard {
     // fromOutOfPlaySource ?: Array < DeckCard >;
     menu = [

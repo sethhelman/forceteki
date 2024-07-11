@@ -1,7 +1,7 @@
 const _ = require('underscore');
 
 const { GameObject } = require('./GameObject');
-// const { Deck } = require('./Deck.js');
+const { Deck } = require('./Deck.js');
 const UpgradePrompt = require('./gamesteps/upgradeprompt.js');
 const { clockFor } = require('./Clocks/ClockSelector.js');
 const { CostReducer } = require('./CostReducer');
@@ -9,7 +9,6 @@ const GameActions = require('./gameActions/GameActions');
 const { PlayableLocation } = require('./PlayableLocation');
 const { PlayerPromptState } = require('./PlayerPromptState.js');
 const { BaseLocationCard } = require('./card/baseLocationCard');
-const { Deck } = require('./Deck');
 
 const {
     AbilityTypes,

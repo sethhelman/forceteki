@@ -1,6 +1,6 @@
-const AbilityDsl = require('./abilitydsl.js');
-const Effects = require('./effects');
-const EffectSource = require('./EffectSource.js');
+const AbilityDsl = require('../abilitydsl.js');
+const Effects = require('../effects/effects');
+const EffectSource = require('../EffectSource.js');
 import CardAbility = require('../CardAbility');
 // import TriggeredAbility = require('./triggeredability');
 import Game = require('../game.js');
@@ -74,6 +74,8 @@ class BaseCard extends EffectSource {
 
     id: string;
     printedTitle: string;
+    printedSubtitle: string;
+    internalName: string;
     type: CardTypes;
     facedown: boolean;
 
@@ -109,6 +111,7 @@ class BaseCard extends EffectSource {
 
         this.printedTitle = cardData.title;
         this.printedSubtitle = cardData.subtitle;
+        this.internalName = cardData.internalname;
         this.printedType = this.#checkConvertToEnum([cardData.type], CardTypes)[0]; // TODO: does this work for leader consistently, since it has two types?
         this.traits = cardData.traits;  // TODO: enum for these
         this.aspects = this.#checkConvertToEnum(cardData.aspects, Aspects);
