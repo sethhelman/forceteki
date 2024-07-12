@@ -35,7 +35,7 @@ class GameFlowWrapper {
         return _.find(this.allPlayers, player => player.firstPlayer);
     }
 
-    eachPlayerInFirstPlayerOrder(handler) {
+    eachPlayerInInitiativeOrder(handler) {
         var playersInOrder = _.sortBy(this.allPlayers, player => !player.firstPlayer);
 
         _.each(playersInOrder, player => handler(player));
@@ -50,6 +50,15 @@ class GameFlowWrapper {
         _.each(playersInPromptedOrder, player => handler(player));
     }
 
+    /**
+     * Resource any two cards in hand for each player
+     */
+    resourceAnyTwo() {
+        this.guardCurrentPhase('setup');
+        _.each(this.allPlayers, player => player.clickAnyOfSelectableCards(2));
+        this.game.continue();
+    }
+
     startGame() {
         this.game.initialise();
     }
@@ -59,7 +68,7 @@ class GameFlowWrapper {
      */
     keepStartingHand() {
         this.guardCurrentPhase('setup');
-        this.eachPlayerInFirstPlayerOrder(player => player.clickPrompt('No'));
+        this.eachPlayerInInitiativeOrder(player => player.clickPrompt('No'));
     }
     /**
      * Skips setup phase with defaults
@@ -67,6 +76,7 @@ class GameFlowWrapper {
     skipSetupPhase() {
         this.selectInitiativePlayer(this.player1);
         this.keepStartingHand();
+        this.resourceAnyTwo();
     }
 
     /**
@@ -108,24 +118,6 @@ class GameFlowWrapper {
             claimingPlayer.clickPrompt('military');
         }
         // this.guardCurrentPhase('fate');
-    }
-
-    /**
-     * Completes the fate phase
-     */
-    finishFatePhase() {
-        // this.guardCurrentPhase('fate');
-        for(let player of this.allPlayers) {
-            if(this.player.currentPrompt().menuTitle === 'Fate Phase') {
-                player.clickPrompt('Done');
-            }
-        }
-        var playersInPromptedOrder = _.sortBy(this.allPlayers, player => player.hasPrompt('Waiting for opponent to discard dynasty cards'));
-        _.each(playersInPromptedOrder, player => player.clickPrompt('Done'));
-        // End the round
-        var promptedToEnd = _.sortBy(this.allPlayers, player => player.hasPrompt('Waiting for opponent to end the round'));
-        _.each(promptedToEnd, player => player.clickPrompt('End Round'));
-        this.guardCurrentPhase('dynasty');
     }
 
     /**
@@ -191,7 +183,7 @@ class GameFlowWrapper {
         this.player1.bidHonor(player1amt);
         this.player2.bidHonor(player2amt);
         if(this.game.currentPhase === 'draw') {
-            this.eachPlayerInFirstPlayerOrder(player => {
+            this.eachPlayerInInitiativeOrder(player => {
                 if(player.hasPrompt('Triggered Abilities')) {
                     player.pass();
                 }

@@ -159,30 +159,14 @@ global.integration = function (definitions) {
 
                 this.startGame();
 
-                // TODO: do we need this?
-                //Setup phase
-                if (!options.skipAutoSetup) {
-                    if (!options.skipAutoFirstPlayer) {
-                        this.selectInitiativePlayer(this.player1);
-                    }
-                }
-
                 if (options.phase !== 'setup') {
                     this.player1.player.promptedActionWindows[options.phase] = true;
                     this.player2.player.promptedActionWindows[options.phase] = true;
-                    this.keepStartingHand();
 
                     //Advance the phases to the specified
                     this.advancePhases(options.phase);
                 }
 
-                //Set state
-                if (options.player1.rings) {
-                    _.each(options.player1.rings, (ring) => this.player1.claimRing(ring));
-                }
-                if (options.player2.rings) {
-                    _.each(options.player2.rings, (ring) => this.player2.claimRing(ring));
-                }
                 //Player stats
                 // TODO: base damage
                 this.player1.fate = options.player1.fate;

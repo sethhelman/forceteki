@@ -528,6 +528,22 @@ class PlayerInteractionWrapper {
         this.checkUnserializableGameState();
     }
 
+    // click any N of the selectable cards available
+    // used for randomly selecting resource cards to get through the setup phase
+    clickAnyOfSelectableCards(nCardsToChoose) {
+        let availableCards = this.currentActionTargets;
+
+        if (!availableCards || availableCards.length < nCardsToChoose) {
+            throw new Error(`Insufficient card targets available for control, expected ${nCardsToChoose} found ${availableCards?.length ?? 0} prompt:\n${this.formatPrompt()}`)
+        }
+
+        for (let i = 0; i < nCardsToChoose; i++) {
+            this.game.cardClicked(this.player.name, availableCards[i].uuid);
+        }
+
+        // this.checkUnserializableGameState();
+    }
+
     clickCard(card, location = 'any', side) {
         if (_.isString(card)) {
             card = this.findCardByName(card, location, side);

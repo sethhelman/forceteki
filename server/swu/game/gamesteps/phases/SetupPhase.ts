@@ -19,7 +19,9 @@ export class SetupPhase extends Phase {
             new SimpleStep(game, () => this.drawStartingHands()),
             new SimpleStep(game, () => this.chooseMulligan()),
             new ResourcePrompt(game, 2, 2),
-            new SimpleStep(game, () => this.endPhase())
+
+            // there aren't clear game rules yet for resolving events that trigger during the setup step, so we skip the event window here
+            new SimpleStep(game, () => this.endPhase(true))
         ]);
     }
 
