@@ -27,18 +27,18 @@ class DeckBuilder {
     /*
         options: as player1 and player2 are described in setupTest #1514
     */
-    customDeck(player = {}) {
+    customDeck(playerCards = {}) {
         let leader = defaultLeader;
         let base = defaultBase;
         let allCards = [];
         let deckSize = deckBufferSize; 
         let inPlayCards = [];
 
-        if(player.leader) {
-            leader = player.leader;
+        if(playerCards.leader) {
+            leader = playerCards.leader;
         }
-        if(player.base) {
-            base = player.base;
+        if(playerCards.base) {
+            base = playerCards.base;
         }
 
         /**
@@ -46,29 +46,43 @@ class DeckBuilder {
          * hand and discard
          */
         let initialDeckSize = 0;
-        if(player.deckSize) {   // allow override in case some card has adjusted this
-            deckSize = player.deckSize;
+        if(playerCards.deckSize) {   // allow override in case some card has adjusted this
+            deckSize = playerCards.deckSize;
         }
-        if(player.deck) {
-            allCards.push(...player.deck);
-            initialDeckSize = player.deck.length;
+        if(playerCards.deck) {
+            allCards.push(...playerCards.deck);
+            initialDeckSize = playerCards.deck.length;
         }
-        if(player.discard) {
-            allCards.push(...player.discard);
+        if(playerCards.discard) {
+            allCards.push(...playerCards.discard);
         }
-        if(player.hand) {
-            allCards.push(...player.hand);
+        if(playerCards.hand) {
+            allCards.push(...playerCards.hand);
         }
-        if(player.resources) {
-            allCards.push(...player.resources);
+        if(playerCards.resources) {
+            allCards.push(...playerCards.resources);
         }
         //Add cards to prevent reshuffling due to running out of cards
         for(let i = initialDeckSize; i < deckSize; i++) {
             allCards.push(deckFillerCard);
         }
 
-        //Collect the names of cards in play
-        _.each(player.inPlay, card => {
+        inPlayCards = inPlayCards.concat(this.getInPlayCardsForArena(playerCards.groundArena));
+        inPlayCards = inPlayCards.concat(this.getInPlayCardsForArena(playerCards.spaceArena));
+
+        //Collect all the cards together
+        allCards = allCards.concat(inPlayCards).concat(leader).concat(base);
+
+        return this.buildDeck(allCards);
+    }
+
+    getInPlayCardsForArena(arenaList) {
+        if (!arenaList) {
+            return [];
+        }
+
+        let inPlayCards = [];
+        for (const card of arenaList) {
             if(_.isString(card)) {
                 inPlayCards.push(card);
             } else {
@@ -79,12 +93,9 @@ class DeckBuilder {
                     inPlayCards.push(...card.attachments);
                 }
             }
-        });
+        }
 
-        //Collect all the cards together
-        allCards = allCards.concat(inPlayCards).concat(leader).concat(base);
-
-        return this.buildDeck(allCards);
+        return inPlayCards;
     }
 
     buildDeck(cardInternalNames) {

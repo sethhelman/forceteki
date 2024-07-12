@@ -154,7 +154,7 @@ global.integration = function (definitions) {
                 }
                 this.game.gameMode = GameModes.Premier;
 
-                //Build decks
+                // pass decklists to players. they are initialized into real card objects in the startGame() call
                 this.player1.selectDeck(deckBuilder.customDeck(options.player1));
                 this.player2.selectDeck(deckBuilder.customDeck(options.player2));
 
@@ -171,9 +171,14 @@ global.integration = function (definitions) {
                 //Player stats
                 this.player1.damageToBase = options.player1.damageToBase ?? 0;
                 this.player2.damageToBase = options.player2.damageToBase ?? 0;
+
+                // set cards below - the playerinteractionwrapper will convert string names to real cards
+
                 //Field
-                this.player1.inPlay = options.player1.inPlay;
-                this.player2.inPlay = options.player2.inPlay;
+                this.player1.groundArena = options.player1.groundArena;
+                this.player2.groundArena = options.player2.groundArena;
+                this.player1.spaceArena = options.player1.spaceArena;
+                this.player2.spaceArena = options.player2.spaceArena;
                 //Resources
                 this.player1.resources = options.player1.resources;
                 this.player2.resources = options.player2.resources;

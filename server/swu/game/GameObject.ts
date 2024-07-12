@@ -12,7 +12,6 @@ export class GameObject {
     public uuid = uuidV1();
     protected id: string;
     protected printedType = '';
-    private resourced = false;
     private effects = [] as CardEffect[];
 
     public constructor(
@@ -98,16 +97,11 @@ export class GameObject {
         return false;
     }
 
-    public isResource() {
-        return this.resourced;
-    }
-
     public getShortSummary() {
         return {
             id: this.id,
             label: this.name,
             name: this.name,
-            resource: this.isResource(),
             type: this.getType(),
             uuid: this.uuid
         };

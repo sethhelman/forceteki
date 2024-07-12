@@ -12,7 +12,6 @@ export class Deck {
 
     prepare(player: Player) {
         const result = {
-            faction: this.data.faction,
             deckCards: [] as DeckCard[],
             outOfPlayCards: [],
             outsideTheGameCards: [] as DeckCard[],

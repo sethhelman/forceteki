@@ -40,7 +40,7 @@ class DeckCard extends BaseCard {
         this.isConflict = cardData.side === 'conflict';
         this.isDynasty = cardData.side === 'dynasty';
         this.allowDuplicatesOfAttachment = !!cardData.attachment_allow_duplicates;
-        this.defaultArena = cardData.arena;  // TODO: figure out how this is actually stored and parse it to enum
+        this.defaultArena = cardData.arena + " arena";  // TODO: figure out how this is actually stored and parse it to enum
 
         // if (cardData.type === CardTypes.Character) {
         //     this.abilities.reactions.push(new CourtesyAbility(this.game, this));
@@ -178,11 +178,12 @@ class DeckCard extends BaseCard {
         clone.effects = _.clone(this.effects);
         clone.controller = this.controller;
         clone.exhausted = this.exhausted;
-        clone.statusTokens = [...this.statusTokens];
+        // clone.statusTokens = [...this.statusTokens];
         clone.location = this.location;
         clone.parent = this.parent;
-        clone.fate = this.fate;
-        clone.inConflict = this.inConflict;
+        clone.aspects = _.clone(this.aspects);
+        // clone.fate = this.fate;
+        // clone.inConflict = this.inConflict;
         clone.traits = Array.from(this.getTraits());
         clone.uuid = this.uuid;
         return clone;
@@ -838,9 +839,9 @@ class DeckCard extends BaseCard {
     //     return !this.anyEffect(EffectNames.DoesNotBow);
     // }
 
-    // setDefaultController(player) {
-    //     this.defaultController = player;
-    // }
+    setDefaultController(player) {
+        this.defaultController = player;
+    }
 
     // getModifiedController() {
     //     if (

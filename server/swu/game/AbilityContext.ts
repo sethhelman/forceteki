@@ -13,6 +13,7 @@ export interface AbilityContextProperties {
     player?: Player;
     ability?: BaseAbility;
     costs?: any;
+    costAspects?: Aspects[];
     targets?: any;
     selects?: any;
     tokens?: any;
@@ -49,6 +50,7 @@ export class AbilityContext<S = any> {
         this.player = properties.player;
         this.ability = properties.ability || new BaseAbility({});
         this.costs = properties.costs || {};
+        this.costAspects = properties.costAspects || [];
         this.targets = properties.targets || {};
         this.selects = properties.selects || {};
         this.tokens = properties.tokens || {};
@@ -62,6 +64,7 @@ export class AbilityContext<S = any> {
         let copy = this.createCopy(newProps);
         copy.target = this.target;
         // copy.token = this.token;
+        copy.costAspects = this.costAspects;
         copy.select = this.select;
         copy.subResolution = this.subResolution;
         copy.choosingPlayerOverride = this.choosingPlayerOverride;

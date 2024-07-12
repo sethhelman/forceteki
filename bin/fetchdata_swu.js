@@ -24,8 +24,8 @@ function filterValues(card) {
     }
 
     filteredObj = (
-        ({ title, subtitle, cost, hp, power, text, deployBox, epicAction, unique, rules, type, traits, arenas, keywords}) => 
-            ({ title, subtitle, cost, hp, power, text, deployBox, epicAction, unique, rules, type, traits, arenas, keywords}))
+        ({ title, subtitle, cost, hp, power, text, deployBox, epicAction, unique, rules }) => 
+            ({ title, subtitle, cost, hp, power, text, deployBox, epicAction, unique, rules }))
         (card.attributes);
 
     filteredObj.id = card.attributes.cardId || card.attributes.cardUid;
@@ -33,7 +33,7 @@ function filterValues(card) {
     filteredObj.aspects = getAttributeNames(card.attributes.aspects);
     filteredObj.type = getAttributeNames(card.attributes.type);
     filteredObj.traits = getAttributeNames(card.attributes.traits);
-    filteredObj.arenas = getAttributeNames(card.attributes.arenas);
+    filteredObj.arena = getAttributeNames(card.attributes.arenas)[0];
     filteredObj.keywords = getAttributeNames(card.attributes.keywords);
     
     let internalName = filteredObj.title;

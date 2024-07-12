@@ -18,7 +18,7 @@ export class PlayUnitAction extends BaseAction {
     public meetsRequirements(context = this.createContext(), ignoredRequirements: string[] = []): string {
         if (
             !ignoredRequirements.includes('phase') &&
-            context.game.currentPhase === Phases.Action
+            context.game.currentPhase !== Phases.Action
         ) {
             return 'phase';
         }

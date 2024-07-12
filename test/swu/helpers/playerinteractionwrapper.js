@@ -18,26 +18,6 @@ class PlayerInteractionWrapper {
         return this.player.name;
     }
 
-    get fate() {
-        return this.player.fate;
-    }
-
-    set fate(newFate) {
-        if (newFate >= 0) {
-            this.player.fate = newFate;
-        }
-    }
-
-    get honor() {
-        return this.player.honor;
-    }
-
-    set honor(newHonor) {
-        if (newHonor > 0) {
-            this.player.honor = newHonor;
-        }
-    }
-
     get hand() {
         return this.player.hand.value();
     }
@@ -53,39 +33,6 @@ class PlayerInteractionWrapper {
         _.each(cardsInHand, (card) => this.moveCard(card, 'deck'));
         cards = this.mixedListToCardList(cards, 'deck');
         _.each(cards, (card) => this.moveCard(card, 'hand'));
-    }
-
-    get stronghold() {
-        return this.player.strongholdProvince.value();
-    }
-
-    /**
-     * Gives information about the contents of the player's provinces
-     * @return {Object} contents of provinces 1,2,3,4
-     */
-    get provinces() {
-        var provinceOne = this.player.provinceOne.value();
-        var provinceTwo = this.player.provinceTwo.value();
-        var provinceThree = this.player.provinceThree.value();
-        var provinceFour = this.player.provinceFour.value();
-        return {
-            'province 1': {
-                provinceCard: _.find(provinceOne, (card) => card.isProvince),
-                dynastyCards: _.reject(provinceOne, (card) => card.isProvince)
-            },
-            'province 2': {
-                provinceCard: _.find(provinceTwo, (card) => card.isProvince),
-                dynastyCards: _.reject(provinceTwo, (card) => card.isProvince)
-            },
-            'province 3': {
-                provinceCard: _.find(provinceThree, (card) => card.isProvince),
-                dynastyCards: _.reject(provinceThree, (card) => card.isProvince)
-            },
-            'province 4': {
-                provinceCard: _.find(provinceFour, (card) => card.isProvince),
-                dynastyCards: _.reject(provinceFour, (card) => card.isProvince)
-            }
-        };
     }
 
     /**
@@ -150,14 +97,39 @@ class PlayerInteractionWrapper {
     }
 
     /**
-     * Gets all cards in play for a player
-     * @return {DrawCard[]} - List of player's cards currently in play
+     * Gets all cards in play for a player in the space arena
+     * @return {DeckCard[]} - List of player's cards currently in play in the space arena
      */
     get inPlay() {
         return this.player.filterCardsInPlay(() => true);
     }
+
     /**
-     * List of objects describing characters in play and any upgrades:
+     * Gets all cards in play for a player in the space arena
+     * @return {DeckCard[]} - List of player's cards currently in play in the space arena
+     */
+    get spaceArena() {
+        return this.player.filterCardsInPlay((card) => card.location === 'space arena');
+    }
+
+    /**
+     * Gets all cards in play for a player in the ground arena
+     * @return {DeckCard[]} - List of player's cards currently in play in the ground arena
+     */
+    get groundArena() {
+        return this.player.filterCardsInPlay((card) => card.location === 'ground arena');
+    }
+
+    set spaceArena(newState = []) {
+        this.setArenaUnits('space arena', this.spaceArena, newState);
+    }
+
+    set groundArena(newState = []) {
+        this.setArenaUnits('ground arena', this.groundArena, newState);
+    }
+
+    /**
+     * List of objects describing units in play and any upgrades:
      * Either as Object:
      * {
      *    card: String,
@@ -166,11 +138,13 @@ class PlayerInteractionWrapper {
      *    upgrades: String[]
      *  }
      * or String containing name or id of the card
+     * @param {String} arenaName - name of the arena to set the units in, either 'ground arena' or 'space arena'
+     * @param {DrawCard[]} currentUnitsInArena - list of cards currently in the arena
      * @param {(Object|String)[]} newState - list of cards in play and their states
      */
-    set inPlay(newState = []) {
-        // First, move all cards in play back to the appropriate decks
-        _.each(this.inPlay, (card) => { this.moveCard(card, 'deck'); });
+    setArenaUnits(arenaName, currentUnitsInArena, newState = []) {
+        // First, move all cards in play back to the deck
+        _.each(currentUnitsInArena, (card) => { this.moveCard(card, 'deck'); });
         // Set up each of the cards
         _.each(newState, (options) => {
             //TODO: Optionally, accept just a string as a parameter???
@@ -184,7 +158,7 @@ class PlayerInteractionWrapper {
             }
             var card = this.findCardByName(options.card, ['deck', 'hand']);
             // Move card to play
-            this.moveCard(card, 'play area');
+            this.moveCard(card, arenaName);
             // Set exhausted state
             if (options.exhausted !== undefined) {
                 options.exhausted ? card.exhaust() : card.ready();
@@ -208,6 +182,44 @@ class PlayerInteractionWrapper {
 
     get deck() {
         return this.player.deck.value();
+    }
+
+    get resources() {
+        return this.player.resources.value();
+    }
+
+    // TODO: helper method for this
+    /**
+     * List of objects describing cards in resource area
+     * Either as Object:
+     * {
+     *    card: String,
+     *    exhausted: Boolean
+     *  }
+     * or String containing name or id of the card
+     * @param {(Object|String)[]} newState - list of cards in play and their states
+     */
+    set resources(newContents = []) {
+        //  Move cards to the deck
+        _.each(this.resources, (card) => {
+            this.moveCard(card, 'deck');
+        });
+        // Move cards to the resource area in reverse order
+        // (helps with referring to cards by index)
+        _.chain(newContents)
+            .reverse()
+            .each((name) => {
+                var card = this.findCardByName(name, ['deck', 'hand']);
+                this.moveCard(card, 'resource');
+            });
+    }
+
+    countSpendableResources() {
+        return this.player.countSpendableResources();
+    }
+
+    countExhaustedResources() {
+        return this.player.countExhaustedResources();
     }
 
     get discard() {

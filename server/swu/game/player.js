@@ -610,7 +610,6 @@ class Player extends GameObject {
     prepareDecks() {
         var deck = new Deck(this.deck);
         var preparedDeck = deck.prepare(this);
-        this.faction = preparedDeck.faction;
         if (preparedDeck.base instanceof BaseLocationCard) {
             this.base = preparedDeck.base;
         }
@@ -713,7 +712,7 @@ class Player extends GameObject {
      */
     getMinimumPossibleCost(playingType, context, target, ignoreType = false) {
         const card = context.source;
-        let reducedCost = this.getReducedCost(playingType, card, target, ignoreType, null);
+        let reducedCost = this.getReducedCost(playingType, card, target, ignoreType, context.costAspects);
         let triggeredCostReducers = 0;
         let fakeWindow = { addChoice: () => triggeredCostReducers++ };
         let fakeEvent = this.game.getEvent(EventNames.OnCardPlayed, { card: card, player: this, context: context });
@@ -1085,7 +1084,14 @@ class Player extends GameObject {
      * Returns the number of resources available to spend
      */
     countSpendableResources() {
-        return this.resources.reduce((count, card) => count += !card.exhausted )
+        return this.resources.value().reduce((count, card) => count += !card.exhausted, 0)
+    }
+
+    /**
+     * Returns the number of resources available to spend
+     */
+    countExhaustedResources() {
+        return this.resources.value().reduce((count, card) => count += card.exhausted, 0)
     }
 
     /**
@@ -1161,8 +1167,13 @@ class Player extends GameObject {
             card.controller = card.owner;
         }
 
+        if (currentLocation === Locations.Resource && targetLocation !== Locations.Resource) {
+            card.resourced = false;
+        }
+
         if (targetLocation === Locations.Resource) {
             card.facedown = true;
+            card.resourced = true;
             targetPile.push(card);
         } else if (targetLocation === Locations.Deck && !options.bottom) {
             targetPile.unshift(card);

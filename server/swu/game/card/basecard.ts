@@ -78,6 +78,7 @@ class BaseCard extends EffectSource {
     internalName: string;
     type: CardTypes;
     facedown: boolean;
+    resourced: boolean;
 
     tokens: object = {};
     menu: { command: string; text: string }[] = [];
@@ -448,7 +449,8 @@ class BaseCard extends EffectSource {
     }
 
     getTraits(): Set<string> {
-        return this.getTraitSet();
+        // return this.getTraitSet();
+        return new Set();
     }
 
     // getTraitSet(): Set<string> {
@@ -1081,6 +1083,18 @@ class BaseCard extends EffectSource {
             return { facedown: true, isDynasty: this.isDynasty, isConflict: this.isConflict };
         }
         return super.getShortSummaryForControls(activePlayer);
+    }
+
+    public isFacedown() {
+        return this.facedown;
+    }
+
+    public isFaceup() {
+        return !this.facedown;
+    }
+
+    public isResource() {
+        return this.resourced;
     }
 
     // getSummary(activePlayer, hideWhenFaceup) {

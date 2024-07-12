@@ -6,10 +6,11 @@ describe('Cartel Spacer', function() {
                     phase: 'action',
                     player1: {
                         hand: ['cartel-spacer'],
-                        resources: ['atst', 'atst']
+                        resources: ['atst', 'atst'],
+                        leader: 'boba-fett#collecting-the-bounty'
                     },
                     player2: {
-                        inPlay: ['wampa'],
+                        groundArena: ['wampa'],
                         resources: ['atst', 'atst']
                     }
                 });
@@ -23,6 +24,8 @@ describe('Cartel Spacer', function() {
                 this.player1.clickCard(this.cartelSpacer);
 
                 expect(this.cartelSpacer.location).toBe('space arena');
+                expect(this.player1.countSpendableResources()).toBe(0);
+                expect(this.player1.countExhaustedResources()).toBe(2);
             });
         });
     });
