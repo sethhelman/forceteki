@@ -684,7 +684,7 @@ class DeckCard extends BaseCard {
         // TODO: add base / leader actions if this doesn't already cover them
 
         // otherwise (i.e. card is in hand), return play card action(s) + other available card actions
-        return [this.getPlayActions(), super.getActions()];
+        return this.getPlayActions().concat(super.getActions());
     }
 
     /**

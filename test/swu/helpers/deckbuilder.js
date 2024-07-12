@@ -3,7 +3,7 @@ const path = require('path');
 const _ = require('underscore');
 
 // defaults to fill in with if not explicitly provided by the test case
-const defaultLeader = 'darth-vader|dark-lord-of-the-sith';
+const defaultLeader = 'darth-vader#dark-lord-of-the-sith';
 const defaultBase = 'kestro-city';
 const deckFillerCard = 'underworld-thug';
 const deckBufferSize = 8; // buffer decks to prevent re-shuffling
@@ -58,6 +58,9 @@ class DeckBuilder {
         }
         if(player.hand) {
             allCards.push(...player.hand);
+        }
+        if(player.resources) {
+            allCards.push(...player.resources);
         }
         //Add cards to prevent reshuffling due to running out of cards
         for(let i = initialDeckSize; i < deckSize; i++) {

@@ -6,6 +6,7 @@ import type Game from '../../game';
 import { Phase } from '../Phase';
 import { SimpleStep } from '../SimpleStep';
 import ResourcePrompt from '../basic_steps/resourceprompt';
+import Player from '../../player';
 
 export class SetupPhase extends Phase {
     constructor(game: Game) {
@@ -28,6 +29,7 @@ export class SetupPhase extends Phase {
     putBaseInPlay() {
         for (const player of this.game.getPlayers()) {
             player.moveCard(player.base, Locations.Base);
+            player.damageToBase = 0;
         }
     }
 

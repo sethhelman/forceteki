@@ -53,6 +53,7 @@ class Player extends GameObject {
 
         this.leader = null;
         this.base = null;
+        this.damageToBase = null;
 
         this.clock = clockFor(this, clockdetails);
 
@@ -879,22 +880,19 @@ class Player extends GameObject {
         }
     }
 
-    // TODO: switch to beginAction
-    // /**
-    //  * Called at the start of the Dynasty Phase.  Resets a lot of the single round parameters
-    //  */
-    // beginDynasty() {
-    //     if (this.resetTimerAtEndOfRound) {
-    //         this.noTimer = false;
-    //     }
+    /**
+     * Called at the start of the Action Phase.  Resets a lot of the single round parameters
+     */
+    beginAction() {
+        if (this.resetTimerAtEndOfRound) {
+            this.noTimer = false;
+        }
 
-    //     this.resetConflictOpportunities();
-
-    //     this.cardsInPlay.each((card) => {
-    //         card.new = false;
-    //     });
-    //     this.passedDynasty = false;
-    // }
+        this.getCardsInPlay().each((card) => {
+            card.new = false;
+        });
+        this.passedActionPhase = false;
+    }
 
     // showDeck() {
     //     this.showDeck = true;

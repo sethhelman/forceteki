@@ -38,9 +38,9 @@ function filterValues(card) {
     
     let internalName = filteredObj.title;
     if (filteredObj.subtitle) {
-        internalName += "|" + filteredObj.subtitle;
+        internalName += "#" + filteredObj.subtitle;
     }
-    filteredObj.internalName = internalName.toLowerCase().replace(/[^\w\s|]|_/g, "").replace(/\s/g, "-");
+    filteredObj.internalName = internalName.toLowerCase().replace(/[^\w\s#]|_/g, "").replace(/\s/g, "-");
 
     // keep original card for debug logging, will be removed before card is written to file
     delete card.attributes.variants;
@@ -100,7 +100,7 @@ async function main() {
         console.log(`Duplicate cards found, with set codes: ${JSON.stringify(duplicatesWithSetCode, null, 2)}`);
     }
 
-    await Promise.all(uniqueCards.map(async (card) => fs.writeFile(path.join(pathToJSON, `Card/${card.id}.json`), JSON.stringify([card], null, 2))));
+    await Promise.all(uniqueCards.map(async (card) => fs.writeFile(path.join(pathToJSON, `Card/${card.internalName}.json`), JSON.stringify([card], null, 2))));
 
     fs.writeFile(path.join(pathToJSON, '_cardMap.json'), JSON.stringify(cardMap, null, 2))
 }

@@ -197,17 +197,14 @@ class Game extends EventEmitter {
     /**
      * Checks who the next legal active player for the action phase should be and updates @member {activePlayer}. If none available, sets it to null.
      */
-    checkRotateActivePlayer() {
-        if (this.actionPhaseActivePlayer.opponent.canTakeActionsThisPhase) {
+    rotateActivePlayer() {
+        if (!this.actionPhaseActivePlayer.opponent.passedActionPhase) {
             this.actionPhaseActivePlayer = this.actionPhaseActivePlayer.opponent;
-            return;
+        } else if (this.actionPhaseActivePlayer.passedActionPhase) {
+            this.actionPhaseActivePlayer = null;
         }
 
-        if (this.actionPhaseActivePlayer.canTakeActionsThisPhase) {
-            return;
-        }
-
-        this.actionPhaseActivePlayer = null;
+        // by default, if the opponent has passed and the active player has not, they remain the active player and play continues
     }
 
     /**
@@ -755,8 +752,8 @@ class Game extends EventEmitter {
      * @returns {undefined}
      */
     beginRound() {
-        this.resetLimitedForPlayer();
         this.roundNumber++;
+        this.actionPhaseActivePlayer = this.initiativePlayer;
         this.raiseEvent(EventNames.OnBeginRound);
         this.queueStep(new ActionPhase(this));
         this.queueStep(new RegroupPhase(this));
@@ -766,13 +763,6 @@ class Game extends EventEmitter {
 
     roundEnded() {
         this.raiseEvent(EventNames.OnRoundEnded);
-    }
-
-    resetLimitedForPlayer() {
-        var players = this.getPlayers();
-        players.forEach((player) => {
-            player.limitedPlayed = 0;
-        });
     }
 
     /*

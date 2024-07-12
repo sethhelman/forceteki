@@ -2,12 +2,12 @@ const { UiPrompt } = require('./UiPrompt.js');
 const { EventNames, Locations, Players, EffectNames, isArena, WildcardLocations } = require('../Constants');
 
 class ActionWindow extends UiPrompt {
-    constructor(game, activePlayer, title, windowName) {
+    constructor(game, title, windowName, activePlayer = null) {
         super(game);
 
         this.title = title;
         this.windowName = windowName;
-        this.activePlayer = activePlayer;
+        this.activePlayer = activePlayer ?? this.game.initiativePlayer;
         this.activePlayerConsecutiveActions = 0;
         this.opportunityCounter = 0;
         this.prevPlayerPassed = false;
@@ -79,6 +79,7 @@ class ActionWindow extends UiPrompt {
             this.activePlayer.actionPhasePriority = false;
         }
 
+        // TODO: do we need promptedActionWindows?
         if(!this.activePlayer.promptedActionWindows[this.windowName]) {
             this.pass();
         }

@@ -5,20 +5,24 @@ describe('Cartel Spacer', function() {
                 this.setupTest({
                     phase: 'action',
                     player1: {
-                        hand: ['cartel-spacer']
+                        hand: ['cartel-spacer'],
+                        resources: ['atst', 'atst']
                     },
                     player2: {
-                        inPlay: ['wampa']
+                        inPlay: ['wampa'],
+                        resources: ['atst', 'atst']
                     }
                 });
                 this.cartelSpacer = this.player1.findCardByName('cartel-spacer');
-                this.wampa = this.player1.findCardByName('wampa');
+                this.wampa = this.player2.findCardByName('wampa');
 
                 this.noMoreActions();
             });
 
             it('play card', function () {
                 this.player1.clickCard(this.cartelSpacer);
+
+                expect(this.cartelSpacer.location).toBe('space arena');
             });
         });
     });

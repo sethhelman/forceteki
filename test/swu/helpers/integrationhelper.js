@@ -11,6 +11,7 @@ const GameFlowWrapper = require('./gameflowwrapper.js');
 
 const deckBuilder = new DeckBuilder();
 
+// TODO: why not just call these directly
 const ProxiedGameFlowWrapperMethods = [
     'eachPlayerInFirstPlayerOrder',
     'startGame',
@@ -168,15 +169,15 @@ global.integration = function (definitions) {
                 }
 
                 //Player stats
-                // TODO: base damage
-                this.player1.fate = options.player1.fate;
-                this.player2.fate = options.player2.fate;
-                this.player1.honor = options.player1.honor;
-                this.player2.honor = options.player2.honor;
+                this.player1.damageToBase = options.player1.damageToBase ?? 0;
+                this.player2.damageToBase = options.player2.damageToBase ?? 0;
                 //Field
                 this.player1.inPlay = options.player1.inPlay;
                 this.player2.inPlay = options.player2.inPlay;
-                //Conflict deck related
+                //Resources
+                this.player1.resources = options.player1.resources;
+                this.player2.resources = options.player2.resources;
+                //Deck + discard
                 this.player1.hand = options.player1.hand;
                 this.player2.hand = options.player2.hand;
                 this.player1.discard = options.player1.discard;

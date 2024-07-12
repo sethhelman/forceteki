@@ -32,11 +32,11 @@ class GameFlowWrapper {
     }
 
     get firstPlayer() {
-        return _.find(this.allPlayers, player => player.firstPlayer);
+        return _.find(this.allPlayers, player => player.initiativePlayer);
     }
 
     eachPlayerInInitiativeOrder(handler) {
-        var playersInOrder = _.sortBy(this.allPlayers, player => !player.firstPlayer);
+        var playersInOrder = _.sortBy(this.allPlayers, player => !player.initiativePlayer);
 
         _.each(playersInOrder, player => handler(player));
     }
@@ -83,16 +83,16 @@ class GameFlowWrapper {
      * Both players pass for the rest of the action window
      */
     noMoreActions() {
-        if(this.game.currentPhase === 'dynasty') {
-            // Players that have already passed aren't prompted again in dynasty
-            this.eachPlayerStartingWithPrompted(player => {
-                if(!player.player.passedDynasty) {
-                    player.clickPrompt('Pass');
-                }
-            });
-        } else {
-            this.eachPlayerStartingWithPrompted(player => player.clickPrompt('Pass'));
-        }
+        // if(this.game.currentPhase === 'dynasty') {
+        //     // Players that have already passed aren't prompted again in dynasty
+        //     this.eachPlayerStartingWithPrompted(player => {
+        //         if(!player.player.passedDynasty) {
+        //             player.clickPrompt('Pass');
+        //         }
+        //     });
+        // } else {
+        //     this.eachPlayerStartingWithPrompted(player => player.clickPrompt('Pass'));
+        // }
     }
 
     /**

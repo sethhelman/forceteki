@@ -28,25 +28,20 @@ export class ActionPhase extends Phase {
     constructor(game: Game) {
         super(game, Phases.Action);
         this.initialise([
-            new SimpleStep(this.game, () => this.queueActions())
+            new SimpleStep(this.game, () => this.#queueNextAction())
         ]);
     }
 
-    queueActions() {
-        // player with initiative acts first
-        this.game.actionPhaseActivePlayer = this.game.initiativePlayer;
-        for (const player of this.game.getPlayers()) {
-            player.canTakeActionsThisPhase = true;
-        }
+    #queueNextAction() {
+        this.game.queueStep(new ActionWindow(this.game, 'Action Window', 'action'));
+        this.game.queueStep(() => this.#rotateActiveQueueNextAction());
+    }
 
-        // loop until neither player can take actions anymore due to passing
-        do {
-            this.game.queueStep(new ActionWindow(this.game, 'Action Window'));
-            this.game.checkRotateActivePlayer();
-        } while (this.game.actionPhaseActivePlayer !== null);
-
-        for (const player of this.game.getPlayers()) {
-            player.canTakeActionsThisPhase = null;
+    #rotateActiveQueueNextAction() {
+        // breaks the action loop if both players have passed
+        this.game.rotateActivePlayer();
+        if (this.game.actionPhaseActivePlayer !== null) {
+            this.game.queueStep(() => this.#queueNextAction());
         }
     }
 }
