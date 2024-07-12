@@ -85,16 +85,13 @@ export class PutIntoPlayAction extends CardGameAction {
 
         let targetSide = event.side;
 
-        if (event.status === 'honored') {
-            event.card.honor();
-        } else if (event.status === 'dishonored') {
-            event.card.dishonor();
-        }
-        if (event.card.hasPrintedKeyword('corrupted')) {
-            event.card.taint();
-        }
-
         player.moveCard(event.card, event.card.defaultArena);
+
+        if (event.status === 'ready') {
+            event.card.ready();
+        } else {
+            event.card.exhaust();
+        }
 
         //moveCard sets all this stuff and only works if the owner is moving cards, so we're switching it around
         if (event.card.controller !== finalController) {
