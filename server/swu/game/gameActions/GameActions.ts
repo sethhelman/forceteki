@@ -1,7 +1,7 @@
 import { AbilityContext } from '../AbilityContext';
 // import { AddTokenAction, AddTokenProperties } from './AddTokenAction';
 // import { AttachAction, AttachActionProperties } from './AttachAction';
-// import { BowAction, BowActionProperties } from './BowAction';
+import { AttackAction, AttackProperties } from './AttackAction';
 // import { CancelAction, CancelActionProperties } from './CancelAction';
 import { CardGameAction } from './CardGameAction';
 // import { CardMenuAction, CardMenuProperties } from './CardMenuAction';
@@ -16,6 +16,7 @@ import { CardGameAction } from './CardGameAction';
 // import { DiscardFromPlayAction, DiscardFromPlayProperties } from './DiscardFromPlayAction';
 // import { DiscardStatusAction, DiscardStatusProperties } from './DiscardStatusAction';
 // import { DrawAction, DrawProperties } from './DrawAction';
+import { ExhaustAction, ExhaustActionProperties } from './ExhaustAction';
 // import { GainStatusTokenAction, GainStatusTokenProperties } from './GainStatusTokenAction';
 import { GameAction } from './GameAction';
 import { HandlerAction, HandlerProperties } from './HandlerAction';
@@ -62,9 +63,9 @@ type PropsFactory<Props> = Props | ((context: AbilityContext) => Props);
 // export function attach(propertyFactory: PropsFactory<AttachActionProperties> = {}): GameAction {
 //     return new AttachAction(propertyFactory);
 // }
-// export function bow(propertyFactory: PropsFactory<BowActionProperties> = {}): CardGameAction {
-//     return new BowAction(propertyFactory);
-// }
+export function attack(propertyFactory: PropsFactory<AttackProperties>): GameAction {
+    return new AttackAction(propertyFactory);
+}
 // export function cardLastingEffect(propertyFactory: PropsFactory<LastingEffectCardProperties>): GameAction {
 //     return new LastingEffectCardAction(propertyFactory);
 // }
@@ -80,6 +81,9 @@ type PropsFactory<Props> = Props | ((context: AbilityContext) => Props);
 // export function discardFromPlay(propertyFactory: PropsFactory<DiscardFromPlayProperties> = {}): GameAction {
 //     return new DiscardFromPlayAction(propertyFactory);
 // }
+export function exhaust(propertyFactory: PropsFactory<ExhaustActionProperties> = {}): CardGameAction {
+    return new ExhaustAction(propertyFactory);
+}
 // export function lookAt(propertyFactory: PropsFactory<LookAtProperties> = {}): GameAction {
 //     return new LookAtAction(propertyFactory);
 // }

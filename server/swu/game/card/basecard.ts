@@ -1,13 +1,14 @@
 const AbilityDsl = require('../abilitydsl.js');
 const Effects = require('../effects/effects');
 const EffectSource = require('../EffectSource.js');
-import CardAbility = require('../CardAbility');
+import CardAbility = require('../CardTextAbility');
 // import TriggeredAbility = require('./triggeredability');
 import Game = require('../game.js');
 
 import { GameModes } from '../../GameModes.js';
 import { AbilityContext } from '../AbilityContext.js';
-import { CardAction } from '../CardAction.js';
+import { CardTextAction } from '../CardTextAction.js';
+import { AttackAction } from '../gameActions/AttackAction';
 import {
     AbilityTypes,
     CardTypes,
@@ -121,6 +122,10 @@ class BaseCard extends EffectSource {
         this.setupCardAbilities(AbilityDsl);
         this.parseKeywords(cardData.text ? cardData.text.replace(/<[^>]*>/g, '').toLowerCase() : '');
         // this.applyAttachmentBonus();
+
+        if (this.type === CardTypes.Unit) {
+            actions.push(AbilityDsl.attack());
+        }
     }
 
     get name(): string {
@@ -152,12 +157,14 @@ class BaseCard extends EffectSource {
         return effects[effects.length - 1];
     }
 
-    _getActions(ignoreDynamicGains = false): CardAction[] {
+    #getActions(ignoreDynamicGains = false): CardTextAction[] {
         let actions = this.abilities.actions;
+
         const mostRecentEffect = this.#mostRecentEffect((effect) => effect.type === EffectNames.CopyCharacter);
         if (mostRecentEffect) {
             actions = mostRecentEffect.value.getActions(this);
         }
+        
         const effectActions = this.getEffects(EffectNames.GainAbility).filter(
             (ability) => ability.abilityType === AbilityTypes.Action
         );
@@ -188,8 +195,8 @@ class BaseCard extends EffectSource {
         return allAbilities;
     }
 
-    get actions(): CardAction[] {
-        return this._getActions();
+    get actions(): CardTextAction[] {
+        return this.#getActions();
     }
 
     // _getReactions(ignoreDynamicGains = false): TriggeredAbility[] {
@@ -297,8 +304,8 @@ class BaseCard extends EffectSource {
         this.abilities.actions.push(this.createAction(properties));
     }
 
-    createAction(properties: ActionProps): CardAction {
-        return new CardAction(this.game, this, properties);
+    createAction(properties: ActionProps): CardTextAction {
+        return new CardTextAction(this.game, this, properties);
     }
 
     // triggeredAbility(abilityType: AbilityTypes, properties: TriggeredAbilityProps): void {

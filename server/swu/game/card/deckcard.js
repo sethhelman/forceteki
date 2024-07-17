@@ -1,9 +1,9 @@
 const _ = require('underscore');
 
 const BaseCard = require('./basecard');
-// const StatModifier = require('./StatModifier');
+const StatModifier = require('../StatModifier');
 
-const { Locations, EffectNames, CardTypes, PlayTypes, EventNames, isArena } = require('../Constants.js');
+const { Locations, EffectNames, CardTypes, PlayTypes, EventNames, isArena, StatType } = require('../Constants.js');
 const { GameModes } = require('../../GameModes.js');
 // const { EventRegistrar } = require('./EventRegistrar');
 
@@ -21,8 +21,8 @@ class DeckCard extends BaseCard {
         this.defaultController = owner;
         this.parent = null;
 
-        this.printedMilitarySkill = this.getPrintedSkill('military');
-        this.printedPoliticalSkill = this.getPrintedSkill('political');
+        this.printedPower = this.getPrintedSkill('military');
+        this.printedHp = this.getPrintedSkill('health');
         this.printedCost = parseInt(this.cardData.cost);
 
         if (!_.isNumber(this.printedCost) || isNaN(this.printedCost)) {
@@ -69,14 +69,14 @@ class DeckCard extends BaseCard {
         }
     }
 
-    getPrintedSkill(type) {
-        if (type === 'military') {
-            return this.cardData.military === null || this.cardData.military === undefined
+    getPrintedStat(type) {
+        if (type === StatType.Damage) {
+            return this.cardData.damage === null || this.cardData.damage === undefined
                 ? NaN
                 : isNaN(parseInt(this.cardData.military))
                 ? 0
                 : parseInt(this.cardData.military);
-        } else if (type === 'political') {
+        } else if (type === StatType.Hp) {
             return this.cardData.political === null || this.cardData.political === undefined
                 ? NaN
                 : isNaN(parseInt(this.cardData.political))
@@ -226,181 +226,117 @@ class DeckCard extends BaseCard {
         }
     }
 
-    // getBaseSkillModifiers() {
-    //     const baseModifierEffects = [
-    //         EffectNames.CopyCharacter,
-    //         EffectNames.CalculatePrintedMilitarySkill,
-    //         EffectNames.ModifyBaseMilitarySkillMultiplier,
-    //         EffectNames.ModifyBasePoliticalSkillMultiplier,
-    //         EffectNames.SetBaseMilitarySkill,
-    //         EffectNames.SetBasePoliticalSkill,
-    //         EffectNames.SetBaseDash,
-    //         EffectNames.SwitchBaseSkills,
-    //         EffectNames.SetBaseGlory
-    //     ];
+    /**
+     * Apply any modifiers that explicitly say they change the base skill value
+     */ 
+    getBaseStatModifiers() {
+        const baseModifierEffects = [
+            EffectNames.CopyCharacter,
+            EffectNames.CalculatePrintedPower,
+            EffectNames.SetBasePower,
+            EffectNames.SetBaseHp
+        ];
 
-    //     let baseEffects = this.getRawEffects().filter((effect) => baseModifierEffects.includes(effect.type));
-    //     let baseMilitaryModifiers = [StatModifier.fromCard(this.printedMilitarySkill, this, 'Printed skill', false)];
-    //     let basePoliticalModifiers = [StatModifier.fromCard(this.printedPoliticalSkill, this, 'Printed skill', false)];
-    //     let baseMilitarySkill = this.printedMilitarySkill;
-    //     let basePoliticalSkill = this.printedPoliticalSkill;
+        let baseEffects = this.getRawEffects().filter((effect) => baseModifierEffects.includes(effect.type));
+        let basePowerModifiers = [StatModifier.fromCard(this.printedPower, this, 'Printed power', false)];
+        let baseHpModifiers = [StatModifier.fromCard(this.printedHp, this, 'Printed hp', false)];
+        let basePower = this.printedPower;
+        let baseHp = this.printedHp;
 
-    //     baseEffects.forEach((effect) => {
-    //         switch (effect.type) {
-    //             case EffectNames.CalculatePrintedMilitarySkill: {
-    //                 let skillFunction = effect.getValue(this);
-    //                 let calculatedSkillValue = skillFunction(this);
-    //                 baseMilitarySkill = calculatedSkillValue;
-    //                 baseMilitaryModifiers = baseMilitaryModifiers.filter(
-    //                     (mod) => !mod.name.startsWith('Printed skill')
-    //                 );
-    //                 baseMilitaryModifiers.push(
-    //                     StatModifier.fromEffect(
-    //                         baseMilitarySkill,
-    //                         effect,
-    //                         false,
-    //                         `Printed skill due to ${StatModifier.getEffectName(effect)}`
-    //                     )
-    //                 );
-    //                 break;
-    //             }
-    //             case EffectNames.CopyCharacter: {
-    //                 let copiedCard = effect.getValue(this);
-    //                 baseMilitarySkill = copiedCard.getPrintedSkill('military');
-    //                 basePoliticalSkill = copiedCard.getPrintedSkill('political');
-    //                 // replace existing base or copied modifier
-    //                 baseMilitaryModifiers = baseMilitaryModifiers.filter(
-    //                     (mod) => !mod.name.startsWith('Printed skill')
-    //                 );
-    //                 basePoliticalModifiers = basePoliticalModifiers.filter(
-    //                     (mod) => !mod.name.startsWith('Printed skill')
-    //                 );
-    //                 baseMilitaryModifiers.push(
-    //                     StatModifier.fromEffect(
-    //                         baseMilitarySkill,
-    //                         effect,
-    //                         false,
-    //                         `Printed skill from ${copiedCard.name} due to ${StatModifier.getEffectName(effect)}`
-    //                     )
-    //                 );
-    //                 basePoliticalModifiers.push(
-    //                     StatModifier.fromEffect(
-    //                         basePoliticalSkill,
-    //                         effect,
-    //                         false,
-    //                         `Printed skill from ${copiedCard.name} due to ${StatModifier.getEffectName(effect)}`
-    //                     )
-    //                 );
-    //                 break;
-    //             }
-    //             case EffectNames.SetBaseDash:
-    //                 if (effect.getValue(this) === 'military') {
-    //                     baseMilitaryModifiers.push(
-    //                         StatModifier.fromEffect(undefined, effect, true, StatModifier.getEffectName(effect))
-    //                     );
-    //                     baseMilitarySkill = NaN;
-    //                 }
-    //                 if (effect.getValue(this) === 'political') {
-    //                     basePoliticalModifiers.push(
-    //                         StatModifier.fromEffect(undefined, effect, true, StatModifier.getEffectName(effect))
-    //                     );
-    //                     basePoliticalSkill = NaN;
-    //                 }
-    //                 break;
-    //             case EffectNames.SetBaseMilitarySkill:
-    //                 baseMilitarySkill = effect.getValue(this);
-    //                 baseMilitaryModifiers.push(
-    //                     StatModifier.fromEffect(
-    //                         baseMilitarySkill,
-    //                         effect,
-    //                         true,
-    //                         `Base set by ${StatModifier.getEffectName(effect)}`
-    //                     )
-    //                 );
-    //                 break;
-    //             case EffectNames.SetBasePoliticalSkill:
-    //                 basePoliticalSkill = effect.getValue(this);
-    //                 basePoliticalModifiers.push(
-    //                     StatModifier.fromEffect(
-    //                         basePoliticalSkill,
-    //                         effect,
-    //                         true,
-    //                         `Base set by ${StatModifier.getEffectName(effect)}`
-    //                     )
-    //                 );
-    //                 break;
-    //             case EffectNames.SwitchBaseSkills: {
-    //                 const milChange = Math.max(basePoliticalSkill, 0) - Math.max(baseMilitarySkill, 0);
-    //                 const polChange = Math.max(baseMilitarySkill, 0) - Math.max(basePoliticalSkill, 0);
-    //                 baseMilitarySkill += milChange;
-    //                 basePoliticalSkill += polChange;
-    //                 baseMilitaryModifiers.push(
-    //                     StatModifier.fromEffect(
-    //                         milChange,
-    //                         effect,
-    //                         false,
-    //                         `Base due to ${StatModifier.getEffectName(effect)}`
-    //                     )
-    //                 );
-    //                 basePoliticalModifiers.push(
-    //                     StatModifier.fromEffect(
-    //                         polChange,
-    //                         effect,
-    //                         false,
-    //                         `Base due to ${StatModifier.getEffectName(effect)}`
-    //                     )
-    //                 );
-    //                 break;
-    //             }
-    //             case EffectNames.ModifyBaseMilitarySkillMultiplier: {
-    //                 const milChange = (effect.getValue(this) - 1) * baseMilitarySkill;
-    //                 baseMilitarySkill += milChange;
-    //                 baseMilitaryModifiers.push(
-    //                     StatModifier.fromEffect(
-    //                         milChange,
-    //                         effect,
-    //                         false,
-    //                         `Base due to ${StatModifier.getEffectName(effect)}`
-    //                     )
-    //                 );
-    //                 break;
-    //             }
-    //             case EffectNames.ModifyBasePoliticalSkillMultiplier: {
-    //                 const polChange = (effect.getValue(this) - 1) * basePoliticalSkill;
-    //                 basePoliticalSkill += polChange;
-    //                 basePoliticalModifiers.push(
-    //                     StatModifier.fromEffect(
-    //                         polChange,
-    //                         effect,
-    //                         false,
-    //                         `Base due to ${StatModifier.getEffectName(effect)}`
-    //                     )
-    //                 );
-    //                 break;
-    //             }
-    //         }
-    //     });
+        baseEffects.forEach((effect) => {
+            switch (effect.type) {
+                // this case is for cards that don't have a default printed power but it is instead calculated
+                case EffectNames.CalculatePrintedPower: {
+                    let damageFunction = effect.getValue(this);
+                    let calculatedDamageValue = damageFunction(this);
+                    basePower = calculatedDamageValue;
+                    basePowerModifiers = basePowerModifiers.filter(
+                        (mod) => !mod.name.startsWith('Printed power')
+                    );
+                    basePowerModifiers.push(
+                        StatModifier.fromEffect(
+                            basePower,
+                            effect,
+                            false,
+                            `Printed power due to ${StatModifier.getEffectName(effect)}`
+                        )
+                    );
+                    break;
+                }
+                case EffectNames.CopyCharacter: {
+                    let copiedCard = effect.getValue(this);
+                    basePower = copiedCard.getPrintedStat(StatType.Power);
+                    baseHp = copiedCard.getPrintedStat(StatType.Hp);
+                    // replace existing base or copied modifier
+                    basePowerModifiers = basePowerModifiers.filter(
+                        (mod) => !mod.name.startsWith('Printed stat')
+                    );
+                    baseHpModifiers = baseHpModifiers.filter(
+                        (mod) => !mod.name.startsWith('Printed stat')
+                    );
+                    basePowerModifiers.push(
+                        StatModifier.fromEffect(
+                            basePower,
+                            effect,
+                            false,
+                            `Printed skill from ${copiedCard.name} due to ${StatModifier.getEffectName(effect)}`
+                        )
+                    );
+                    baseHpModifiers.push(
+                        StatModifier.fromEffect(
+                            baseHp,
+                            effect,
+                            false,
+                            `Printed skill from ${copiedCard.name} due to ${StatModifier.getEffectName(effect)}`
+                        )
+                    );
+                    break;
+                }
+                case EffectNames.SetBasePower:
+                    basePower = effect.getValue(this);
+                    basePowerModifiers.push(
+                        StatModifier.fromEffect(
+                            basePower,
+                            effect,
+                            true,
+                            `Base power set by ${StatModifier.getEffectName(effect)}`
+                        )
+                    );
+                    break;
+                case EffectNames.SetBaseHp:
+                    baseHp = effect.getValue(this);
+                    baseHpModifiers.push(
+                        StatModifier.fromEffect(
+                            baseHp,
+                            effect,
+                            true,
+                            `Base HP set by ${StatModifier.getEffectName(effect)}`
+                        )
+                    );
+                    break;
+            }
+        });
 
-    //     let overridingMilModifiers = baseMilitaryModifiers.filter((mod) => mod.overrides);
-    //     if (overridingMilModifiers.length > 0) {
-    //         let lastModifier = _.last(overridingMilModifiers);
-    //         baseMilitaryModifiers = [lastModifier];
-    //         baseMilitarySkill = lastModifier.amount;
-    //     }
-    //     let overridingPolModifiers = basePoliticalModifiers.filter((mod) => mod.overrides);
-    //     if (overridingPolModifiers.length > 0) {
-    //         let lastModifier = _.last(overridingPolModifiers);
-    //         basePoliticalModifiers = [lastModifier];
-    //         basePoliticalSkill = lastModifier.amount;
-    //     }
+        let overridingPowerModifiers = basePowerModifiers.filter((mod) => mod.overrides);
+        if (overridingPowerModifiers.length > 0) {
+            let lastModifier = _.last(overridingPowerModifiers);
+            basePowerModifiers = [lastModifier];
+            basePower = lastModifier.amount;
+        }
+        let overridingHpModifiers = baseHpModifiers.filter((mod) => mod.overrides);
+        if (overridingHpModifiers.length > 0) {
+            let lastModifier = _.last(overridingHpModifiers);
+            baseHpModifiers = [lastModifier];
+            baseHp = lastModifier.amount;
+        }
 
-    //     return {
-    //         baseMilitaryModifiers: baseMilitaryModifiers,
-    //         baseMilitarySkill: baseMilitarySkill,
-    //         basePoliticalModifiers: basePoliticalModifiers,
-    //         basePoliticalSkill: basePoliticalSkill
-    //     };
-    // }
+        return {
+            basePowerModifiers: basePowerModifiers,
+            basePower: basePower,
+            baseHpModifiers: baseHpModifiers,
+            BaseHp: baseHp
+        };
+    }
 
     getStatusTokenSkill() {
         let modifiers = this.getStatusTokenModifiers();
@@ -563,7 +499,7 @@ class DeckCard extends BaseCard {
         if (!this.showStats) {
             return {};
         }
-        let modifiers = this.getMilitaryModifiers().map((modifier) => Object.assign({}, modifier));
+        let modifiers = this.getPowerModifiers().map((modifier) => Object.assign({}, modifier));
         let skill = modifiers.reduce((total, modifier) => total + modifier.amount, 0);
         return {
             stat: isNaN(skill) ? '-' : Math.max(skill, 0).toString(),
@@ -584,12 +520,12 @@ class DeckCard extends BaseCard {
         };
     }
 
-    get militarySkill() {
-        return this.getMilitarySkill();
+    get power() {
+        return this.getPower();
     }
 
-    getMilitarySkill(floor = true) {
-        let modifiers = this.getMilitaryModifiers();
+    getPower(floor = true, excludeModifiers = []) {
+        let modifiers = this.getPowerModifiers(excludeModifiers);
         let skill = modifiers.reduce((total, modifier) => total + modifier.amount, 0);
         if (isNaN(skill)) {
             return 0;
@@ -597,65 +533,126 @@ class DeckCard extends BaseCard {
         return floor ? Math.max(0, skill) : skill;
     }
 
-    getMilitarySkillExcludingModifiers(exclusions, floor = true) {
-        if (!Array.isArray(exclusions) && typeof exclusions !== 'function') {
-            exclusions = [exclusions];
-        }
-        let modifiers = this.getMilitaryModifiers(exclusions);
-        let skill = modifiers.reduce((total, modifier) => total + modifier.amount, 0);
-        if (isNaN(skill)) {
-            return 0;
-        }
-        return floor ? Math.max(0, skill) : skill;
+    get basePower() {
+        return this.getBasePower();
     }
 
-    get politicalSkill() {
-        return this.getPoliticalSkill();
-    }
-
-    getPoliticalSkill(floor = true) {
-        let modifiers = this.getPoliticalModifiers();
-        let skill = modifiers.reduce((total, modifier) => total + modifier.amount, 0);
-        if (isNaN(skill)) {
-            return 0;
-        }
-        return floor ? Math.max(0, skill) : skill;
-    }
-
-    getPoliticalSkillExcludingModifiers(exclusions, floor = true) {
-        if (!Array.isArray(exclusions) && typeof exclusions !== 'function') {
-            exclusions = [exclusions];
-        }
-        let modifiers = this.getPoliticalModifiers(exclusions);
-        let skill = modifiers.reduce((total, modifier) => total + modifier.amount, 0);
-        if (isNaN(skill)) {
-            return 0;
-        }
-        return floor ? Math.max(0, skill) : skill;
-    }
-
-    get baseMilitarySkill() {
-        return this.getBaseMilitarySkill();
-    }
-
-    getBaseMilitarySkill() {
-        let skill = this.getBaseSkillModifiers().baseMilitarySkill;
+    getBasePower() {
+        let skill = this.getBaseStatModifiers().basePower;
         if (isNaN(skill)) {
             return 0;
         }
         return Math.max(0, skill);
     }
 
-    get basePoliticalSkill() {
-        return this.getBasePoliticalSkill();
+    getPowerModifiers(exclusions) {
+        let baseStatModifiers = this.getBaseStatModifiers();
+        if (isNaN(baseStatModifiers.basePower)) {
+            return baseStatModifiers.basePowerModifiers;
+        }
+
+        if (!exclusions) {
+            exclusions = [];
+        }
+
+        let rawEffects;
+        if (typeof exclusions === 'function') {
+            rawEffects = this.getRawEffects().filter((effect) => !exclusions(effect));
+        } else {
+            rawEffects = this.getRawEffects().filter((effect) => !exclusions.includes(effect.type));
+        }
+
+        // set effects
+        let setEffects = rawEffects.filter(
+            (effect) => effect.type === EffectNames.SetPower
+        );
+        if (setEffects.length > 0) {
+            let latestSetEffect = _.last(setEffects);
+            let setAmount = latestSetEffect.getValue(this);
+            return [
+                StatModifier.fromEffect(
+                    setAmount,
+                    latestSetEffect,
+                    true,
+                    `Set by ${StatModifier.getEffectName(latestSetEffect)}`
+                )
+            ];
+        }
+
+        let modifiers = baseStatModifiers.baseMilitaryModifiers;
+
+        // skill modifiers
+        // TODO: remove status tokens completely, upgrades completely cover that category
+        let modifierEffects = rawEffects.filter(
+            (effect) =>
+                effect.type === EffectNames.UpgradePowerModifier ||
+                effect.type === EffectNames.ModifyPower
+        );
+        modifierEffects.forEach((modifierEffect) => {
+            const value = modifierEffect.getValue(this);
+            modifiers.push(StatModifier.fromEffect(value, modifierEffect));
+        });
+
+        return modifiers;
     }
 
-    getBasePoliticalSkill() {
-        let skill = this.getBaseSkillModifiers().basePoliticalSkill;
+    get hp() {
+        return this.getHp();
+    }
+
+    getHp(floor = true, excludeModifiers = []) {
+        let modifiers = this.getPowerModifiers(excludeModifiers);
+        let skill = modifiers.reduce((total, modifier) => total + modifier.amount, 0);
+        if (isNaN(skill)) {
+            return 0;
+        }
+        return floor ? Math.max(0, skill) : skill;
+    }
+
+    get baseHp() {
+        return this.getBaseHp();
+    }
+
+    getBaseHp() {
+        let skill = this.getBaseStatModifiers().basePoliticalSkill;
         if (isNaN(skill)) {
             return 0;
         }
         return Math.max(0, skill);
+    }
+
+    getHpModifiers(exclusions) {
+        let baseStatModifiers = this.getBaseStatModifiers();
+        if (isNaN(baseStatModifiers.baseHp)) {
+            return baseStatModifiers.baseHpModifiers;
+        }
+
+        if (!exclusions) {
+            exclusions = [];
+        }
+
+        let rawEffects;
+        if (typeof exclusions === 'function') {
+            rawEffects = this.getRawEffects().filter((effect) => !exclusions(effect));
+        } else {
+            rawEffects = this.getRawEffects().filter((effect) => !exclusions.includes(effect.type));
+        }
+
+        let modifiers = baseStatModifiers.baseMilitaryModifiers;
+
+        // skill modifiers
+        // TODO: remove status tokens completely, upgrades completely cover that category
+        let modifierEffects = rawEffects.filter(
+            (effect) =>
+                effect.type === EffectNames.UpgradeHpModifier ||
+                effect.type === EffectNames.ModifyHp
+        );
+        modifierEffects.forEach((modifierEffect) => {
+            const value = modifierEffect.getValue(this);
+            modifiers.push(StatModifier.fromEffect(value, modifierEffect));
+        });
+
+        return modifiers;
     }
 
     exhaust() {

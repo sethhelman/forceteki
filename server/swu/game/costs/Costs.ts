@@ -57,6 +57,13 @@ export interface Cost {
     pay?(context: TriggeredAbilityContext): void;
 }
 
+/**
+ * Cost that will bow the card that initiated the ability.
+ */
+export function exhaustSelf(): Cost {
+    return new GameActionCost(GameActions.exhaust());
+}
+
 // /**
 //  * Cost that will sacrifice the card that initiated the ability.
 //  */

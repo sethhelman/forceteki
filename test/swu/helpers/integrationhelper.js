@@ -173,6 +173,7 @@ global.integration = function (definitions) {
                 this.player2.damageToBase = options.player2.damageToBase ?? 0;
 
                 // set cards below - the playerinteractionwrapper will convert string names to real cards
+                // TODO: need to redesign the below, it's unintuitive to read and will probably lead to unintended side effects
 
                 //Field
                 this.player1.groundArena = options.player1.groundArena;

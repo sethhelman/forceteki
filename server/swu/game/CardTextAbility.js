@@ -1,10 +1,10 @@
-const AbilityLimit = require('./AbilityLimit');
-const AbilityDsl = require('./abilitydsl');
-const ThenAbility = require('./ThenAbility');
+const AbilityLimit = require('./AbilityLimit.js');
+const AbilityDsl = require('./abilitydsl.js');
+const ThenAbility = require('./ThenAbility.js');
 const Costs = require('./costs/Costs.js');
-const { Locations, CardTypes, EffectNames, WildcardLocations } = require('./Constants');
+const { Locations, CardTypes, EffectNames, WildcardLocations } = require('./Constants.js');
 
-class CardAbility extends ThenAbility {
+class CardTextAbility extends ThenAbility {
     constructor(game, card, properties) {
         super(game, card, properties);
 
@@ -230,4 +230,4 @@ class CardAbility extends ThenAbility {
     }
 }
 
-module.exports = CardAbility;
+module.exports = CardTextAbility;

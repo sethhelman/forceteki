@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import { EventNames } from './Constants';
 import Player from './player';
-import type CardAbility from './CardAbility';
+import type CardAbility from './CardTextAbility';
 
 export interface AbilityLimit {
     ability?: CardAbility;

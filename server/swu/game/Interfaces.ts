@@ -3,7 +3,8 @@ import type { TriggeredAbilityContext } from './TriggeredAbilityContext';
 import type { GameAction } from './gameActions/GameAction';
 import type BaseCard = require('./card/basecard');
 import type DeckCard = require('./card/deckcard');
-import type CardAbility = require('./CardAbility');
+import type CardAbility = require('./CardTextAbility');
+import type { AttackProperties } from './gameActions/AttackAction';
 import type { Players, TargetModes, CardTypes, Locations, EventNames, Phases } from './Constants';
 // import type { StatusToken } from './StatusToken';
 import type Player = require('./player');
@@ -33,6 +34,13 @@ interface TargetAbility extends BaseTarget {
     cardType?: CardTypes | CardTypes[];
     cardCondition?: (card: BaseCard, context?: AbilityContext) => boolean;
     abilityCondition?: (ability: CardAbility) => boolean;
+}
+
+export interface InitiateAttack extends AttackProperties {
+    opponentChoosesAttackTarget?: boolean;
+    opponentChoosesAttacker?: boolean;
+    attackerCondition?: (card: DeckCard, context: TriggeredAbilityContext) => boolean;
+    targetCondition?: (card: DeckCard, context: TriggeredAbilityContext) => boolean;
 }
 
 // interface TargetToken extends BaseTarget {

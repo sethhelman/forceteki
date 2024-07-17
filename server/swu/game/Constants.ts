@@ -54,6 +54,11 @@ export enum PlayTypes {
     Smuggle = 'smuggle'
 }
 
+export enum StatType {
+    Power = 'power',
+    Hp = 'hp'
+}
+
 export enum EffectNames {
     AbilityRestrictions = 'abilityRestrictions',
     ChangeType = 'changeType',
@@ -62,20 +67,30 @@ export enum EffectNames {
     EntersPlayForOpponent = 'entersPlayForOpponent',
     CostReducer = 'costReducer',
     CanPlayFromOutOfPlay = 'canPlayFromOutOfPlay',
-    DoesNotReady = 'doesnotready',
+    DoesNotReady = 'doesNotReady',
     Blank = 'blank',
-    AddKeyword = 'addkeyword',
-    LoseKeyword = 'losekeyword',
-    CopyCharacter = 'copycharacter',
-    GainAbility = 'gainability',
-    CanBeTriggeredByOpponent = 'canbetriggeredbyopponent',
-    UnlessActionCost = 'unlessactioncost',
-    MustBeChosen = 'mustbechosen',
-    TakeControl = 'takecontrol',
-    AdditionalAction = 'additionalaction',
-    AdditionalActionAfterWindowCompleted = 'additionalactionafterwindowcompleted',
-    AdditionalTriggerCost = 'additionaltriggercost',
-    AdditionalPlayCost = 'additionalplaycost',
+    AddKeyword = 'addKeyword',
+    LoseKeyword = 'loseKeyword',
+    CopyCharacter = 'copyCharacter',
+    GainAbility = 'gainAbility',
+    CanBeTriggeredByOpponent = 'canBeTriggeredByOpponent',
+    UnlessActionCost = 'unlessActionCost',
+    MustBeChosen = 'mustBeChosen',
+    TakeControl = 'takeControl',
+    AdditionalAction = 'additionalActions',
+    AdditionalActionAfterWindowCompleted = 'additionalActionsAfterWindowCompleted',
+    AdditionalTriggerCost = 'additionalTriggercost',
+    AdditionalPlayCost = 'additionalDlaycost',
+    ModifyPower = 'modifyPower',
+    SetBasePower = 'setBasePower',
+    SetPower = 'setPower',
+    CalculatePrintedPower = 'calculatePrintedDamge',
+    SetBaseHp = 'setBaseHp',
+    ModifyHp = 'modifyHp',
+    UpgradePowerModifier = 'upgradePowerModifier',
+    UpgradeHpModifier = 'upgradeHpModifier',
+    CanAttackGroundArenaFromSpaceArena = 'CanAttackGroundArenaFromSpaceArena',
+    CanAttackSpaceArenaFromGroundArena = 'CanAttackSpaceArenaFromGroundArena'
 }
 
 export enum Durations {
@@ -158,6 +173,7 @@ export enum EventNames {
     Unnamed = 'unnamedEvent',
     OnAbilityResolverInitiated = 'onAbilityResolverInitiated',
     OnSpendResources = 'onSpendResources',
+    OnAttackInitiated = 'onAttackInitiated'
 }
 
 export enum AbilityTypes {
