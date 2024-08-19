@@ -6,6 +6,7 @@ const mkdirp = require('mkdirp');
 const path = require('path');
 const cliProgress = require('cli-progress');
 
+const pathToEnum = path.join(__dirname, '../server/enum');
 const pathToJSON = path.join(__dirname, '../test/json/');
 
 function getAttributeNames(attributeList) {
@@ -24,7 +25,7 @@ function filterValues(card) {
     }
 
     // filtering out TWI for now since the cards don't have complete data
-    if (card.attributes.expansion.data.attributes.code === 'TWI') {
+    if (card.attributes.expansion.data.attributes.code === 'TWI' || card.attributes.expansion.data.attributes.code === 'C24') {
         return null;
     }
 
@@ -39,6 +40,7 @@ function filterValues(card) {
     filteredObj.traits = getAttributeNames(card.attributes.traits);
     filteredObj.arena = getAttributeNames(card.attributes.arenas)[0];
     filteredObj.keywords = getAttributeNames(card.attributes.keywords);
+    filteredObj.expansion = card.attributes.expansion.data.attributes.code;
 
     // if a card has multiple types it will be still in one string, like 'token upgrade'
     filteredObj.types = getAttributeNames(card.attributes.type).split(' ');
@@ -90,6 +92,7 @@ async function main() {
     var seenNames = [];
     var duplicatesWithSetCode = {};
     var uniqueCards = [];
+    var enumMap = new Map();
     for (const card of cards) {
         if (seenNames.includes(card.internalName)) {
             if (duplicatesWithSetCode[card.internalName] === null) {
@@ -101,6 +104,10 @@ async function main() {
 
         seenNames.push(card.internalName);
         cardMap.push({ id: card.id, internalName: card.internalName, title: card.title, subtitle: card.subtitle });
+        var set = card.expansion;
+        var setArr = enumMap.has(set) ? enumMap.get(set) : new Array();
+        setArr.push(card);
+        enumMap.set(set, setArr);
         uniqueCards.push(card);
     }
 
@@ -116,6 +123,32 @@ async function main() {
     }));
 
     fileWriteProgressBar.stop();
+
+    var enumString = '';
+    enumMap.forEach((value, key) => {
+        var first = true;
+        enumString += 'export enum ' + key + ' { ';
+        value.forEach((card) => {
+            if (!first) {
+                enumString += ', ';
+            } else {
+                first = false;
+            }
+            var title = card.title;
+            if (card.types.includes('leader')) {
+                enumString += 'Leader';
+            }
+            if ((/^\d/).test(title)) {
+                enumString += '_';
+            }
+            enumString += title.replace(/[^A-Z0-9]+/ig, '') + ' = \'' + card.internalName + '\'';
+        });
+        enumString += ' } \n\n';
+    });
+
+    fs.writeFile(path.join(pathToEnum, 'CardEnums.ts'), enumString);
+
+    // fileWriteProgressBar.stop();
 
     // TODO: better way to handle duplicates between sets
     // if (duplicatesWithSetCode) {
