@@ -108,7 +108,8 @@ function parseNumericKeywordValueIfEnabled(keyword: KeywordName, cardText: strin
 
 function getRegexForKeyword(keyword: KeywordName) {
     // these regexes check that the keyword is starting on its own line, indicating that it's not part of an ability text
-    // for numeric keywords, the regex also grabs the numeric value after the keyword as a capture group
+    // for numeric keywords, the regex also grabs the numeric value after the keyword as a capture group. For Smuggle,
+    // this also captures the aspects that are part of the Smuggle cost.
 
     switch (keyword) {
         case KeywordName.Ambush:
@@ -129,7 +130,8 @@ function getRegexForKeyword(keyword: KeywordName) {
             return /(?:^|(?:\n))Sentinel/g;
         case KeywordName.Shielded:
             return /(?:^|(?:\n))Shielded/g;
-        case KeywordName.Smuggle:   // TODO SMUGGLE: regex
+        case KeywordName.Smuggle:
+            return /(?:\n)?Smuggle\s\[\s*(\d+)\s+resources\s+([\w\s]+)/g;
         default:
             throw new Error(`Keyword '${keyword}' is not implemented yet`);
     }

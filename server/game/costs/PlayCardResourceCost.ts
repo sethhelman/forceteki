@@ -1,5 +1,5 @@
 import { AbilityContext } from '../core/ability/AbilityContext';
-import { EventName, Location, RelativePlayer } from '../core/Constants';
+import { EventName, Location, PlayType, RelativePlayer } from '../core/Constants';
 import type { ICost, Result } from '../core/cost/ICost';
 import { GameEvent } from '../core/event/GameEvent';
 
@@ -9,12 +9,12 @@ import { GameEvent } from '../core/event/GameEvent';
  */
 export class PlayCardResourceCost implements ICost {
     public isPlayCost = true;
-    public isPrintedResourceCost = true;
+    public isPrintedResourceCost = PlayType.PlayFromHand === this.playType;
 
     // used for extending this class if any cards have unique after pay hooks
     protected afterPayHook?: ((event: any) => void) = null;
 
-    public constructor(public ignoreType: boolean) {}
+    public constructor(public ignoreType: boolean, public playType: PlayType) {}
 
     public canPay(context: AbilityContext): boolean {
         if (context.source.printedCost === null) {

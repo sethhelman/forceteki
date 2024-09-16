@@ -1,5 +1,5 @@
 import { AbilityContext } from '../core/ability/AbilityContext';
-import { EventName, Location, RelativePlayer, TargetMode } from '../core/Constants';
+import { EventName, Location, PlayType, RelativePlayer, TargetMode } from '../core/Constants';
 import { GameEvent } from '../core/event/GameEvent';
 import { CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
 import { GameSystem } from '../core/gameSystem/GameSystem';
@@ -233,7 +233,7 @@ export function putSelfIntoPlay(): ICost {
  * matching adjuster effects will expire, if applicable.
  */
 export function payPlayCardResourceCost(ignoreType = false): ICost {
-    return new PlayCardResourceCost(ignoreType);
+    return new PlayCardResourceCost(ignoreType, PlayType.PlayFromHand);
 }
 
 // /**
