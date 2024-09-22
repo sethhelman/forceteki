@@ -1,10 +1,11 @@
 import Contract from '../../utils/Contract';
-import { CardConstructor } from '../Card';
+import { Card, CardConstructor } from '../Card';
 
 /** Mixin function that adds the `cost` property to a base class. */
 export function WithCost<TBaseClass extends CardConstructor>(BaseClass: TBaseClass) {
     return class WithCost extends BaseClass {
         private readonly _printedCost: number;
+        private readonly _smuggleCost: number;
 
         public get cost(): number {
             return this._printedCost;

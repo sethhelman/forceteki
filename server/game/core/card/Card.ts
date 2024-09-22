@@ -11,7 +11,7 @@ import * as Helpers from '../utils/Helpers';
 import { AbilityContext } from '../ability/AbilityContext';
 import CardAbility from '../ability/CardAbility';
 import type Shield from '../../cards/01_SOR/Shield';
-import { KeywordInstance } from '../ability/KeywordInstance';
+import { KeywordInstance, KeywordWithCostValues } from '../ability/KeywordInstance';
 import * as KeywordHelpers from '../ability/KeywordHelpers';
 import { StateWatcherRegistrar } from '../stateWatcher/StateWatcherRegistrar';
 import type { EventCard } from './EventCard';
@@ -38,6 +38,9 @@ export class Card extends OngoingEffectSource {
     public static implemented = false;
 
     public readonly aspects: Aspect[] = [];
+    public readonly smuggleAspects?: Aspect[];
+    public readonly smuggleCost?: number;
+    public readonly additionalSmuggleCosts?: boolean;
     public readonly internalName: string;
     public readonly subtitle?: string;
     public readonly title: string;
@@ -106,6 +109,12 @@ export class Card extends OngoingEffectSource {
         this.printedKeywords = KeywordHelpers.parseKeywords(cardData.keywords,
             this.printedType === CardType.Leader ? cardData.deployBox : cardData.text,
             this.internalName);
+
+        if (this.hasSomeKeyword(KeywordName.Smuggle)) {
+            const smuggleKeyword = this.getKeyword(KeywordName.Smuggle) as KeywordWithCostValues;
+            this.smuggleAspects = smuggleKeyword.costAspects;
+            this.additionalSmuggleCosts = smuggleKeyword.additionalCosts;
+        }
 
         if (this.isToken()) {
             this._location = Location.OutsideTheGame;
@@ -302,6 +311,10 @@ export class Card extends OngoingEffectSource {
         }
 
         return keywords;
+    }
+
+    public getKeyword(keywordName: KeywordName): KeywordInstance {
+        return this.getKeywords().find((keyword) => keyword.valueOf() === keywordName);
     }
 
     public hasSomeKeyword(keywords: Set<KeywordName> | KeywordName | KeywordName[]): boolean {

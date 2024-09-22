@@ -366,7 +366,7 @@ class Game extends EventEmitter {
         this.pipeline.handleCardClicked(player, card);
     }
 
-    // TODO SMUGGLE: implementation of this
+    // TODO SMUGGLE: Is this needed?
     // facedownCardClicked(playerName, location, controllerName, isProvince = false) {
     //     let player = this.getPlayerByName(playerName);
     //     let controller = this.getPlayerByName(controllerName);

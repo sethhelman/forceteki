@@ -616,7 +616,7 @@ class Player extends GameObject {
     getAdjustedCost(playingType, card, target, ignoreType = false) {
         // if any aspect penalties, check modifiers for them separately
         let aspectPenaltiesTotal = 0;
-        let penaltyAspects = this.getPenaltyAspects(card.aspects);
+        let penaltyAspects = playingType === PlayType.Smuggle ? this.getPenaltyAspects(card.smuggleAspects) : this.getPenaltyAspects(card.aspects);
         for (const aspect of penaltyAspects) {
             aspectPenaltiesTotal += this.runAdjustersForCostType(playingType, 2, card, target, ignoreType, aspect);
         }

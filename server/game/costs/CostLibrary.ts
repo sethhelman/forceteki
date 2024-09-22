@@ -228,12 +228,21 @@ export function putSelfIntoPlay(): ICost {
 // }
 
 /**
- * Cost that will pay the printed fate cost on the card minus any active
+ * Cost that will pay the printed cost on the card minus any active
  * adjuster effects the play has activated. Upon playing the card, all
  * matching adjuster effects will expire, if applicable.
  */
 export function payPlayCardResourceCost(ignoreType = false): ICost {
     return new PlayCardResourceCost(ignoreType, PlayType.PlayFromHand);
+}
+
+/**
+ * Cost that will pay the printed Smuggle cost on the card minus any active
+ * adjuster effects the play has activated. Upon playing the card, all
+ * matching adjuster effects will expire, if applicable.
+ */
+export function paySmuggleCost(ignoreType = false): ICost {
+    return new PlayCardResourceCost(ignoreType, PlayType.Smuggle);
 }
 
 // /**

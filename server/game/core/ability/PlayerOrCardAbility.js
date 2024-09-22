@@ -180,7 +180,7 @@ class PlayerOrCardAbility {
 
     getCosts(context, playCosts = true, triggerCosts = true) {
         let costs = this.cost.map((a) => a);
-        if (context.ignoreResourceCost) {
+        if (context.ignoreResourceCost) { //TODO: Should this filter out Smuggle Costs too?
             costs = costs.filter((cost) => !cost.isPrintedResourceCost);
         }
 

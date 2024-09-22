@@ -10,6 +10,7 @@ import { GameEvent } from '../core/event/GameEvent';
 export class PlayCardResourceCost implements ICost {
     public isPlayCost = true;
     public isPrintedResourceCost = PlayType.PlayFromHand === this.playType;
+    public isSmuggleCost = PlayType.Smuggle === this.playType;
 
     // used for extending this class if any cards have unique after pay hooks
     protected afterPayHook?: ((event: any) => void) = null;

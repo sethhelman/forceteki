@@ -2,7 +2,7 @@ import { IKeywordProperties } from '../../Interfaces';
 import { AbilityType, KeywordName } from '../Constants';
 import Contract from '../utils/Contract';
 import * as EnumHelpers from '../utils/EnumHelpers';
-import { KeywordInstance, KeywordWithNumericValue } from './KeywordInstance';
+import { KeywordInstance, KeywordWithCostValues, KeywordWithNumericValue } from './KeywordInstance';
 
 export function parseKeywords(expectedKeywordsRaw: string[], cardText: string, cardName: string): KeywordInstance[] {
     const expectedKeywords = EnumHelpers.checkConvertToEnum(expectedKeywordsRaw, KeywordName);
@@ -16,7 +16,10 @@ export function parseKeywords(expectedKeywordsRaw: string[], cardText: string, c
                 keywords.push(new KeywordWithNumericValue(keywordName, keywordValueOrNull));
             }
         } else if (keywordName === KeywordName.Smuggle) {
-            // TODO SMUGGLE: smuggle keyword creation
+            const smuggleValuesOrNull = parseSmuggleIfEnabled(keywordName, cardText, cardName);
+            if (smuggleValuesOrNull != null) {
+                keywords.push(smuggleValuesOrNull);
+            }
         } else {
             // default case is a keyword with no params
             if (isKeywordEnabled(keywordName, cardText, cardName)) {
@@ -106,6 +109,36 @@ function parseNumericKeywordValueIfEnabled(keyword: KeywordName, cardText: strin
     return Number(match.value[1]);
 }
 
+/**
+ * Checks if the Smuggle keyword is enabled and returns
+ *
+ * @returns null if the keyword is not enabled, or the numeric value if enabled
+ */
+function parseSmuggleIfEnabled(keyword: KeywordName, cardText: string, cardName: string): KeywordWithCostValues {
+    if (!Contract.assertTrue(KeywordName.Smuggle === keyword)) {
+        return null;
+    }
+
+    const regex = getRegexForKeyword(keyword);
+    const matchIter = cardText.matchAll(regex);
+
+    const match = matchIter.next();
+    if (match.done) {
+        return null;
+    }
+
+    if (matchIter.next().done !== true) {
+        throw new Error(`Expected to match at most one instance of enabled keyword ${keyword} in card ${cardName}, but found multiple`);
+    }
+
+    const smuggleCost = match.value[1];
+    const smuggleAspects = match.value[2];
+    const additionalSmuggleCosts = match.value[3] !== undefined;
+
+    // regex capture group will be numeric keyword value
+    return new KeywordWithCostValues(KeywordName.Smuggle, smuggleCost, smuggleAspects, additionalSmuggleCosts);
+}
+
 function getRegexForKeyword(keyword: KeywordName) {
     // these regexes check that the keyword is starting on its own line, indicating that it's not part of an ability text
     // for numeric keywords, the regex also grabs the numeric value after the keyword as a capture group. For Smuggle,
@@ -131,7 +164,7 @@ function getRegexForKeyword(keyword: KeywordName) {
         case KeywordName.Shielded:
             return /(?:^|(?:\n))Shielded/g;
         case KeywordName.Smuggle:
-            return /(?:\n)?Smuggle\s\[\s*(\d+)\s+resources\s+([\w\s]+)/g;
+            return /(?:\n)?Smuggle\s\[\s*(\d+)\s+resources\s+([\w\s]+)(,.*)?/g;
         default:
             throw new Error(`Keyword '${keyword}' is not implemented yet`);
     }
