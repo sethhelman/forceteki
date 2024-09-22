@@ -50,7 +50,7 @@ export class PlayCardResourceCost implements ICost {
         context.costs.resources = amount;
         return new GameEvent(EventName.OnSpendResources, { amount, context }, (event) => {
             event.context.player.markUsedAdjusters(context.playType, event.context.source);
-            event.context.player.exhaustResources(amount);
+            event.context.player.exhaustResources(amount, [event.context.source]);
 
             if (this.afterPayHook) {
                 this.afterPayHook(event);

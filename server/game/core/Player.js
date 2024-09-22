@@ -363,6 +363,13 @@ class Player extends GameObject {
     //     });
     // }
 
+    getTopCardOfDeck() {
+        if (this.drawDeck.length > 0) {
+            return this.drawDeck[0];
+        }
+        return;
+    }
+
     /**
      * Draws the passed number of cards from the top of the conflict deck into this players hand, shuffling and deducting honor if necessary
      * @param {number} numCards
@@ -614,7 +621,7 @@ class Player extends GameObject {
             aspectPenaltiesTotal += this.runAdjustersForCostType(playingType, 2, card, target, ignoreType, aspect);
         }
 
-        let penalizedCost = card.cost + aspectPenaltiesTotal;
+        let penalizedCost = (playingType === PlayType.Smuggle ? card.smuggleCost : card.cost) + aspectPenaltiesTotal;
         return this.runAdjustersForCostType(playingType, penalizedCost, card, target, ignoreType);
     }
 
@@ -880,9 +887,17 @@ class Player extends GameObject {
     /**
      * Exhaust the specified number of resources
      */
-    exhaustResources(count) {
+    exhaustResources(count, priorityResources = []) {
+        let priorityResourcesExhausted = 0;
         let readyResources = this.resources.filter((card) => !card.exhausted);
-        for (let i = 0; i < Math.min(count, readyResources.length); i++) {
+        if(priorityResources.length > 0) {
+            let foundResource = readyResources.find((resource) => priorityResources.includes(resource));
+            if(foundResource != undefined) {
+                foundResource.exhausted = true;
+                priorityResourcesExhausted++;
+            }
+        }
+        for (let i = 0; i < Math.min((count - priorityResourcesExhausted), readyResources.length); i++) {
             readyResources[i].exhausted = true;
         }
     }
