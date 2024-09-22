@@ -1,9 +1,8 @@
-import type { AbilityContext } from '../core/ability/AbilityContext.js';
 import { AbilityRestriction } from '../core/Constants.js';
 import { Card } from '../core/card/Card';
 import Contract from '../core/utils/Contract.js';
 import { EventCard } from '../core/card/EventCard.js';
-import { PlayCardContext, PlayCardAction } from '../core/ability/PlayCardAction.js';
+import { PlayCardContext } from '../core/ability/PlayCardAction.js';
 import { PlayCardFromHandAction } from '../core/ability/PlayCardFromHandAction.js';
 
 export class PlayEventAction extends PlayCardFromHandAction {
