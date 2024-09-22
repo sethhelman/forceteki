@@ -1,12 +1,13 @@
 import { AbilityContext } from '../core/ability/AbilityContext';
 import { PlayCardContext, PlayCardAction } from '../core/ability/PlayCardAction';
+import { PlayCardFromHandAction } from '../core/ability/PlayCardFromHandAction';
 import { Card } from '../core/card/Card';
 import { AbilityRestriction, EventName, Location, PhaseName, PlayType, RelativePlayer } from '../core/Constants';
 import { GameEvent } from '../core/event/GameEvent';
 import { payPlayCardResourceCost } from '../costs/CostLibrary';
 import { attachUpgrade } from '../gameSystems/GameSystemLibrary';
 
-export class PlayUpgradeAction extends PlayCardAction {
+export class PlayUpgradeAction extends PlayCardFromHandAction {
     // we pass in a targetResolver holding the attachUpgrade system so that the action will be blocked if there are no valid targets
     public constructor(card: Card) {
         super(card, 'Play this upgrade', [], { immediateEffect: attachUpgrade((context) => ({

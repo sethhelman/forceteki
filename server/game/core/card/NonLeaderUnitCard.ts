@@ -12,6 +12,7 @@ import { WithUnitProperties } from './propertyMixins/UnitProperties';
 import { InPlayCard } from './baseClasses/InPlayCard';
 import { WithStandardAbilitySetup } from './propertyMixins/StandardAbilitySetup';
 import { Card } from './Card';
+import { SmuggleUnitAction } from '../../actions/SmuggleUnitAction';
 
 const NonLeaderUnitCardParent = WithUnitProperties(WithCost(WithStandardAbilitySetup(InPlayCard)));
 
@@ -24,6 +25,9 @@ export class NonLeaderUnitCard extends NonLeaderUnitCardParent {
 
         this.defaultActions.push(new PlayUnitAction(this));
         // TODO: add smuggle action here
+        if (this.hasSomeKeyword(KeywordName.Smuggle)) {
+            this.defaultActions.push(new SmuggleUnitAction(this));
+        }
     }
 
     public override isNonLeaderUnit(): this is NonLeaderUnitCard {

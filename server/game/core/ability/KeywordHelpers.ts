@@ -1,5 +1,5 @@
 import { IKeywordProperties } from '../../Interfaces';
-import { AbilityType, KeywordName } from '../Constants';
+import { AbilityType, Aspect, KeywordName } from '../Constants';
 import Contract from '../utils/Contract';
 import * as EnumHelpers from '../utils/EnumHelpers';
 import { KeywordInstance, KeywordWithCostValues, KeywordWithNumericValue } from './KeywordInstance';
@@ -132,7 +132,8 @@ function parseSmuggleIfEnabled(keyword: KeywordName, cardText: string, cardName:
     }
 
     const smuggleCost = match.value[1];
-    const smuggleAspects = match.value[2];
+    const aspectString = match.value[2];
+    const smuggleAspects = EnumHelpers.checkConvertToEnum(aspectString.toLowerCase().split(' '), Aspect);
     const additionalSmuggleCosts = match.value[3] !== undefined;
 
     // regex capture group will be numeric keyword value

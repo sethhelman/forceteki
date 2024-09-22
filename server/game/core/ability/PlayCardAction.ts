@@ -9,22 +9,12 @@ import PlayerAction from './PlayerAction';
 export type PlayCardContext = AbilityContext & { onPlayCardSource: any };
 
 export abstract class PlayCardAction extends PlayerAction {
-    public constructor(card: Card, title: string, additionalCosts: ICost[] = [], targetResolver: IActionTargetResolver = null) {
-        super(card, title, additionalCosts.concat(CostLibrary.payPlayCardResourceCost()), targetResolver);
-    }
-
     public override meetsRequirements(context = this.createContext(), ignoredRequirements: string[] = []): string {
         if (
             !ignoredRequirements.includes('phase') &&
             context.game.currentPhase !== PhaseName.Action
         ) {
             return 'phase';
-        }
-        if (
-            !ignoredRequirements.includes('location') &&
-            !context.player.isCardInPlayableLocation(context.source, PlayType.PlayFromHand)
-        ) {
-            return 'location';
         }
         if (
             !ignoredRequirements.includes('cannotTrigger') &&

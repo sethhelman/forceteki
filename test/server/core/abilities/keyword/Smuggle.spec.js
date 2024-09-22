@@ -23,6 +23,7 @@ describe('Smuggle keyword', function() {
 
             it('a unit can be played for its smuggle cost', function () {
                 this.player1.clickCard(this.freetownBackup);
+                expect(this.player1.countExhaustedResources()).toBe(4);
                 expect(this.freetownBackup).toBeInLocation('ground arena');
             });
 

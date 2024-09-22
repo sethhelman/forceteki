@@ -3,11 +3,11 @@ import { putIntoPlay } from '../gameSystems/GameSystemLibrary.js';
 import { Card } from '../core/card/Card';
 import { GameEvent } from '../core/event/GameEvent.js';
 import { PlayCardContext } from '../core/ability/PlayCardAction.js';
-import { PlayCardFromHandAction } from '../core/ability/PlayCardFromHandAction.js';
+import { SmuggleCardAction } from '../core/ability/SmuggleCardAction.js';
 
-export class PlayUnitAction extends PlayCardFromHandAction {
+export class SmuggleUnitAction extends SmuggleCardAction {
     public constructor(card: Card) {
-        super(card, 'Play this unit');
+        super(card, 'Smuggle this unit');
     }
 
     public override executeHandler(context: PlayCardContext): void {
