@@ -55,7 +55,7 @@ describe('Relentless, Konstantine\'s Folly', function() {
                 this.player2.clickCard(this.vanquish);
                 expect(this.relentless).toBeInLocation('discard');
             });
-
+            
             it('should not nullify an event played by its controller', function () {
                 this.player1.clickCard(this.relentless);
 
