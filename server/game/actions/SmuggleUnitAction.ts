@@ -1,5 +1,5 @@
 import { AbilityRestriction, EffectName, EventName, Location, PlayType, RelativePlayer } from '../core/Constants.js';
-import { putIntoPlay, resourceCard } from '../gameSystems/GameSystemLibrary.js';
+import { moveCard, putIntoPlay, resourceCard } from '../gameSystems/GameSystemLibrary.js';
 import { Card } from '../core/card/Card';
 import { GameEvent } from '../core/event/GameEvent.js';
 import { PlayCardContext } from '../core/ability/PlayCardAction.js';

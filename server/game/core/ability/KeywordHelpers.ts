@@ -1,5 +1,5 @@
 import { IKeywordProperties } from '../../Interfaces';
-import { Aspect, KeywordName } from '../Constants';
+import { AbilityType, Aspect, KeywordName } from '../Constants';
 import Contract from '../utils/Contract';
 import * as EnumHelpers from '../utils/EnumHelpers';
 import { KeywordInstance, KeywordWithCostValues, KeywordWithNumericValue } from './KeywordInstance';

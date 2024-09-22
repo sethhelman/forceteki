@@ -1,4 +1,8 @@
+import * as CostLibrary from '../../costs/CostLibrary';
+import { IActionTargetResolver } from '../../TargetInterfaces';
+import { Card } from '../card/Card';
 import { PhaseName, PlayType, Stage } from '../Constants';
+import { ICost } from '../cost/ICost';
 import { AbilityContext } from './AbilityContext';
 import PlayerAction from './PlayerAction';
 

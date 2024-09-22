@@ -1,11 +1,17 @@
 import Player from '../Player';
+import { WithPrintedHp } from './propertyMixins/PrintedHp';
 import { WithCost } from './propertyMixins/Cost';
+import { WithPrintedPower } from './propertyMixins/PrintedPower';
+import { InitiateAttackAction } from '../../actions/InitiateAttackAction';
 import { PlayUnitAction } from '../../actions/PlayUnitAction';
 import Contract from '../utils/Contract';
 import { CardType, KeywordName, Location } from '../Constants';
+import { WithDamage } from './propertyMixins/Damage';
+import { PlayableOrDeployableCard } from './baseClasses/PlayableOrDeployableCard';
 import { WithUnitProperties } from './propertyMixins/UnitProperties';
 import { InPlayCard } from './baseClasses/InPlayCard';
 import { WithStandardAbilitySetup } from './propertyMixins/StandardAbilitySetup';
+import { Card } from './Card';
 import { SmuggleUnitAction } from '../../actions/SmuggleUnitAction';
 
 const NonLeaderUnitCardParent = WithUnitProperties(WithCost(WithStandardAbilitySetup(InPlayCard)));
@@ -18,7 +24,7 @@ export class NonLeaderUnitCard extends NonLeaderUnitCardParent {
         Contract.assertFalse(this.printedType === CardType.Leader);
 
         this.defaultActions.push(new PlayUnitAction(this));
-        //TODO: Should we only register this when a unit is in resources
+        // TODO: add smuggle action here
         if (this.hasSomeKeyword(KeywordName.Smuggle)) {
             this.defaultActions.push(new SmuggleUnitAction(this));
         }
