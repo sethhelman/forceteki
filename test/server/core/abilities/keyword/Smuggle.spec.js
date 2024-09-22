@@ -50,6 +50,11 @@ describe('Smuggle keyword', function() {
             //     this.player1.clickCard(this.lomPyke);
             //     expect(this.lomPyke).toBeInLocation('ground arena');
             // });
+
+            // it('Cards with different smuggle aspects than play aspects only care about the smuggle aspects', function () {
+            //     this.player1.clickCard(this.lomPyke);
+            //     expect(this.lomPyke).toBeInLocation('ground arena');
+            // });
         });
     });
 });
