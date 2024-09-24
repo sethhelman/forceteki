@@ -1,6 +1,6 @@
 import AbilityHelper from '../../../AbilityHelper';
 import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
-import { CardType } from '../../../core/Constants';
+import { CardType, RelativePlayer, Location } from '../../../core/Constants';
 import { StateWatcherRegistrar } from '../../../core/stateWatcher/StateWatcherRegistrar';
 import { CardsPlayedThisPhaseWatcher } from '../../../stateWatchers/CardsPlayedThisPhaseWatcher';
 
@@ -19,14 +19,15 @@ export default class RelentlessKonstantinesFolly extends NonLeaderUnitCard {
     }
 
     public override setupCardAbilities() {
-        this.addReplacementEffectAbility({
+        this.addConstantAbility({
             title: 'The first event played by each opponent each round loses all abilities',
-            when: {
-                onCardAbilityInitiated: (event) => this.isFirstEventPlayedByThisOpponentThisPhase(event.card)
-            },
-            replaceWith: { replacementImmediateEffect: null },
-            effect: 'Relentless nullifies the effects of {1}',
-            effectArgs: (context) => [context.event.card]
+            ongoingEffect: AbilityHelper.ongoingEffects.blank(false),
+            //An event card goes to the discard before its effects resolve, so filtering for being in the discard is appropriate to allow playing an event but blanking its effects.
+            //Filtering for anywhere(WildcardLocation.Any), causes the event card to lose the ability to even play it in the first place.
+            targetLocationFilter: Location.Discard,
+            targetController: RelativePlayer.Opponent,
+            targetCardTypeFilter: CardType.Event,
+            matchTarget: (card) => this.isFirstEventPlayedByThisOpponentThisPhase(card)
         });
     }
 
