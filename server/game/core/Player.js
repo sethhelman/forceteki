@@ -2,7 +2,7 @@ const { GameObject } = require('./GameObject');
 const { Deck } = require('../Deck.js');
 const UpgradePrompt = require('./gameSteps/prompts/UpgradePrompt.js');
 const { clockFor } = require('./clocks/ClockSelector.js');
-const { CostAdjuster } = require('./cost/CostAdjuster');
+const { CostAdjuster, CostAdjustDirection } = require('./cost/CostAdjuster');
 const GameSystems = require('../gameSystems/GameSystemLibrary');
 const { PlayableLocation } = require('./PlayableLocation');
 const { PlayerPromptState } = require('./PlayerPromptState.js');
@@ -624,16 +624,16 @@ class Player extends GameObject {
             adjuster.canAdjust(playingType, card, target, ignoreType, penaltyAspect)
         );
         var costIncreases = matchingAdjusters
-            .filter((a) => a.getAmount(card, this) < 0)
-            .reduce((cost, adjuster) => cost - adjuster.getAmount(card, this), 0);
-        var costDecreases = matchingAdjusters
-            .filter((a) => a.getAmount(card, this) > 0)
+            .filter((adjuster) => adjuster.direction === CostAdjustDirection.Increase)
             .reduce((cost, adjuster) => cost + adjuster.getAmount(card, this), 0);
+        var costDecreases = matchingAdjusters
+            .filter((adjuster) => adjuster.direction === CostAdjustDirection.Decrease)
+            .reduce((cost, adjuster) => cost - adjuster.getAmount(card, this), 0);
 
         baseCost += costIncreases;
         var reducedCost = baseCost - costDecreases;
 
-        var costFloor = Math.min(baseCost, Math.max(...matchingAdjusters.map((a) => a.costFloor)));
+        var costFloor = Math.min(baseCost, Math.max(...matchingAdjusters.map((adjuster) => adjuster.costFloor)));
         return Math.max(reducedCost, costFloor);
     }
 
