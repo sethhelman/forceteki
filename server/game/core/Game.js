@@ -1,39 +1,39 @@
 const EventEmitter = require('events');
 
-const ChatCommands = require('./chat/ChatCommands.js');
-const { GameChat } = require('./chat/GameChat.js');
-const { OngoingEffectEngine } = require('./ongoingEffect/OngoingEffectEngine.js');
-const Player = require('./Player.js');
-const { Spectator } = require('../../Spectator.js');
-const { AnonymousSpectator } = require('../../AnonymousSpectator.js');
-const { GamePipeline } = require('./GamePipeline.js');
-const { SetupPhase } = require('./gameSteps/phases/SetupPhase.js');
-const { ActionPhase } = require('./gameSteps/phases/ActionPhase.js');
-const { RegroupPhase } = require('./gameSteps/phases/RegroupPhase.js');
-const { SimpleStep } = require('./gameSteps/SimpleStep.js');
-const MenuPrompt = require('./gameSteps/prompts/MenuPrompt.js');
-const HandlerMenuPrompt = require('./gameSteps/prompts/HandlerMenuPrompt.js');
-const SelectCardPrompt = require('./gameSteps/prompts/SelectCardPrompt.js');
-const GameWonPrompt = require('./gameSteps/prompts/GameWonPrompt.js');
-const GameSystems = require('../gameSystems/GameSystemLibrary.js');
-const { GameEvent } = require('./event/GameEvent.js');
-const InitiateCardAbilityEvent = require('./event/InitiateCardAbilityEvent.js');
-const EventWindow = require('./event/EventWindow.js');
-const ThenEventWindow = require('./event/ThenEventWindow.js');
-const InitiateAbilityEventWindow = require('./gameSteps/abilityWindow/InitiateAbilityEventWindow.js');
-const AbilityResolver = require('./gameSteps/AbilityResolver.js');
-const { SimultaneousEffectWindow } = require('./gameSteps/SimultaneousEffectWindow.js');
-const { AbilityContext } = require('./ability/AbilityContext.js');
+// const ChatCommands = require('./chat/ChatCommands.js');
+// const { GameChat } = require('./chat/GameChat.js');
+const { OngoingEffectEngine } = require('./ongoingEffect/OngoingEffectEngine');
+const Player = require('./Player');
+const { Spectator } = require('../../Spectator');
+const { AnonymousSpectator } = require('../../AnonymousSpectator');
+const { GamePipeline } = require('./GamePipeline');
+const { SetupPhase } = require('./gameSteps/phases/SetupPhase');
+const { ActionPhase } = require('./gameSteps/phases/ActionPhase');
+const { RegroupPhase } = require('./gameSteps/phases/RegroupPhase');
+const { SimpleStep } = require('./gameSteps/SimpleStep');
+const MenuPrompt = require('./gameSteps/prompts/MenuPrompt');
+const HandlerMenuPrompt = require('./gameSteps/prompts/HandlerMenuPrompt');
+const SelectCardPrompt = require('./gameSteps/prompts/SelectCardPrompt');
+const GameWonPrompt = require('./gameSteps/prompts/GameWonPrompt');
+const GameSystems = require('../gameSystems/GameSystemLibrary');
+const { GameEvent } = require('./event/GameEvent');
+const InitiateCardAbilityEvent = require('./event/InitiateCardAbilityEvent');
+const EventWindow = require('./event/EventWindow');
+const ThenEventWindow = require('./event/ThenEventWindow');
+const InitiateAbilityEventWindow = require('./gameSteps/abilityWindow/InitiateAbilityEventWindow');
+const AbilityResolver = require('./gameSteps/AbilityResolver');
+const { SimultaneousEffectWindow } = require('./gameSteps/SimultaneousEffectWindow');
+const { AbilityContext } = require('./ability/AbilityContext');
 const Contract = require('./utils/Contract');
-const { cards } = require('../cards/Index.js');
-// const { Conflict } = require('./conflict.js');
-// const ConflictFlow = require('./gamesteps/conflict/conflictflow.js');
+const { cards } = require('../cards/Index');
+// const { Conflict } = require('./conflict');
+// const ConflictFlow = require('./gamesteps/conflict/conflictflow');
 // const MenuCommands = require('./MenuCommands');
 
-const { EffectName, EventName, Location, TokenName } = require('./Constants.js');
-const { BaseStepWithPipeline } = require('./gameSteps/BaseStepWithPipeline.js');
-const { default: Shield } = require('../cards/01_SOR/Shield.js');
-const { StateWatcherRegistrar } = require('./stateWatcher/StateWatcherRegistrar.js');
+const { EffectName, EventName, Location, TokenName } = require('./Constants');
+const { BaseStepWithPipeline } = require('./gameSteps/BaseStepWithPipeline');
+const { default: Shield } = require('../cards/01_SOR/Shield');
+const { StateWatcherRegistrar } = require('./stateWatcher/StateWatcherRegistrar');
 
 class Game extends EventEmitter {
     constructor(details, options = {}) {
@@ -41,8 +41,8 @@ class Game extends EventEmitter {
 
         this.ongoingEffectEngine = new OngoingEffectEngine(this);
         this.playersAndSpectators = {};
-        this.gameChat = new GameChat();
-        this.chatCommands = new ChatCommands(this);
+        // this.gameChat = new GameChat();
+        // this.chatCommands = new ChatCommands(this);
         this.pipeline = new GamePipeline();
         this.id = details.id;
         this.name = details.name;
@@ -122,7 +122,8 @@ class Game extends EventEmitter {
     }
 
     get messages() {
-        return this.gameChat.messages;
+        // return this.gameChat.messages;
+        return [];
     }
 
     /**
@@ -691,7 +692,7 @@ class Game extends EventEmitter {
     }
 
     toggleManualMode(playerName) {
-        this.chatCommands.manual(playerName);
+        // this.chatCommands.manual(playerName);
     }
 
     /*
@@ -1247,45 +1248,41 @@ class Game extends EventEmitter {
     // /*
     //  * This information is sent to the client
     //  */
-    // getState(notInactivePlayerName) {
-    //     let activePlayer = this.playersAndSpectators[notInactivePlayerName] || new AnonymousSpectator();
-    //     let playerState = {};
-    //     let ringState = {};
-    //     let conflictState = {};
+    getState(notInactivePlayerName) {
+        let activePlayer = this.playersAndSpectators[notInactivePlayerName] || new AnonymousSpectator();
+        let playerState = {};
+        let ringState = {};
+        let conflictState = {};
+        let {blocklist, email, emailHash, promptedActionWindows, settings, ...simplifiedOwner} = this.owner;
+        // if (this.started) {
+            for (const player of this.getPlayers()) {
+                playerState[player.name] = player.getState(activePlayer);
+            }
 
-    //     if (this.started) {
-    //         for (const player of this.getPlayers()) {
-    //             playerState[player.name] = player.getState(activePlayer);
-    //         }
+            return {
+                id: this.id,
+                manualMode: this.manualMode,
+                name: this.name,
+                owner: simplifiedOwner,
+                players: playerState,
+                rings: ringState,
+                conflict: conflictState,
+                phase: this.currentPhase,
+                // messages: this.gameChat.messages,
+                spectators: this.getSpectators().map((spectator) => {
+                    return {
+                        id: spectator.id,
+                        name: spectator.name
+                    };
+                }),
+                started: this.started,
+                gameMode: this.gameMode,
+                winner: this.winner ? this.winner.name : undefined
+            };
+        // }
 
-    //         if (this.currentPhase === 'conflict' && this.currentConflict) {
-    //             conflictState = this.currentConflict.getSummary();
-    //         }
-
-    //         return {
-    //             id: this.id,
-    //             manualMode: this.manualMode,
-    //             name: this.name,
-    //             owner: _.omit(this.owner, ['blocklist', 'email', 'emailHash', 'promptedActionWindows', 'settings']),
-    //             players: playerState,
-    //             rings: ringState,
-    //             conflict: conflictState,
-    //             phase: this.currentPhase,
-    //             messages: this.gameChat.messages,
-    //             spectators: this.getSpectators().map((spectator) => {
-    //                 return {
-    //                     id: spectator.id,
-    //                     name: spectator.name
-    //                 };
-    //             }),
-    //             started: this.started,
-    //             gameMode: this.gameMode,
-    //             winner: this.winner ? this.winner.name : undefined
-    //         };
-    //     }
-
-    //     return this.getSummary(notInactivePlayerName);
-    // }
+        // return this.getSummary(notInactivePlayerName);
+    }
 
     // /*
     //  * This is used for debugging?

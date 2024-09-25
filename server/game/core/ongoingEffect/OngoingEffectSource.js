@@ -1,5 +1,5 @@
 const AbilityHelper = require('../../AbilityHelper');
-const { GameObject } = require('../GameObject.js');
+const { GameObject } = require('../GameObject');
 
 const { Duration, WildcardLocation } = require('../Constants.js');
 const OngoingEffect = require('./OngoingEffect.js');
