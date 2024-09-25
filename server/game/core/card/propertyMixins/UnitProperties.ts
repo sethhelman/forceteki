@@ -18,6 +18,7 @@ import { ShieldedAbility } from '../../../abilities/keyword/ShieldedAbility';
 import { Attack } from '../../attack/Attack';
 import type { UnitCard } from '../CardTypes';
 import { SaboteurDefeatShieldsAbility } from '../../../abilities/keyword/SaboteurDefeatShieldsAbility';
+import { AmbushAbility } from '../../../abilities/keyword/AmbushAbility';
 
 export const UnitPropertiesCard = WithUnitProperties(InPlayCard);
 
@@ -180,11 +181,11 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
 
             // TODO: uncomment once Veld does engine work
             // ambush
-            // if (this.hasSomeKeyword(KeywordName.Ambush)) {
-            //     const ambushAbility = this.createTriggeredAbility(AmbushAbility.buildAmbushAbilityProperties());
-            //     ambushAbility.registerEvents();
-            //     this._whenPlayedKeywordAbilities.push(ambushAbility);
-            // }
+            if (this.hasSomeKeyword(KeywordName.Ambush)) {
+                const ambushAbility = this.createTriggeredAbility(AmbushAbility.buildAmbushAbilityProperties());
+                ambushAbility.registerEvents();
+                this._whenPlayedKeywordAbilities.push(ambushAbility);
+            }
         }
 
         /**
