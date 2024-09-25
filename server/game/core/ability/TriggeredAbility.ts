@@ -6,7 +6,7 @@ import { GameEvent } from '../event/GameEvent';
 import { Card } from '../card/Card';
 import Game from '../Game';
 import { TriggeredAbilityWindow } from '../gameSteps/abilityWindow/TriggeredAbilityWindow';
-import Contract from '../utils/Contract';
+import * as Contract from '../utils/Contract';
 import type CardAbilityStep from './CardAbilityStep';
 import { CardWithTriggeredAbilities } from '../card/CardTypes';
 
@@ -71,10 +71,9 @@ export default class TriggeredAbility extends CardAbility {
     }
 
     public eventHandler(event, window) {
-        if (!Contract.assertNotNullLike(window)) {
-            return;
-        }
+        Contract.assertNotNullLike(window);
 
+        // IMPORTANT: the below code is referenced in the debugging guide (docs/debugging-guide.md). If you make changes here, make sure to update that document as well.
         for (const player of this.game.getPlayers()) {
             const context = this.createContext(player, event);
             //console.log(event.name, this.card.name, this.isTriggeredByEvent(event, context), this.meetsRequirements(context));
@@ -109,7 +108,7 @@ export default class TriggeredAbility extends CardAbility {
             source: this.card,
             player: player,
             ability: this,
-            stage: Stage.PreTarget
+            stage: Stage.Trigger
         });
     }
 

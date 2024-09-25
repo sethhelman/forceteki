@@ -9,15 +9,12 @@ import { cardCannot } from './CardCannot';
 // const { mustBeDeclaredAsAttacker } = require('./Effects/Library/mustBeDeclaredAsAttacker');
 import { modifyCost } from './ModifyCost';
 // const { switchAttachmentSkillModifiers } = require('./Effects/Library/switchAttachmentSkillModifiers');
-import { AbilityType, EffectName, KeywordName, NonParameterKeywordName, PlayType } from '../core/Constants';
+import { AbilityType, EffectName, PlayType } from '../core/Constants';
 import { StatsModifier } from '../core/ongoingEffect/effectImpl/StatsModifier';
-import { IActionAbilityProps, IKeywordProperties, ITriggeredAbilityProps, KeywordNameOrProperties } from '../Interfaces';
+import { IActionAbilityProps, ITriggeredAbilityProps, KeywordNameOrProperties } from '../Interfaces';
 import GainAbility from '../core/ongoingEffect/effectImpl/GainAbility';
 import { IConstantAbility } from '../core/ongoingEffect/IConstantAbility';
 import * as KeywordHelpers from '../core/ability/KeywordHelpers';
-import { AbilityContext } from '../core/ability/AbilityContext';
-import { Attack } from '../core/attack/Attack';
-import { UnitCard } from '../core/card/CardTypes';
 import { CostAdjustDirection, ICostAdjusterProperties } from '../core/cost/CostAdjuster';
 
 /* Types of effect
@@ -82,16 +79,6 @@ export = {
     //         apply: (card) => card.controller.addConflictOpportunity(type),
     //         unapply: (card) => card.controller.removeConflictOpportunity(type)
     //     }),
-    /** For effects of the form "if unit has [X], it gains +Y/+Z for this attack" */
-    conditionalAttackStatBonus: (bonusCondition: (attacker: UnitCard) => boolean, statBonus: StatsModifier) => (context: AbilityContext, attack: Attack) => {
-        if (bonusCondition(attack.attacker)) {
-            return {
-                target: attack.attacker,
-                effect: OngoingEffectBuilder.card.flexible(EffectName.ModifyStats, statBonus),
-            };
-        }
-        return null;
-    },
     // contributeToConflict: (player) => OngoingEffectBuilder.card.flexible(EffectName.ContributeToConflict, player),
     // canContributeWhileBowed: (properties) => OngoingEffectBuilder.card.static(EffectName.CanContributeWhileBowed, properties),
     // copyCard,

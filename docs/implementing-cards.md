@@ -1,4 +1,3 @@
-
 # Implementing Cards
 
 To implement a card, follow these steps:
@@ -7,7 +6,10 @@ To implement a card, follow these steps:
 This code was ported from the [Ringteki codebase](https://github.com/ringteki/ringteki) powering the online L5R client, Jigoku. During the initial implementation phase, we have included the legacy code from L5R under the folder [legacy_jigoku/](../legacy_jigoku/). These are included for reference as there is still a lot of useful code that hasn't been fully ported yet, but be careful when making changes or searching for files that you do not accidentally start doing your work in the L5R folder.
 
 ### Unit tests
-We have a policy of creating at least one unit test with each new card. Please see the [Unit Testing Guide](./testing-cards.md) for details.
+We have a policy of creating at least one unit test with each new card. Please see the [Unit Testing Guide](./testing-cards.md) and [Test Cheat Sheet](./test-cheat-sheet.md) for details.
+
+### Debugging
+If you are having issues with your card implementation, see the [Debugging Guide](./debugging-guide.md).
 
 ## Set up for implementation
 
@@ -69,7 +71,10 @@ GroguIrresistible.implemented = true;
 
 ## Implement card abilities (quickstart)
 
-The below is a quickstart guide on how to implement each ability type with some examples without going into too much detail on the components. See section [Ability Building Blocks](#ability-building-blocks) for details on the how individual components of an ability definition work.
+The below is a quickstart guide on how to implement each ability type with some examples without going into too much detail on the components. 
+
+- See section [Advanced Usage](#advanced-usage) for details on implementing more complex card abilities.
+- See section [Ability Building Blocks](#ability-building-blocks) for a reference on the how individual components of an ability definition work (immediateEffect, targetResolver, etc.).
 
 Almost all card abilities (i.e., any card text with an effect) should be defined in the `setupCardAbilities` method:
 
@@ -171,63 +176,6 @@ this.constantAbility({
     targetCardType: WildcardCardType.Unit,
     targetController: RelativePlayer.Opponent,
     ongoingEffect: AbilityHelper.ongoingEffects.modifyStats({ power: -1, hp: -1 })
-});
-```
-
-#### Applying multiple effects at once
-As a shorthand, it is possible to pass an array into the `ongoingEffect` property to apply multiple effects that have the same conditions / matching functions.
-
-```typescript
-// This unit gets Sentinel and +1/+1 while damaged
-this.constantAbility({
-    condition: () => this.damage !== 0,
-    effect: [
-        AbilityHelper.ongoingEffects.gainKeyword(KeywordName.Sentinel),
-        AbilityHelper.ongoingEffects.modifyStats({ power: -1, hp: -1 })
-    ]
-});
-```
-
-#### Helper methods for upgrade cards
-Some helper methods are available to make it easier to declare constant abilities on upgrades, since these are extremely common.
-
-##### Static stat bonuses from upgrades
-
-Static upgrade stat bonuses from the printed upgrade values are automatically included in combat calculations for the attached unit.
-
-##### Effects targeting attached card
-
-Since most upgrade abilities target the attached card, we have helper methods available to declare such abilities succintly.
-
-Most upgrades say that the attached unit gains a triggered ability:
-```typescript
-// Attached character gains ability 'On Attack: Exhaust the defender'
-this.addGainTriggeredAbilityTargetingAttached({
-    title: 'Exhaust the defender on attack',
-    // note here that context.source refers to the attached unit card, not the upgrade itself
-    when: { onAttackDeclared: (event, context) => event.attack.attacker === context.source },
-    targetResolver: {
-        cardCondition: (card, context) => card === context.event.attack.target,
-        immediateEffect: AbilityHelper.immediateEffects.exhaust()
-    }
-});
-```
-
-It is also common for an upgrade to grant a keyword to the attached:
-```typescript
-// Attached character gains keyword 'Restore 2'
-this.addGainKeywordTargetingAttached({
-    keyword: KeywordName.Restore,
-    amount: 2
-});
-```
-
-In some rare cases an upgrade's ability targets the attached card without giving it any new abilities
-```typescript
-// Entrenched ability
-this.addConstantAbilityTargetingAttached({
-    title: 'Attached unit cannot attack bases',
-    ongoingEffect: AbilityHelper.ongoingEffects.cannotAttackBase(),
 });
 ```
 
@@ -373,10 +321,9 @@ The following triggers have helper methods:
 | --- | --- |
 | When played | addWhenPlayedAbility |
 | On attack | addOnAttackAbility |
-| ~~On defeat~~ | TBD |
-<!-- TODO: update the above table when we add a when defeated card trigger example -->
+| When defeated | addWhenDefeatedAbility |
 
-#### Optionally triggered abilities
+#### Optionally triggered abilities / "you may"
 If the triggered ability uses the word "may," then the ability is considered optional and the player may choose to pass it when it is triggered. In these cases, the triggered ability must be flagged with the "optional" property. For example, Fleet Lieutenant's ability:
 
 ```typescript
@@ -403,7 +350,7 @@ this.addTriggeredAbility({
     },
     targetResolver: {
         cardCondition: (card, context) => card.hasSomeTrait(Trait.Spectre) && 
-        immediateEffect: AbilityHelper.immediateEffects.defeat()
+        immediateEffect: AbilityHelper.immediateEffects.giveShield()
     }
 });
 ```
@@ -421,6 +368,61 @@ this.reaction({
     location: 'hand',
     gameAction: AbilityHelper.actions.putIntoPlay()
 })
+```
+
+### Helper methods for upgrade cards
+Some helper methods are available to make it easier to declare constant abilities on upgrades, since these are extremely common.
+
+#### Static stat bonuses from upgrades
+
+Static upgrade stat bonuses from the printed upgrade values are automatically included in combat calculations for the attached unit.
+
+#### Effects targeting attached card
+
+Since most upgrade abilities target the attached card, we have helper methods available to declare such abilities succintly.
+
+Most upgrades say that the attached unit gains a triggered ability:
+```typescript
+// Attached character gains ability 'On Attack: Exhaust the defender'
+this.addGainTriggeredAbilityTargetingAttached({
+    title: 'Exhaust the defender on attack',
+    // note here that context.source refers to the attached unit card, not the upgrade itself
+    when: { onAttackDeclared: (event, context) => event.attack.attacker === context.source },
+    targetResolver: {
+        cardCondition: (card, context) => card === context.event.attack.target,
+        immediateEffect: AbilityHelper.immediateEffects.exhaust()
+    }
+});
+```
+
+It is also common for an upgrade to grant a keyword to the attached:
+```typescript
+// Attached character gains keyword 'Restore 2'
+this.addGainKeywordTargetingAttached({
+    keyword: KeywordName.Restore,
+    amount: 2
+});
+```
+
+If an attachment effect has a condition, it can be set using the optional second parameter of the setup method. See the implementation of the Fallen Lightsaber text, "If attached unit is a Force unit, it gains: “On Attack: Deal 1 damage to each ground unit the defending player controls.”
+```typescript
+this.addGainTriggeredAbilityTargetingAttached({
+    title: 'Deal 1 damage to each ground unit the defending player controls',
+    when: { onAttackDeclared: (event, context) => event.attack.attacker === context.source },
+    immediateEffect: AbilityHelper.immediateEffects.damage((context) => {
+        return { target: context.source.controller.opponent.getUnitsInPlay(Location.GroundArena), amount: 1 };
+    })
+},
+(context) => context.source.parentCard?.hasSomeTrait(Trait.Force));
+```
+
+In some rare cases an upgrade's ability targets the attached card without giving it any new abilities
+```typescript
+// Entrenched ability
+this.addConstantAbilityTargetingAttached({
+    title: 'Attached unit cannot attack bases',
+    ongoingEffect: AbilityHelper.ongoingEffects.cannotAttackBase(),
+});
 ```
 
 ### Event abilities
@@ -558,6 +560,130 @@ export default class DirectorKrennicAspiringToAuthority extends LeaderUnitCard {
 ```
 
 The above will not work correctly because the shared properties object `krennicAbilityProperties` will be modified during setup, causing it to behave incorrectly in some cases.
+
+## Advanced usage
+This section describes features for handling more complex card card behaviors.
+
+### The word "if"
+Many cards will have an effect conditioned with "if", e.g. "if [X], do [Y]." How exactly to implement this condition depends on whether it is being used in a triggered or action ability vs constant abilities.
+
+#### If conditions in triggered / action abilities
+If an effect in a triggered or action ability has the word "if", _except in the special case of "if you do,"_ then use `AbilityHelper.immediateEffects.conditional().` See Jedha Agitator:
+```typescript
+this.addOnAttackAbility({
+    title: 'If you control a leader unit, deal 2 damage to a ground unit or base',
+    targetResolver: {
+        cardCondition: (card) => (card.isUnit() && card.location === Location.GroundArena) || card.isBase(),
+        immediateEffect: AbilityHelper.immediateEffects.conditional({
+            condition: (context) => context.source.controller.leader.deployed,
+            onTrue: AbilityHelper.immediateEffects.damage({ amount: 2 }),
+            onFalse: AbilityHelper.immediateEffects.noAction()
+        })
+    }
+});
+```
+
+<!-- TODO: fill this out when we add "if you do" support -->
+#### Special case: "if you do"
+Abilities that say "if you do," usually in the form "you may [X]. If you do, then [Y]", are not yet supported.
+
+#### If conditions in constant abilities
+If there is an "if" condition in a constant ability, it is handled using the `condition` property. For example, see the Sabine unit's constant ability:
+
+```typescript
+this.addConstantAbility({
+    title: 'Cannot be attacked if friendly units have at least 3 unique aspects',
+    condition: (context) => countUniqueAspects(this.controller.getOtherUnitsInPlay(context.source)) >= 3,
+    ongoingEffect: AbilityHelper.ongoingEffects.cardCannot(AbilityRestriction.BeAttacked)
+});
+```
+
+### Abilities with multiple effects
+If a card ability has multiple discrete effects, use one of the following "meta-effects" which allow chaining other effects together.
+
+#### Effects resolving in the same window
+In most cases, when an ability says to do multiple things they are being resolved simultaneously in the same window. These are typically worded in one of the following forms:
+
+- **"Do [X] and do [Y]."** Covert Strength: "Heal 2 damage from a unit and give an Experience token to it."
+- **"Do [X]. Do [Y]."** Asteroid Sanctuary: "Exhaust an enemy unit. Give a Shield token to a friendly unit that costs 3 or less."
+
+These are examples of effects that resolve simultaneously. In these cases, use `AbilityHelper.immediateEffects.simultaneous()` with a list of effects to resolve. For example, The Force is With Me:
+
+```typescript
+this.setEventAbility({
+    title: 'Give 2 Experience, a Shield if there is a Force unit, and optionally attack',
+    targetResolver: {
+        controller: RelativePlayer.Self,
+        immediateEffect: AbilityHelper.immediateEffects.simultaneous([
+            AbilityHelper.immediateEffects.giveExperience({ amount: 2 }),
+            AbilityHelper.immediateEffects.conditional({
+                condition: (context) => context.source.controller.isTraitInPlay(Trait.Force),
+                onTrue: AbilityHelper.immediateEffects.giveShield({ amount: 1 }),
+                onFalse: AbilityHelper.immediateEffects.noAction()
+            }),
+            AbilityHelper.immediateEffects.attack({ optional: true })
+        ])
+    }
+});
+```
+
+#### Effects resolved sequentially
+In some specific cases, the ability will indicate that an effect(s) should be fully resolved before the next effect(s) take place. This is usually indicated in one of two ways:
+
+- **The word "then."** Leia leader: "Attack with a Rebel unit. Then, you may attack with another Rebel unit."
+- **"Do [X] [N] times."** Headhunting: "Attack with up to 3 units (one at a time). ..."
+
+In these situations, there are two equivalent options. First, you can use the `then` property to chain abilities together. See the Leia leader:
+```typescript
+this.addActionAbility({
+    title: 'Attack with a Rebel unit',
+    cost: AbilityHelper.costs.exhaustSelf(),
+    initiateAttack: {
+        attackerCondition: (card) => card.hasSomeTrait(Trait.Rebel)
+    },
+    then: {
+        title: 'Attack with a second Rebel unit',
+        optional: true,
+        initiateAttack: {
+            attackerCondition: (card) => card.hasSomeTrait(Trait.Rebel)
+        }
+    }
+});
+```
+
+An alternative that is useful for longer chains is using the sequential system. See Headhunting:
+
+```typescript
+public override setupCardAbilities() {
+    this.setEventAbility({
+        title: 'Attack with up to 3 units',
+        immediateEffect: AbilityHelper.immediateEffects.sequential([
+            this.buildBountyHunterAttackEffect(),
+            this.buildBountyHunterAttackEffect(),
+            this.buildBountyHunterAttackEffect()
+        ])
+    });
+}
+
+// create the effect that selects the target for attack. See section below for details.
+private buildBountyHunterAttackEffect() {
+    return AbilityHelper.immediateEffects.selectCard({
+        innerSystem: AbilityHelper.immediateEffects.attack({
+            targetCondition: (card) => !card.isBase(),
+            attackerLastingEffects: {
+                effect: AbilityHelper.ongoingEffects.modifyStats({ power: 2, hp: 0 }),
+                condition: (attack: Attack) => attack.attacker.hasSomeTrait(Trait.BountyHunter)
+            },
+            optional: true
+        })
+    });
+}
+```
+
+#### Resolving targets inside an effect chain
+One current drawback of `simultaneous()` and `sequential()` is that you cannot use a standard target resolver inside of the chain. For situations where you need to resolve a target in an effect sequence (such as the Headhunting example above), use the helper tool `AbilityHelper.immediateEffects.selectCard()`.
+
+As shown above, `selectCard()` has an `innerSystem` property which declares the system that is being targeted for. It also supports all of the same filtering and condition options as `targetResolver`.
 
 ## Ability building blocks
 This section describes some of the major components that are used in the definitions of abilities:
@@ -844,61 +970,49 @@ this.action({
 });
 ```
 
-<!-- TODO: update this section -->
-#### **IGNORE THIS, STILL WIP:** ~~Lasting effects~~
+### Lasting effects ("for this phase", "for this attack")
 
-Unlike constant abilities, "lasting" effects are typically applied during an action or triggered ability and expire after a specified period of time.  Lasting effects use the same properties as constant abilities, above.  Lasting effects are applied using the `cardLastingEffect` or `playerLastingEffect`, depending on what they affect.  They take a `duration:` property which is one of `untilEndOfAttack` (default), `untilEndOfPhase` or `untilEndOfRound`.
+In some cases, a triggered or constant ability will create an ongoing effect with a specific time duration. This is called a "lasting" effect. The two most common examples in SWU are:
+
+- **For this phase**: e.g., Disarm: `Give an enemy unit -4/-0 for this phase.`
+- **For this attack**: e.g., Surprise Strike: `Attack with a unit. It gets +3/+0 for this attack.`
+
+Lasting effects use the same properties as constant abilities, above. How they are created depends on which type you are using (phase-lasting effects or attack-lasting effects).
+
+#### "For this phase" effects
+
+Effects that last for the remainder of the phase are created using `AbilityHelper.immediateEffects.forThisPhaseCardEffect()`. Here is an example with Disarm:
 
 ```typescript
-// Action: During a conflict, bow this character. Choose another [crane] character – that character 
-// gets +3 [political] until the end of the conflict.
-this.action({
-    title: 'Give a character +0/+3',
-    condition: () => this.game.isDuringConflict(),
-    cost: AbilityHelper.costs.bowSelf(),
-    target: {
-        cardType: 'character',
-        cardCondition: (card, context) => card !== context.source && card.isFaction('crane'),
-        gameAction: AbilityHelper.actions.cardLastingEffect(() => ({
-            duration: 'untilEndOfConflict',
-            effect: AbilityHelper.effects.modifyPoliticalSkill(3)
-        }))
-    },
-    effect: 'give {0} +3{1} skill',
-    effectArgs: () => 'political'
-});
-
+public override setupCardAbilities() {
+    this.setEventAbility({
+        title: 'Give an enemy unit -4/-0 for the phase',
+        targetResolver: {
+            cardTypeFilter: WildcardCardType.Unit,
+            controller: RelativePlayer.Opponent,
+            immediateEffect: AbilityHelper.immediateEffects.forThisPhaseCardEffect({
+                effect: AbilityHelper.ongoingEffects.modifyStats({ power: -4, hp: 0 })
+            })
+        }
+    });
+}
 ```
 
-To apply an effect to last until the end of the current phase, use `untilEndOfPhase`:
-```typescript
-// Action: Reduce the cost of the next event you play this phase by 1.
-this.action({
-    title: 'Reduce cost of next event by 1',
-    effect: 'reduce the cost of their next event by 1',
-    gameAction: AbilityHelper.actions.playerLastingEffect({
-        duration: 'untilEndOfPhase',
-        effect: AbilityHelper.effects.reduceNextPlayedCardCost(1, card => card.type === 'event')
-    })
-});
-```
+#### "For this attack" effects
 
-To apply an effect to last until the end of the round, use `untilEndOfRound`:
+Any lasting effects applied to the attacker or the defender for the duration of the attack can be added via the `attackerLastingEffects` and `defenderLastingEffects` properties of an attack. There is also a condition property which can be used to control whether the effect is applied. See Fleet Lieutenant for an example:
+
 ```typescript
-/// Action: Choose a holding you control – you may trigger each of that holding's triggered abilities an additional time this round (or specified period).
-this.action({
-    title: 'Add an additional ability use to a holding',
-    target: {
-        cardType: 'holding',
-        location: 'province',
-        controller: 'self',
-        gameAction: AbilityHelper.actions.cardLastingEffect({
-            duration: 'untilEndOfPhase',
-            targetLocation: 'province',
-            effect: AbilityHelper.effects.increaseLimitOnAbilities()
-        })
-    },
-    effect: 'add an additional use to each of {0}\'s abilities'
+// When Played: You may attack with a unit. If it's a Rebel unit, it gets +2/0 for this attack.
+this.addWhenPlayedAbility({
+    title: 'Attack with a unit',
+    optional: true,
+    initiateAttack: {
+        attackerLastingEffects: {
+            effect: AbilityHelper.ongoingEffects.modifyStats({ power: 2, hp: 0 }),
+            condition: (attack: Attack) => attack.attacker.hasSomeTrait(Trait.Rebel)
+        }
+    }
 });
 ```
 

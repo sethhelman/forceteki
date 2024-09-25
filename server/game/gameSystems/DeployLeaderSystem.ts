@@ -1,14 +1,13 @@
 import type { AbilityContext } from '../core/ability/AbilityContext';
 import type { Card } from '../core/card/Card';
-import { Arena, CardType, EventName } from '../core/Constants';
+import { CardType, EventName } from '../core/Constants';
 import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
-import Contract from '../core/utils/Contract';
-import * as EnumHelpers from '../core/utils/EnumHelpers';
+import * as Contract from '../core/utils/Contract';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface IDeployLeaderProperties extends ICardTargetSystemProperties {}
 
-export class DeployLeaderSystem extends CardTargetSystem<IDeployLeaderProperties> {
+export class DeployLeaderSystem<TContext extends AbilityContext = AbilityContext> extends CardTargetSystem<TContext, IDeployLeaderProperties> {
     public override readonly name = 'deploy leader';
     public override readonly eventName = EventName.OnLeaderDeployed;
     public override readonly effectDescription = 'deploy {0}';
@@ -16,16 +15,12 @@ export class DeployLeaderSystem extends CardTargetSystem<IDeployLeaderProperties
     protected override readonly targetTypeFilter = [CardType.Leader];
 
     public eventHandler(event): void {
-        if (
-            !Contract.assertTrue(event.card.isLeader())
-        ) {
-            return;
-        }
+        Contract.assertTrue(event.card.isLeader());
 
         event.card.deploy();
     }
 
-    public override canAffect(card: Card, context: AbilityContext): boolean {
+    public override canAffect(card: Card, context: TContext): boolean {
         if (!card.isLeader() || card.deployed) {
             return false;
         }

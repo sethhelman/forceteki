@@ -1,7 +1,7 @@
 const { detectBinary } = require('../../build/Util.js');
 const { GameMode } = require('../../build/GameMode.js');
 
-const { checkNullCard, formatPrompt } = require('./Util.js');
+const { checkNullCard, formatPrompt, getPlayerPromptState, promptStatesEqual } = require('./Util.js');
 
 class PlayerInteractionWrapper {
     constructor(game, player, testContext) {
@@ -107,6 +107,29 @@ class PlayerInteractionWrapper {
 
             leaderCard.exhausted = leaderOptions.exhausted || false;
         }
+
+        this.game.resolveGameState();
+    }
+
+    setBaseStatus(baseOptions) {
+        if (!baseOptions) {
+            return;
+        }
+
+        // leader as a string card name is a no-op unless it doesn't match the existing leader, then throw an error
+        if (typeof baseOptions === 'string') {
+            if (baseOptions !== this.player.base.internalName) {
+                throw new Error(`Provided base name ${baseOptions} does not match player's base ${this.player.base.internalName}. Do not try to change base after test has initialized.`);
+            }
+            return;
+        }
+
+        if (baseOptions.card !== this.player.base.internalName) {
+            throw new Error(`Provided base name ${baseOptions.card} does not match player's base ${this.player.base.internalName}. Do not try to change base after test has initialized.`);
+        }
+
+        var baseCard = this.player.base;
+        baseCard.damage = baseOptions.damage || 0;
 
         this.game.resolveGameState();
     }
@@ -508,61 +531,21 @@ class PlayerInteractionWrapper {
 
         let beforeClick = null;
         if (expectChange) {
-            beforeClick = this.getPlayerPromptState();
+            beforeClick = getPlayerPromptState(this.player);
         }
 
         this.game.cardClicked(this.player.name, card.uuid);
         this.game.continue();
 
         if (expectChange) {
-            const afterClick = this.getPlayerPromptState();
-            if (this.promptStatesEqual(beforeClick, afterClick)) {
+            const afterClick = getPlayerPromptState(this.player);
+            if (promptStatesEqual(beforeClick, afterClick)) {
                 throw new Error(`Expected player prompt state to change after clicking ${card.internalName} but it did not. Current prompt:\n${formatPrompt(this.currentPrompt(), this.currentActionTargets)}`);
             }
         }
 
         // this.checkUnserializableGameState();
         return card;
-    }
-
-    getPlayerPromptState() {
-        return {
-            selectableCards: this.copySelectionArray(this.player.promptState.selectableCards),
-            selectedCards: this.copySelectionArray(this.player.promptState.selectedCards),
-            menuTitle: this.player.currentPrompt().menuTitle,
-            promptTitle: this.player.currentPrompt().promptTitle
-        };
-    }
-
-    copySelectionArray(ara) {
-        return ara == null ? [] : [...ara];
-    }
-
-    promptStatesEqual(promptState1, promptState2) {
-        if (
-            promptState1.menuTitle !== promptState2.menuTitle ||
-            promptState1.promptTitle !== promptState2.promptTitle ||
-            promptState1.selectableCards.length !== promptState2.selectableCards.length ||
-            promptState1.selectedCards.length !== promptState2.selectedCards.length
-        ) {
-            return false;
-        }
-
-        return this.selectionArraysEqual(promptState1.selectedCards, promptState2.selectedCards) &&
-            this.selectionArraysEqual(promptState1.selectableCards, promptState2.selectableCards);
-    }
-
-    selectionArraysEqual(ara1, ara2) {
-        ara1.sort();
-        ara2.sort();
-
-        for (let i = 0; i < ara1.length; i++) {
-            if (ara1[i] !== ara2[i]) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     clickMenu(card, menuText) {

@@ -3,7 +3,9 @@ const CardTargetResolver = require('./abilityTargets/CardTargetResolver.js');
 const SelectTargetResolver = require('./abilityTargets/SelectTargetResolver.js');
 const { Stage, TargetMode, AbilityType } = require('../Constants.js');
 const { GameEvent } = require('../event/GameEvent.js');
-const { default: Contract } = require('../utils/Contract.js');
+const Contract = require('../utils/Contract.js');
+const { GameSystem } = require('../gameSystem/GameSystem.js');
+const { has } = require('underscore');
 
 // TODO: convert to TS and make this abstract
 /**
@@ -24,26 +26,39 @@ class PlayerOrCardAbility {
      * @param {Object|Array} [properties.cost] - optional property that specifies
      * the cost for the ability. Can either be a cost object or an array of cost
      * objects.
-     * @param {Object} [properties.target] - Optional property that specifies
-     * the target of the ability.
-     * @param {Array} [properties.immediateEffect] - GameSystem[] optional array of game actions
+     * @param {Object} [properties.target] - Optional property that specifies the target of the ability.
+     * @param {GameSystem} [properties.immediateEffect] - Optional GameSystem without a target resolver
+     * @param {any} [properties.targetResolver] - Optional target resolver
+     * @param {any} [properties.targetResolvers] - Optional target resolvers set
      * @param {string} [properties.title] - Name to use for ability display and debugging
      * @param {string} [properties.cardName] - Optional property that specifies the name of the card, if any
-     * @param {boolean} [properties.optional] - Optional property that indicates if resolution of the ability
-     * is optional or required
+     * @param {boolean} [properties.optional] - Optional property that indicates if resolution of the ability is optional and may be passed through
+     * @param {boolean} [properties.resolveTriggersAfter] - Optional property that indicates whether triggers triggered during this
+     * ability should be resolved right after it, or passed back to the parent game event window
      */
     constructor(properties, type = AbilityType.Action) {
         Contract.assertStringValue(properties.title);
+
+        const hasImmediateEffect = properties.immediateEffect != null;
+        const hasTargetResolver = properties.targetResolver != null;
+        const hasTargetResolvers = properties.targetResolvers != null;
+
+        const systemTypesCount = [hasImmediateEffect, hasTargetResolver, hasTargetResolvers].reduce(
+            (acc, val) => acc + (val ? 1 : 0), 0,
+        );
+
+        Contract.assertFalse(systemTypesCount > 1, 'Cannot create ability with multiple system initialization properties');
 
         this.title = properties.title;
         this.limit = null;
         this.keyword = null;
         this.type = type;
         this.optional = !!properties.optional;
-        this.gameSystem = properties.immediateEffect || [];
-        if (!Array.isArray(this.gameSystem)) {
-            this.gameSystem = [this.gameSystem];
-        }
+        this.immediateEffect = properties.immediateEffect;
+
+        //TODO: Ensure that nested abilities(triggers resolving during a trigger resolution) are resolving as expected.
+        this.resolveTriggersAfter = this.type === AbilityType.Triggered || !!properties.resolveTriggersAfter;
+
         this.buildTargetResolvers(properties);
         this.cost = this.buildCost(properties.cost);
         for (const cost of this.cost) {
@@ -86,13 +101,6 @@ class PlayerOrCardAbility {
     }
 
     buildTargetResolver(name, properties) {
-        if (properties.immediateEffect) {
-            if (!Array.isArray(properties.immediateEffect)) {
-                properties.immediateEffect = [properties.immediateEffect];
-            }
-        } else {
-            properties.immediateEffect = [];
-        }
         if (properties.mode === TargetMode.Select) {
             return new SelectTargetResolver(name, properties, this);
         } else if (properties.mode === TargetMode.Ability) {
@@ -112,17 +120,45 @@ class PlayerOrCardAbility {
         if (!this.canPayCosts(context) && !ignoredRequirements.includes('cost')) {
             return 'cost';
         }
-        if (this.targetResolvers.length === 0) {
-            if (this.gameSystem.length > 0 && !this.checkGameActionsForPotential(context)) {
-                return 'condition';
-            }
+
+        // we don't check whether a triggered ability has legal targets at the trigger stage, that's evaluated at ability resolution
+        if (context.stage === Stage.Trigger && this.isTriggeredAbility()) {
             return '';
         }
-        return this.canResolveTargets(context) ? '' : 'target';
+
+        // for actions, the only requirement to be legal to activate is that something changes game state. so if there's a resolvable cost, that's enough (see SWU 6.2.C)
+        // TODO: add a card with an action that has no cost (e.g. Han red or Fennec) and confirm that the action is not legal to activate when there are no targets
+        if (this.isAction()) {
+            if (this.getCosts(context).length > 0) {
+                return '';
+            }
+        }
+
+        if (this.immediateEffect && !this.checkGameActionsForPotential(context)) {
+            return 'gameStateChange';
+        }
+
+        if (this.targetResolvers.length > 0 && !this.canResolveSomeTarget(context)) {
+            return 'target';
+        }
+
+        return '';
+    }
+
+    hasAnyLegalEffects(context) {
+        if (this.immediateEffect && this.checkGameActionsForPotential(context)) {
+            return true;
+        }
+
+        if (this.targetResolvers.length > 0 && this.canResolveSomeTarget(context)) {
+            return true;
+        }
+
+        return false;
     }
 
     checkGameActionsForPotential(context) {
-        return this.gameSystem.some((gameSystem) => gameSystem.hasLegalTarget(context));
+        return this.immediateEffect.hasLegalTarget(context);
     }
 
     /**
@@ -183,8 +219,8 @@ class PlayerOrCardAbility {
      *
      * @returns {Boolean}
      */
-    canResolveTargets(context) {
-        return this.nonDependentTargets.every((target) => target.canResolve(context));
+    canResolveSomeTarget(context) {
+        return this.nonDependentTargets.some((target) => target.canResolve(context));
     }
 
     /**
@@ -217,8 +253,12 @@ class PlayerOrCardAbility {
         return targetResults;
     }
 
-    hasLegalTargets(context) {
-        return this.nonDependentTargets.every((target) => target.hasLegalTarget(context));
+    hasTargets() {
+        return this.nonDependentTargets.length > 0;
+    }
+
+    hasSomeLegalTarget(context) {
+        return this.nonDependentTargets.some((target) => target.hasLegalTarget(context));
     }
 
     checkAllTargets(context) {
@@ -228,7 +268,7 @@ class PlayerOrCardAbility {
     hasTargetsChosenByInitiatingPlayer(context) {
         return (
             this.targetResolvers.some((target) => target.hasTargetsChosenByInitiatingPlayer(context)) ||
-            this.gameSystem.some((action) => action.hasTargetsChosenByInitiatingPlayer(context)) ||
+            this.immediateEffect.hasTargetsChosenByInitiatingPlayer(context) ||
             this.cost.some(
                 (cost) => cost.hasTargetsChosenByInitiatingPlayer && cost.hasTargetsChosenByInitiatingPlayer(context)
             )
@@ -248,6 +288,10 @@ class PlayerOrCardAbility {
 
     isAction() {
         return this.type === AbilityType.Action;
+    }
+
+    isTriggeredAbility() {
+        return this.type === AbilityType.Triggered;
     }
 
     /** Indicates whether a card is played as part of the resolution this ability */

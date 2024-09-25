@@ -2,24 +2,23 @@ import type { AbilityContext } from '../core/ability/AbilityContext';
 import type { Card } from '../core/card/Card';
 import CardSelector from '../core/cardSelector/CardSelector';
 import type BaseCardSelector from '../core/cardSelector/BaseCardSelector';
-import { CardType, EffectName, Location, RelativePlayer, TargetMode } from '../core/Constants';
-import type Player from '../core/Player';
+import { CardTypeFilter, EffectName, Location, RelativePlayer, TargetMode } from '../core/Constants';
 import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
 import type { GameSystem } from '../core/gameSystem/GameSystem';
 import type { GameEvent } from '../core/event/GameEvent';
 
-export interface ISelectCardProperties extends ICardTargetSystemProperties {
+export interface ISelectCardProperties<TContext extends AbilityContext = AbilityContext> extends ICardTargetSystemProperties {
     activePromptTitle?: string;
     player?: RelativePlayer;
-    cardType?: CardType | CardType[];
+    cardTypeFilter?: CardTypeFilter | CardTypeFilter[];
     controller?: RelativePlayer;
     locationFilter?: Location | Location[];
-    cardCondition?: (card: Card, context: AbilityContext) => boolean;
-    targets?: boolean;
+    cardCondition?: (card: Card, context: TContext) => boolean;
+    checkTarget?: boolean;
     message?: string;
     manuallyRaiseEvent?: boolean;
-    messageArgs?: (card: Card, player: RelativePlayer, properties: ISelectCardProperties) => any[];
-    innerSystem: GameSystem;
+    messageArgs?: (card: Card, player: RelativePlayer, properties: ISelectCardProperties<TContext>) => any[];
+    innerSystem: GameSystem<TContext>;
     selector?: BaseCardSelector;
     mode?: TargetMode;
     numCards?: number;
@@ -30,38 +29,41 @@ export interface ISelectCardProperties extends ICardTargetSystemProperties {
     effectArgs?: (context) => string[];
 }
 
+
+// TODO: ideally the pass option would work like it does for target resolvers, where we just add a "Pass"
+// button to the target selection window. Need to change it so that's possible with SelectCard.
+
 /**
  * A wrapper system for adding a target selection prompt around the execution the wrapped system.
- * Only used for adding a selection effect to a system that is part of a cost.
+ * Functions the same as a targetResolver and used in situations where one can't be created (e.g., costs).
  */
-// TODO: why is this class needed for evaluating costs when systems already have target evaluation and selection built in?
-export class SelectCardSystem extends CardTargetSystem {
-    protected override readonly defaultProperties: ISelectCardProperties = {
+export class SelectCardSystem<TContext extends AbilityContext = AbilityContext> extends CardTargetSystem<TContext, ISelectCardProperties<TContext>> {
+    protected override readonly defaultProperties: ISelectCardProperties<TContext> = {
         cardCondition: () => true,
         innerSystem: null,
         innerSystemProperties: (card) => ({ target: card }),
-        targets: false,
-        hidePromptIfSingleCard: false,
+        checkTarget: false,
+        hidePromptIfSingleCard: true,
         manuallyRaiseEvent: false
     };
 
-    public constructor(properties: ISelectCardProperties | ((context: AbilityContext) => ISelectCardProperties)) {
+    public constructor(properties: ISelectCardProperties<TContext> | ((context: TContext) => ISelectCardProperties<TContext>)) {
         super(properties);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     public eventHandler(event): void { }
 
-    public override getEffectMessage(context: AbilityContext): [string, any[]] {
-        const { target, effect, effectArgs } = this.generatePropertiesFromContext(context) as ISelectCardProperties;
+    public override getEffectMessage(context: TContext): [string, any[]] {
+        const { target, effect, effectArgs } = this.generatePropertiesFromContext(context);
         if (effect) {
             return [effect, effectArgs(context) || []];
         }
         return ['choose a target for {0}', [target]];
     }
 
-    public override generatePropertiesFromContext(context: AbilityContext, additionalProperties = {}): ISelectCardProperties {
-        const properties = super.generatePropertiesFromContext(context, additionalProperties) as ISelectCardProperties;
+    public override generatePropertiesFromContext(context: TContext, additionalProperties = {}) {
+        const properties = super.generatePropertiesFromContext(context, additionalProperties);
         properties.innerSystem.setDefaultTargetFn(() => properties.target);
         if (!properties.selector) {
             const cardCondition = (card, context) =>
@@ -74,32 +76,32 @@ export class SelectCardSystem extends CardTargetSystem {
         return properties;
     }
 
-    public override canAffect(card: Card, context: AbilityContext, additionalProperties = {}): boolean {
+    public override canAffect(card: Card, context: TContext, additionalProperties = {}): boolean {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
         const player =
-            (properties.targets && context.choosingPlayerOverride) ||
+            (properties.checkTarget && context.choosingPlayerOverride) ||
             (properties.player === RelativePlayer.Opponent && context.player.opponent) ||
             context.player;
         return properties.selector.canTarget(card, context, player);
     }
 
-    public override hasLegalTarget(context: AbilityContext, additionalProperties = {}): boolean {
+    public override hasLegalTarget(context: TContext, additionalProperties = {}): boolean {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
         const player =
-            (properties.targets && context.choosingPlayerOverride) ||
+            (properties.checkTarget && context.choosingPlayerOverride) ||
             (properties.player === RelativePlayer.Opponent && context.player.opponent) ||
             context.player;
         return properties.selector.hasEnoughTargets(context, player);
     }
 
-    public override queueGenerateEventGameSteps(events: GameEvent[], context: AbilityContext, additionalProperties = {}): void {
+    public override queueGenerateEventGameSteps(events: GameEvent[], context: TContext, additionalProperties = {}): void {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
         if (properties.player === RelativePlayer.Opponent && !context.player.opponent) {
             return;
         }
         let player = properties.player === RelativePlayer.Opponent ? context.player.opponent : context.player;
         let mustSelect = [];
-        if (properties.targets) {
+        if (properties.checkTarget) {
             player = context.choosingPlayerOverride || player;
             mustSelect = properties.selector
                 .getAllLegalTargets(context, player)
@@ -112,11 +114,16 @@ export class SelectCardSystem extends CardTargetSystem {
         if (!properties.selector.hasEnoughTargets(context, player)) {
             return;
         }
+
+        let buttons = [];
+        buttons = properties.cancelHandler ? buttons.concat({ text: 'Cancel', arg: 'cancel' }) : buttons;
+        buttons = properties.innerSystem.isOptional(context) ? buttons.concat({ text: 'Pass ability', arg: 'passAbility' }) : buttons;
+
         const defaultProperties = {
             context: context,
             selector: properties.selector,
             mustSelect: mustSelect,
-            buttons: properties.cancelHandler ? [{ text: 'Cancel', arg: 'cancel' }] : [],
+            buttons: buttons,
             onCancel: properties.cancelHandler,
             onSelect: (player, cards) => {
                 if (properties.message) {
@@ -125,10 +132,16 @@ export class SelectCardSystem extends CardTargetSystem {
                 properties.innerSystem.queueGenerateEventGameSteps(
                     events,
                     context,
-                    Object.assign({ parentAction: this }, additionalProperties, properties.innerSystemProperties(cards))
+                    Object.assign({ parentSystem: this }, additionalProperties, properties.innerSystemProperties(cards))
                 );
                 if (properties.manuallyRaiseEvent) {
                     context.game.openEventWindow(events);
+                }
+                return true;
+            },
+            onMenuCommand: (player, arg) => {
+                if (arg === 'passAbility') {
+                    return true;
                 }
                 return true;
             }
@@ -145,8 +158,8 @@ export class SelectCardSystem extends CardTargetSystem {
         return;
     }
 
-    public override hasTargetsChosenByInitiatingPlayer(context: AbilityContext, additionalProperties = {}): boolean {
+    public override hasTargetsChosenByInitiatingPlayer(context: TContext, additionalProperties = {}): boolean {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
-        return properties.targets && properties.player !== RelativePlayer.Opponent;
+        return properties.checkTarget && properties.player !== RelativePlayer.Opponent;
     }
 }

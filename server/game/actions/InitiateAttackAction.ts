@@ -17,7 +17,7 @@ import { AttackStepsSystem, IAttackProperties } from '../gameSystems/AttackSteps
 export class InitiateAttackAction extends PlayerAction {
     public constructor(card: Card, private attackProperties?: IAttackProperties) {
         super(card, 'Attack', [exhaustSelf()], {
-            immediateEffect: new AttackStepsSystem({ attacker: card }),
+            immediateEffect: new AttackStepsSystem(Object.assign({}, attackProperties, { attacker: card })),
             locationFilter: WildcardLocation.AnyAttackable,
             activePromptTitle: 'Choose a target for attack'
         });
@@ -41,6 +41,9 @@ export class InitiateAttackAction extends PlayerAction {
         }
         if (context.player.hasRestriction(AbilityRestriction.Attack, context)) {
             return 'restriction';
+        }
+        if (!this.targetResolvers[0].hasLegalTarget(context)) {
+            return 'target';
         }
         return super.meetsRequirements(context);
     }

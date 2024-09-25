@@ -2,7 +2,7 @@ import Player from '../../Player';
 import { GameEvent } from '../../event/GameEvent';
 import EventWindow from '../../event/EventWindow';
 import { AbilityType, WildcardLocation } from '../../Constants';
-import Contract from '../../utils/Contract';
+import * as Contract from '../../utils/Contract';
 import { TriggeredAbilityContext } from '../../ability/TriggeredAbilityContext';
 import TriggeredAbility from '../../ability/TriggeredAbility';
 import { Card } from '../../card/Card';
@@ -10,7 +10,7 @@ import { TriggeredAbilityWindowTitle } from './TriggeredAbilityWindowTitle';
 import { BaseStep } from '../BaseStep';
 import { AbilityContext } from '../../ability/AbilityContext';
 import Game from '../../Game';
-import Shield from '../../../cards/01_SOR/Shield';
+import Shield from '../../../cards/01_SOR/tokens/Shield';
 
 export class TriggeredAbilityWindow extends BaseStep {
     /** Triggered effects / abilities that have not yet been resolved, organized by owning player */
@@ -25,7 +25,6 @@ export class TriggeredAbilityWindow extends BaseStep {
     /** The events that were triggered as part of this window */
     private triggeringEvents: GameEvent[];
 
-    private eventsEmitted = false;
     private choosePlayerResolutionOrderComplete = false;
     private readonly toStringName: string;
 
@@ -45,41 +44,26 @@ export class TriggeredAbilityWindow extends BaseStep {
     ) {
         super(game);
 
-        this.toStringName = `'TriggeredAbilityWindow: ${this.eventWindow.events.map((event) => event.name).join(', ')}'`;
+        this.triggeringEvents = [...this.eventWindow.events];
     }
 
-    public emitEvents() {
-        this.eventsEmitted = true;
-
-        const events = this.eventWindow.events.filter((event) => !this.eventsToExclude.includes(event));
+    public emitEvents(newEvents: GameEvent[] = []) {
+        this.triggeringEvents.push(...newEvents);
+        const events = this.triggeringEvents.filter((event) => !this.eventsToExclude.includes(event) && !event.cancelled);
         events.forEach((event) => {
             this.game.emit(event.name + ':' + this.triggerAbilityType, event, this);
         });
         this.game.emit('aggregateEvent:' + this.triggerAbilityType, events, this);
-
-        this.triggeringEvents = events;
     }
 
     public override continue() {
-        if (!Contract.assertTrue(this.eventsEmitted, 'TriggeredAbilityWindow.continue() called before events were emitted')) {
-            return true;
-        }
-
         this.game.currentAbilityWindow = this;
 
         if (!this.choosePlayerResolutionOrderComplete) {
+            this.cleanUpTriggers();
             // if no abilities trigged, continue with game flow
             if (this.unresolved.size === 0) {
                 return true;
-            }
-
-            // remove any triggered abilities from cancelled events
-            // this is necessary because we trigger abilities before any events in the window are executed, so if any were cancelled at execution time we need to clean up
-            this.unresolved = new Map([...this.unresolved].map(([player, triggeredAbilityList]) => [player, triggeredAbilityList.filter((context) => !context.event.cancelled)]));
-
-            // see if consolidating shields gets us down to one trigger
-            if (this.unresolved.size === 1 && this.triggerAbilityType === AbilityType.ReplacementEffect) {
-                this.consolidateShieldTriggers();
             }
 
             // if more than one player has triggered abilities, need to prompt for resolve order (SWU 7.6.10)
@@ -119,19 +103,22 @@ export class TriggeredAbilityWindow extends BaseStep {
     }
 
     protected assertWindowResolutionNotStarted(triggerTypeName: string, source: Card) {
-        if (!Contract.assertFalse(this.choosePlayerResolutionOrderComplete, `Attempting to add new triggered ${triggerTypeName} from source '${source.internalName}' to a window that has already started resolution`)) {
-            return;
-        }
+        Contract.assertFalse(this.choosePlayerResolutionOrderComplete, `Attempting to add new triggered ${triggerTypeName} from source '${source.internalName}' to a window that has already started resolution`);
     }
 
     private promptUnresolvedAbilities() {
-        if (!Contract.assertNotNullLike(this.currentlyResolvingPlayer)) {
-            return false;
-        }
+        Contract.assertNotNullLike(this.currentlyResolvingPlayer);
 
         this.choosePlayerResolutionOrderComplete = true;
 
         let abilitiesToResolve = this.unresolved.get(this.currentlyResolvingPlayer);
+
+        // if none of the player's remaining abilities can resolve, skip to the next player
+        if (!this.canAnyAbilitiesResolve(abilitiesToResolve)) {
+            this.unresolved.set(this.currentlyResolvingPlayer, []);
+            abilitiesToResolve = [];
+        }
+
         if (abilitiesToResolve.length === 0) {
             // if the last resolving player is out of abilities to resolve, we're done
             if (this.resolvePlayerOrder.length === 1) {
@@ -163,38 +150,41 @@ export class TriggeredAbilityWindow extends BaseStep {
 
     /** Get the set of yet-unresolved abilities for the player whose turn it is to do resolution */
     private getCurrentlyResolvingAbilities() {
-        if (
-            !Contract.assertNotNullLike(this.currentlyResolvingPlayer) ||
-            !Contract.assertHasKey(this.unresolved, this.currentlyResolvingPlayer)
-        ) {
-            return null;
-        }
+        Contract.assertNotNullLike(this.currentlyResolvingPlayer);
+        Contract.assertHasKey(this.unresolved, this.currentlyResolvingPlayer);
 
         return this.unresolved.get(this.currentlyResolvingPlayer);
     }
 
     private promptForNextAbilityToResolve() {
         const abilitiesToResolve = this.getCurrentlyResolvingAbilities();
-        const choices = abilitiesToResolve.map((context, index) => {
-            return { text: (context.ability as TriggeredAbility).title, method: 'resolveAbility', arg: context };
-        });
+
+        // TODO: need to optionally show additional details in the ability options for more complex situations, e.g. same ability triggered multiple times in the same window.
+        // (see forcedtriggeredabilitywindow.js in the L5R code for reference)
+        const choices = abilitiesToResolve.map((context) => (context.ability as TriggeredAbility).title);
+        const handlers = abilitiesToResolve.map((context) => () => this.resolveAbility(context));
 
         this.game.promptWithHandlerMenu(this.currentlyResolvingPlayer, {
             activePromptTitle: 'Choose an ability to resolve:',
             source: 'Choose Triggered Ability Resolution Order',
-            choices: choices
+            choices: choices,
+            handlers: handlers
         });
 
-        this.game.promptForSelect(this.currentlyResolvingPlayer, Object.assign(this.getPromptForSelectProperties(), {
-            onSelect: (player, card) => {
-                this.resolveAbility(abilitiesToResolve.find((context) => context.source === card));
-                return true;
-            }
-        }));
+        // TODO: a variation of this was being used in the L5R code to choose which card to activate triggered abilities on.
+        // not used now b/c we're doing a shortcut where we just present each ability text name, which doesn't work well in all cases sadly.
+
+        // this.game.promptForSelect(this.currentlyResolvingPlayer, Object.assign(this.getPromptForSelectProperties(), {
+        //     onSelect: (player, card) => {
+        //         this.resolveAbility(abilitiesToResolve.find((context) => context.source === card));
+        //         return true;
+        //     }
+        // }));
     }
 
+    // this is here to allow for overriding in subclasses
     protected getPromptForSelectProperties() {
-        return Object.assign({ location: WildcardLocation.Any }, this.getPromptProperties());
+        return this.getPromptProperties();
     }
 
     private getPromptProperties() {
@@ -229,15 +219,7 @@ export class TriggeredAbilityWindow extends BaseStep {
         const abilitiesAvailableForPlayer = this.getCurrentlyResolvingAbilities();
 
         for (const abilityContext of abilitiesAvailableForPlayer) {
-            if (!Contract.assertNotNullLike(abilityContext.source)) {
-                continue;
-            }
-
-            // TODO: fill out this implementation. see forcedtriggeredabilitywindow.js in the L5R code for reference
-            if (triggeringCards.has(abilityContext.source)) {
-                throw Error(`The card ${abilityContext.source} has had multiple abilities triggered in the same event window (or one ability triggered multiple times). This is not yet implemented.`);
-            }
-
+            Contract.assertNotNullLike(abilityContext.source);
             triggeringCards.add(abilityContext.source);
         }
 
@@ -247,7 +229,7 @@ export class TriggeredAbilityWindow extends BaseStep {
     private promptForResolvePlayerOrder() {
         this.game.promptWithHandlerMenu(this.game.actionPhaseActivePlayer, {
             activePromptTitle: 'Both players have triggered abilities in response. Choose a player to resolve all of their abilities first:',
-            source: 'Choose Triggered Ability Resolution Order',
+            waitingPromptTitle: 'Waiting for opponent to choose a player to resolve their triggers first',
             choices: ['You', 'Opponent'],
             handlers: [
                 () => {
@@ -262,15 +244,48 @@ export class TriggeredAbilityWindow extends BaseStep {
         });
     }
 
+    private cleanUpTriggers() {
+        // remove any triggered abilities from cancelled events
+        // this is necessary because we trigger abilities before any events in the window are executed, so if any were cancelled at execution time we need to clean up
+        const preCleanupTriggers: [Player, TriggeredAbilityContext<Card>[]][] = [...this.unresolved];
+        this.unresolved = new Map<Player, TriggeredAbilityContext[]>();
+
+        for (const [player, triggeredAbilities] of preCleanupTriggers) {
+            const cleanedAbilities = triggeredAbilities.filter((context) => !context.event.cancelled);
+            if (cleanedAbilities.length > 0) {
+                this.unresolved.set(player, cleanedAbilities);
+            }
+        }
+
+        if (this.unresolved.size === 0) {
+            return;
+        }
+
+        const anyWithLegalTargets = [...this.unresolved].map(([player, triggeredAbilityList]) => triggeredAbilityList).flat()
+            .some((triggeredAbilityContext) => triggeredAbilityContext.ability.hasAnyLegalEffects(triggeredAbilityContext));
+
+        if (!anyWithLegalTargets) {
+            this.unresolved = new Map();
+            return;
+        }
+
+        // see if consolidating shields gets us down to one trigger
+        if (this.unresolved.size === 1 && this.triggerAbilityType === AbilityType.ReplacementEffect) {
+            this.consolidateShieldTriggers();
+        }
+    }
+
+    private canAnyAbilitiesResolve(triggeredAbilities: TriggeredAbilityContext[]) {
+        return triggeredAbilities.some((triggeredAbilityContext) => triggeredAbilityContext.ability.hasAnyLegalEffects(triggeredAbilityContext));
+    }
+
     /**
      * If there are multiple Shield triggers present, consolidate down to one of them to reduce prompt noise.
      * Will randomly choose the Shield to trigger unless any have {@link Shield.highPriorityRemoval}` = true`,
      * in which case one of those will be selected randomly.
      */
     private consolidateShieldTriggers() {
-        if (!Contract.assertEqual(this.triggerAbilityType, AbilityType.ReplacementEffect)) {
-            return;
-        }
+        Contract.assertEqual(this.triggerAbilityType, AbilityType.ReplacementEffect);
 
         const postConsolidateUnresolved = new Map<Player, TriggeredAbilityContext[]>();
 
@@ -301,6 +316,6 @@ export class TriggeredAbilityWindow extends BaseStep {
     }
 
     public override toString() {
-        return this.toStringName;
+        return `'TriggeredAbilityWindow: ${this.triggeringEvents.map((event) => event.name).join(', ')}'`;
     }
 }

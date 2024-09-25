@@ -15,12 +15,12 @@ import { IInitiateAttackProperties } from './gameSystems/InitiateAttackSystem';
 // ********************************************** EXPORTED TYPES **********************************************
 
 /** Interface definition for addTriggeredAbility */
-export type ITriggeredAbilityProps = ITriggeredAbilityWhenProps | ITriggeredAbilityAggregateWhenProps;
-export type IReplacementEffectAbilityProps = IReplacementEffectAbilityWhenProps | IReplacementEffectAbilityAggregateWhenProps;
+export type ITriggeredAbilityProps<TSource extends Card = Card> = ITriggeredAbilityWhenProps<TSource> | ITriggeredAbilityAggregateWhenProps<TSource>;
+export type IReplacementEffectAbilityProps<TSource extends Card = Card> = IReplacementEffectAbilityWhenProps<TSource> | IReplacementEffectAbilityAggregateWhenProps<TSource>;
 
 /** Interface definition for addActionAbility */
-export interface IActionAbilityProps<Source = any> extends Omit<IAbilityProps<AbilityContext<Source>>, 'optional'> {
-    condition?: (context?: AbilityContext<Source>) => boolean;
+export type IActionAbilityProps<TSource extends Card = Card> = Exclude<IAbilityPropsWithSystems<AbilityContext<TSource>>, 'optional'> & {
+    condition?: (context?: AbilityContext<TSource>) => boolean;
 
     /**
      * If true, any player can trigger the ability. If false, only the card's controller can trigger it.
@@ -30,13 +30,13 @@ export interface IActionAbilityProps<Source = any> extends Omit<IAbilityProps<Ab
 }
 
 /** Interface definition for addConstantAbility */
-export interface IConstantAbilityProps<Source = any> {
+export interface IConstantAbilityProps<TSource extends Card = Card> {
     title: string;
     sourceLocationFilter?: LocationFilter | LocationFilter[];
     /** A handler to enable or disable the ability's effects depending on game context */
-    condition?: (context: AbilityContext<Source>) => boolean;
+    condition?: (context: AbilityContext<TSource>) => boolean;
     /** A handler to determine if a specific card is impacted by the ability effect */
-    matchTarget?: (card: Card, context?: AbilityContext<Source>) => boolean;
+    matchTarget?: (card: Card, context?: AbilityContext<TSource>) => boolean;
     targetController?: RelativePlayer;
     targetLocationFilter?: LocationFilter;
     targetCardTypeFilter?: CardTypeFilter | CardTypeFilter[];
@@ -49,48 +49,23 @@ export interface IConstantAbilityProps<Source = any> {
     createCopies?: boolean;
 }
 
-/** Interface definition for setEventAbility */
-export type IEventAbilityProps<Source = any> = IAbilityProps<AbilityContext<Source>>;
-
-/** Interface definition for setEpicActionAbility */
-export type IEpicActionProps<Source = any> = Omit<IAbilityProps<AbilityContext<Source>>, 'cost' | 'limit' | 'handler'>;
-
-// TODO: since many of the files that use this are JS, it's hard to know if it's fully correct.
-// for example, there's ambiguity between IAbilityProps and ITriggeredAbilityProps at the level of PlayerOrCardAbility
-/** Base interface for triggered and action ability definitions */
-export interface IAbilityProps<Context> {
-    title: string;
-    locationFilter?: LocationFilter | LocationFilter[];
-    cost?: any;
-    limit?: any;
-    targetResolver?: IActionTargetResolver;
-    targetResolvers?: IActionTargetsResolver;
-    cardName?: string;
-
-    /**
-     * Indicates if triggering the ability is optional (in which case the player will be offered the
-     * 'Pass' button on resolution) or if it is mandatory
-     */
-    optional?: boolean;
-
-    /**
-     * Indicates that an attack should be triggered from a friendly unit.
-     * Shorthand for `AbilityHelper.immediateEffects.attack(AttackSelectionMode.SelectAttackerAndTarget)`.
-     * Can either be an {@link IInitiateAttackProperties} property object or a function that creates one from
-     * an {@link AbilityContext}.
-     */
-    initiateAttack?: IInitiateAttackProperties | ((context: AbilityContext) => IInitiateAttackProperties);
-
-    printedAbility?: boolean;
-    cannotTargetFirst?: boolean;
-    effect?: string;
-    effectArgs?: EffectArg | ((context: Context) => EffectArg);
-    immediateEffect?: GameSystem | GameSystem[];
-    handler?: (context?: Context) => void;
-    then?: ((context?: AbilityContext) => IAbilityProps<Context>) | IAbilityProps<Context>;
+// exported for use in situations where we need to exclude "when" and "aggregateWhen"
+export type ITriggeredAbilityBaseProps<TSource extends Card = Card> = IAbilityPropsWithSystems<TriggeredAbilityContext<TSource>> & {
+    collectiveTrigger?: boolean;
+    targetResolver?: ITriggeredAbilityTargetResolver<TriggeredAbilityContext<TSource>>;
+    targetResolvers?: ITriggeredAbilityTargetsResolver<TriggeredAbilityContext<TSource>>;
+    handler?: (context: TriggeredAbilityContext) => void;
+    then?: ((context?: TriggeredAbilityContext) => IAbilityProps<TriggeredAbilityContext>) | IAbilityProps<TriggeredAbilityContext>;
 }
 
-interface IReplacementEffectAbilityBaseProps extends Omit<ITriggeredAbilityBaseProps,
+/** Interface definition for setEventAbility */
+export type IEventAbilityProps<TSource extends Card = Card> = IAbilityPropsWithSystems<AbilityContext<TSource>>;
+
+/** Interface definition for setEpicActionAbility */
+export type IEpicActionProps<TSource extends Card = Card> = Exclude<IAbilityPropsWithSystems<AbilityContext<TSource>>, 'cost' | 'limit' | 'handler'>;
+
+
+interface IReplacementEffectAbilityBaseProps<TSource extends Card = Card> extends Omit<ITriggeredAbilityBaseProps<TSource>,
         'immediateEffect' | 'targetResolver' | 'targetResolvers' | 'handler'
 > {
     replaceWith: IReplacementEffectSystemProperties
@@ -128,33 +103,81 @@ export type EffectArg =
     | { id: string; label: string; name: string; facedown: boolean; type: CardType }
     | EffectArg[];
 
-export type WhenType = {
-        [EventNameValue in EventName]?: (event: any, context?: TriggeredAbilityContext) => boolean;
+export type WhenType<TSource extends Card = Card> = {
+        [EventNameValue in EventName]?: (event: any, context?: TriggeredAbilityContext<TSource>) => boolean;
     };
 
 // ********************************************** INTERNAL TYPES **********************************************
-interface ITriggeredAbilityWhenProps extends ITriggeredAbilityBaseProps {
-    when: WhenType;
+type ITriggeredAbilityWhenProps<TSource extends Card> = ITriggeredAbilityBaseProps<TSource> & {
+    when: WhenType<TSource>;
 }
 
-interface ITriggeredAbilityAggregateWhenProps extends ITriggeredAbilityBaseProps {
+type ITriggeredAbilityAggregateWhenProps<TSource extends Card> = ITriggeredAbilityBaseProps<TSource> & {
     aggregateWhen: (events: GameEvent[], context: TriggeredAbilityContext) => boolean;
 }
 
-interface IReplacementEffectAbilityWhenProps extends IReplacementEffectAbilityBaseProps {
-    when: WhenType;
+// TODO: since many of the files that use this are JS, it's hard to know if it's fully correct.
+// for example, there's ambiguity between IAbilityProps and ITriggeredAbilityProps at the level of PlayerOrCardAbility
+/** Base interface for triggered and action ability definitions */
+interface IAbilityProps<TContext extends AbilityContext> {
+    title: string;
+    locationFilter?: LocationFilter | LocationFilter[];
+    cost?: any;
+    limit?: any;
+    cardName?: string;
+
+    /**
+     * Indicates if triggering the ability is optional (in which case the player will be offered the
+     * 'Pass' button on resolution) or if it is mandatory
+     */
+    optional?: boolean;
+
+    printedAbility?: boolean;
+    cannotTargetFirst?: boolean;
+    effect?: string;
+    effectArgs?: EffectArg | ((context: TContext) => EffectArg);
+    then?: ((context?: AbilityContext) => IAbilityPropsWithSystems<TContext>) | IAbilityPropsWithSystems<TContext>;
 }
 
-interface IReplacementEffectAbilityAggregateWhenProps extends IReplacementEffectAbilityBaseProps {
+interface IAbilityPropsWithTargetResolver<TContext extends AbilityContext> extends IAbilityProps<TContext> {
+    targetResolver: IActionTargetResolver<TContext>;
+}
+
+interface IAbilityPropsWithTargetResolvers<TContext extends AbilityContext> extends IAbilityProps<TContext> {
+    targetResolvers: IActionTargetsResolver<TContext>;
+}
+
+interface IAbilityPropsWithImmediateEffect<TContext extends AbilityContext> extends IAbilityProps<TContext> {
+    immediateEffect: GameSystem<TContext>;
+}
+
+interface IAbilityPropsWithHandler<TContext extends AbilityContext> extends IAbilityProps<TContext> {
+    handler: (context: TContext) => void;
+}
+
+interface IAbilityPropsWithInitiateAttack<TContext extends AbilityContext> extends IAbilityProps<TContext> {
+    /**
+     * Indicates that an attack should be triggered from a friendly unit.
+     * Shorthand for `AbilityHelper.immediateEffects.attack(AttackSelectionMode.SelectAttackerAndTarget)`.
+     * Can either be an {@link IInitiateAttackProperties} property object or a function that creates one from
+     * an {@link AbilityContext}.
+     */
+    initiateAttack?: IInitiateAttackProperties | ((context: TContext) => IInitiateAttackProperties);
+}
+
+type IAbilityPropsWithSystems<TContext extends AbilityContext> =
+    IAbilityPropsWithImmediateEffect<TContext> |
+    IAbilityPropsWithInitiateAttack<TContext> |
+    IAbilityPropsWithTargetResolver<TContext> |
+    IAbilityPropsWithTargetResolvers<TContext> |
+    IAbilityPropsWithHandler<TContext>;
+
+interface IReplacementEffectAbilityWhenProps<TSource extends Card> extends IReplacementEffectAbilityBaseProps<TSource> {
+    when: WhenType<TSource>;
+}
+
+interface IReplacementEffectAbilityAggregateWhenProps<TSource extends Card> extends IReplacementEffectAbilityBaseProps<TSource> {
     aggregateWhen: (events: GameEvent[], context: TriggeredAbilityContext) => boolean;
-}
-
-interface ITriggeredAbilityBaseProps extends IAbilityProps<TriggeredAbilityContext> {
-    collectiveTrigger?: boolean;
-    targetResolver?: ITriggeredAbilityTargetResolver;
-    targetResolvers?: ITriggeredAbilityTargetsResolver;
-    handler?: (context: TriggeredAbilityContext) => void;
-    then?: ((context?: TriggeredAbilityContext) => IAbilityProps<TriggeredAbilityContext>) | IAbilityProps<TriggeredAbilityContext>;
 }
 
 interface IKeywordPropertiesBase {
@@ -204,57 +227,3 @@ export type NonParameterKeywordName =
     | KeywordName.Saboteur
     | KeywordName.Sentinel
     | KeywordName.Shielded;
-
-
-// class CardsPlayedThisPhaseWatcher {
-//     public register();
-//     public getValue();
-// }
-
-
-// // ----------------------------- OPTION 1 ---------------------------
-// // export class DarthVaderLordOfTheSith extends LeaderCard {
-// //     private readonly cardsPlayedThisPhaseWatcher: CardsPlayedThisPhaseWatcher;
-
-// //     public constructor() {
-// //         super();
-// //         this.cardsPlayedThisPhaseWatcher = new CardsPlayedThisPhaseWatcher();
-// //         this.cardsPlayedThisPhaseWatcher.register();
-// //     }
-
-// //     public override setupCardAbilities() {
-// //         this.addActionAbility({
-// //             title: 'Deal 1 damage to a unit and 1 to a base',
-// //             condition: () => {
-// //                 const cardsPlayedThisPhase = this.cardsPlayedThisPhaseWatcher.getValue();
-// //                 return cardsPlayedThisPhase.some((card) => card.aspects.includes(Aspect.Villainy));
-// //             }
-// //             // ...costs, targets, etc...
-// //         });
-// //     }
-// // }
-
-// export type CardConstructor = new (...args: any[]) => Card;
-
-// function CardsPlayedThisPhaseWatcher<TBaseClass extends CardConstructor>(BaseClass: TBaseClass) {
-//     return class WithPrintedPower extends BaseClass {
-//         public getCardsPlayedThisPhase();
-//     };
-// }
-
-
-// // ----------------------------- OPTION 2 ---------------------------
-// export class DarthVaderLordOfTheSith extends CardsPlayedThisPhaseWatcher(LeaderCard) {
-//     // setup and registration all happens automatically in mixin constructor
-
-//     public override setupCardAbilities() {
-//         this.addActionAbility({
-//             title: 'Deal 1 damage to a unit and 1 to a base',
-//             condition: () => {
-//                 const cardsPlayedThisPhase = this.getCardsPlayedThisPhase();
-//                 return cardsPlayedThisPhase.some((card) => card.aspects.includes(Aspect.Villainy));
-//             }
-//             // ...costs, targets, etc...
-//         });
-//     }
-// }

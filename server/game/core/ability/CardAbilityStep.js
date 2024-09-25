@@ -2,17 +2,21 @@ const { AbilityContext } = require('./AbilityContext.js');
 const PlayerOrCardAbility = require('./PlayerOrCardAbility.js');
 const { Stage, AbilityType } = require('../Constants.js');
 const AttackHelper = require('../attack/AttackHelper.js');
+const Helpers = require('../utils/Helpers.js');
+const Contract = require('../utils/Contract.js');
 
 /**
  * Represents one step from a card's text ability. Checks are simpler than for a
  * full card ability, since it is assumed the ability is already resolving (see `CardAbility.js`).
- *
- * The default handler for this will resolve the ability using a `ThenEventWindow` so that any triggered
- * effects will not resolve until after the entire "Then" chain is done (see `ThenEventWindow` or SWU 8.29 for details)
  */
 class CardAbilityStep extends PlayerOrCardAbility {
     /** @param {import('../card/Card').Card} card - The card this ability is attached to */
     constructor(game, card, properties, type = AbilityType.Action) {
+        Contract.assertFalse(
+            properties.targetResolvers != null && properties.initiateAttack != null,
+            'Cannot create ability with targetResolvers and initiateAttack properties'
+        );
+
         if (properties.initiateAttack) {
             AttackHelper.addInitiateAttackProperties(properties);
         }
@@ -45,7 +49,7 @@ class CardAbilityStep extends PlayerOrCardAbility {
     checkGameActionsForPotential(context) {
         if (super.checkGameActionsForPotential(context)) {
             return true;
-        } else if (this.gameSystem.every((gameSystem) => gameSystem.isOptional(context)) && this.properties.then) {
+        } else if (this.immediateEffect.isOptional(context) && this.properties.then) {
             const then =
                 typeof this.properties.then === 'function' ? this.properties.then(context) : this.properties.then;
             const cardAbilityStep = new CardAbilityStep(this.game, this.card, then);
@@ -74,10 +78,13 @@ class CardAbilityStep extends PlayerOrCardAbility {
     }
 
     getGameSystems(context) {
-        // if there are any targets, look for gameActions attached to them
-        let actions = this.targetResolvers.reduce((array, target) => array.concat(target.getGameSystem(context)), []);
-        // look for a gameSystem on the ability itself, on an attachment execute that action on its parent, otherwise on the card itself
-        return actions.concat(this.gameSystem);
+        // if we are using target resolvers, get the legal system(s) and return them
+        if (this.targetResolvers.length > 0) {
+            return this.targetResolvers.reduce((array, target) => array.concat(target.getGameSystems(context)), []);
+        }
+
+        // otherwise, we're using a single game system with no target resolver - just return it as an array
+        return Helpers.asArray(this.immediateEffect);
     }
 
     executeGameActions(context) {
@@ -108,7 +115,7 @@ class CardAbilityStep extends PlayerOrCardAbility {
     }
 
     openEventWindow(events) {
-        return this.game.openThenEventWindow(events);
+        return this.game.openEventWindow(events);
     }
 
     /** @override */

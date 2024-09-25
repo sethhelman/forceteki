@@ -1,6 +1,7 @@
 const CardSelector = require('../../cardSelector/CardSelector.js');
 const { Stage, RelativePlayer } = require('../../Constants.js');
-const { default: Contract } = require('../../utils/Contract.js');
+const { GameSystem } = require('../../gameSystem/GameSystem.js');
+const Contract = require('../../utils/Contract.js');
 const EnumHelpers = require('../../utils/EnumHelpers.js');
 
 /** Target resolver for effects that target abilities */
@@ -16,9 +17,7 @@ class AbilityTargetResolver {
             let dependsOnTarget = ability.targetResolvers.find((target) => target.name === this.properties.dependsOn);
 
             // assert that the target we depend on actually exists
-            if (!Contract.assertNotNullLike(dependsOnTarget)) {
-                return null;
-            }
+            Contract.assertNotNullLike(dependsOnTarget);
 
             dependsOnTarget.dependentTarget = this;
         }
@@ -35,7 +34,7 @@ class AbilityTargetResolver {
                 }
                 return (!properties.cardCondition || properties.cardCondition(card, contextCopy)) &&
                        (!this.dependentTarget || this.dependentTarget.hasLegalTarget(contextCopy)) &&
-                       properties.immediateEffect.some((gameSystem) => gameSystem.hasLegalTarget(contextCopy));
+                       properties.immediateEffect.hasLegalTarget(contextCopy);
             });
         };
         return CardSelector.for(Object.assign({}, properties, { cardCondition: cardCondition, targets: false }));
@@ -53,8 +52,9 @@ class AbilityTargetResolver {
         return this.selector.getAllLegalTargets(context, this.getChoosingPlayer(context));
     }
 
-    getGameSystem(context) {
-        return this.properties.immediateEffect.filter((gameSystem) => gameSystem.hasLegalTarget(context));
+    /** @returns {GameSystem[]} */
+    getGameSystems() {
+        return this.properties.immediateEffect ? [this.properties.immediateEffect] : [];
     }
 
     // TODO: add passHandler here so that player can potentially be prompted for pass earlier in the window

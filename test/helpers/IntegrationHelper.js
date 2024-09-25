@@ -4,7 +4,7 @@
 const { select } = require('underscore');
 const { GameMode } = require('../../build/GameMode.js');
 const Contract = require('../../build/game/core/utils/Contract.js');
-const { checkNullCard, formatPrompt } = require('./Util.js');
+const { checkNullCard, formatPrompt, getPlayerPromptState, promptStatesEqual, stringArraysEqual } = require('./Util.js');
 
 require('./ObjectFormatters.js');
 
@@ -41,7 +41,7 @@ var customMatchers = {
                 if (result.pass) {
                     result.message = `Expected ${actual.name} not to have prompt '${expected}' but it did.`;
                 } else {
-                    result.message = `Expected ${actual.name} to have prompt '${expected}' but the prompt is:\n${formatPrompt(actual.currentPrompt(), actual.currentActionTargets)}.`;
+                    result.message = `Expected ${actual.name} to have prompt '${expected}' but the prompt is:\n${formatPrompt(actual.currentPrompt(), actual.currentActionTargets)}`;
                 }
 
                 return result;
@@ -353,10 +353,14 @@ var customMatchers = {
                 }
                 let result = {};
 
+                const beforeClick = getPlayerPromptState(player.player);
+
                 player.clickCardNonChecking(card);
 
-                // this is the default action window prompt (meaning no action was available)
-                result.pass = !player.hasPrompt('Action Window');
+                const afterClick = getPlayerPromptState(player.player);
+
+                // if the prompt state changed after click, there was an action available
+                result.pass = !promptStatesEqual(beforeClick, afterClick);
 
                 if (result.pass) {
                     result.message = `Expected ${card.name} not to have an action available when clicked by ${player.name} but it has ability prompt:\n${generatePromptHelpMessage(player)}`;
@@ -388,10 +392,14 @@ var customMatchers = {
     },
     toHavePassAbilityPrompt: function () {
         return {
-            compare: function (player) {
+            compare: function (player, abilityText) {
                 var result = {};
-                const passPromptText = 'Do you want to trigger this ability or pass?';
-                var currentPrompt = player.currentPrompt();
+
+                if (abilityText == null) {
+                    throw new Error('toHavePassAbilityPrompt requires an abilityText parameter');
+                }
+
+                const passPromptText = `Trigger the ability '${abilityText}' or pass`;
                 result.pass = player.hasPrompt(passPromptText);
 
                 if (result.pass) {
@@ -532,27 +540,12 @@ var customMatchers = {
 
                 const expectedUpgradeNames = [...upgradeNames];
 
-                let expectedUpgrades = expectedUpgradeNames.filter((x) => actualUpgradeNames.includes(x));
-                let missingUpgrades = expectedUpgradeNames.filter((x) => !actualUpgradeNames.includes(x));
-                let unexpectedUpgrades = actualUpgradeNames.filter((x) => !expectedUpgradeNames.includes(x));
-
-                result.pass = unexpectedUpgrades.length === 0 && missingUpgrades.length === 0;
+                result.pass = stringArraysEqual(actualUpgradeNames, expectedUpgradeNames);
 
                 if (result.pass) {
-                    result.message = `Expected ${card.internalName} not to have this exact set of upgrades but it does: ${expectedUpgrades.join(', ')}`;
+                    result.message = `Expected ${card.internalName} not to have this exact set of upgrades but it does: ${expectedUpgradeNames.join(', ')}`;
                 } else {
-                    let message = '';
-
-                    if (missingUpgrades.length > 0) {
-                        message = `Expected ${card.internalName} to have the following upgrades but it does not: ${missingUpgrades.join(', ')}`;
-                    }
-                    if (unexpectedUpgrades.length > 0) {
-                        if (message.length > 0) {
-                            message += '\n';
-                        }
-                        message += `Expected ${card.internalName} not to have the following upgrades but it does: ${unexpectedUpgrades.join(', ')}`;
-                    }
-                    result.message = message;
+                    result.message = `Expected ${card.internalName} to have this exact set of upgrades: '${expectedUpgradeNames.join(', ')}' but it has: '${actualUpgradeNames.join(', ')}'`;
                 }
 
                 return result;
@@ -562,7 +555,7 @@ var customMatchers = {
 };
 
 function generatePromptHelpMessage(player) {
-    return `Current prompt for ${player.name}:\n${formatPrompt(player.currentPrompt(), player.currentActionTargets)}'`;
+    return `Current prompt for ${player.name}:\n${formatPrompt(player.currentPrompt(), player.currentActionTargets)}`;
 }
 
 beforeEach(function () {
@@ -572,8 +565,6 @@ beforeEach(function () {
 global.integration = function (definitions) {
     describe('- integration -', function () {
         beforeEach(function () {
-            Contract.configureAssertMode(Contract.AssertMode.Assert, true);
-
             this.flow = new GameFlowWrapper();
 
             this.game = this.flow.game;
@@ -652,6 +643,10 @@ global.integration = function (definitions) {
                 // Set Leader state (deployed, exhausted, etc.)
                 this.player1.setLeaderStatus(options.player1.leader);
                 this.player2.setLeaderStatus(options.player2.leader);
+
+                // Set Base damage
+                this.player1.setBaseStatus(options.player1.base);
+                this.player2.setBaseStatus(options.player2.base);
 
                 // Deck
                 this.player1.setDeck(options.player1.deck, ['removed from game']);

@@ -1,10 +1,11 @@
 import { AbilityContext } from '../core/ability/AbilityContext';
 import { EventName } from '../core/Constants';
+import { GameSystem } from '../core/gameSystem/GameSystem';
 import { ViewCardSystem, IViewCardProperties, ViewCardMode } from './ViewCardSystem';
 
 export type ILookAtProperties = Omit<IViewCardProperties, 'viewType'>;
 
-export class LookAtSystem extends ViewCardSystem {
+export class LookAtSystem<TContext extends AbilityContext = AbilityContext> extends ViewCardSystem<TContext> {
     public override readonly name = 'lookAt';
     public override readonly eventName = EventName.OnLookAtCard;
     public override readonly effectDescription = 'look at a card';
@@ -17,18 +18,11 @@ export class LookAtSystem extends ViewCardSystem {
 
     // constructor needs to do some extra work to ensure that the passed props object ends up as valid for the parent class
     public constructor(propertiesOrPropertyFactory: ILookAtProperties | ((context?: AbilityContext) => ILookAtProperties)) {
-        let propertyWithViewType: IViewCardProperties | ((context?: AbilityContext) => IViewCardProperties);
-
-        if (typeof propertiesOrPropertyFactory === 'function') {
-            propertyWithViewType = (context?: AbilityContext) => Object.assign(propertiesOrPropertyFactory(context), { viewType: ViewCardMode.LookAt });
-        } else {
-            propertyWithViewType = Object.assign(propertiesOrPropertyFactory, { viewType: ViewCardMode.LookAt });
-        }
-
-        super(propertyWithViewType);
+        const propsWithViewType = GameSystem.appendToPropertiesOrPropertyFactory<IViewCardProperties, 'viewType'>(propertiesOrPropertyFactory, { viewType: ViewCardMode.LookAt });
+        super(propsWithViewType);
     }
 
-    public override getMessageArgs(event: any, context: AbilityContext, additionalProperties: any): any[] {
+    public override getMessageArgs(event: any, context: TContext, additionalProperties: any): any[] {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
         const messageArgs = properties.messageArgs ? properties.messageArgs(event.cards) : [
             context.source, event.cards
