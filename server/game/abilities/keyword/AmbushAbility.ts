@@ -22,7 +22,11 @@ export class AmbushAbility extends TriggeredAbility {
                 onTrue: AbilityHelper.immediateEffects.sequential([
                     AbilityHelper.immediateEffects.ready(),
                     AbilityHelper.immediateEffects.attack((context) => {
-                        return { attacker: context.source };
+                        return {
+                            attacker: context.source,
+                            targetCondition: (card) => !card.isBase(),
+                            optional: false     // override the default optional behavior - once we've triggered ambush, the attack is no longer optional
+                        };
                     })]),
                 onFalse: AbilityHelper.immediateEffects.noAction()
             })

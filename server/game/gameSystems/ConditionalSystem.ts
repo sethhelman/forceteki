@@ -10,11 +10,8 @@ export interface IConditionalSystemProperties<TContext extends AbilityContext = 
 }
 
 export class ConditionalSystem<TContext extends AbilityContext = AbilityContext> extends MetaSystem<TContext, IConditionalSystemProperties<TContext>> {
-    public override generatePropertiesFromContext(context: TContext, additionalProperties = {}) {
-        const properties = super.generatePropertiesFromContext(context, additionalProperties);
-        properties.onTrue.setDefaultTargetFn(() => properties.target);
-        properties.onFalse.setDefaultTargetFn(() => properties.target);
-        return properties;
+    public override getInnerSystems(properties: IConditionalSystemProperties<TContext>) {
+        return [properties.onTrue, properties.onFalse];
     }
 
     public override getEffectMessage(context: TContext): [string, any[]] {

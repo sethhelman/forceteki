@@ -37,12 +37,8 @@ export class SimultaneousGameSystem<TContext extends AbilityContext = AbilityCon
         return [message, legalSystems.map((system) => system.getEffectMessage(context))];
     }
 
-    public override generatePropertiesFromContext(context: TContext, additionalProperties = {}) {
-        const properties = super.generatePropertiesFromContext(context, additionalProperties);
-        for (const gameSystem of properties.gameSystems) {
-            gameSystem.setDefaultTargetFn(() => properties.target);
-        }
-        return properties;
+    public override getInnerSystems(properties: ISimultaneousSystemProperties<TContext>) {
+        return properties.gameSystems;
     }
 
     public override hasLegalTarget(context: TContext, additionalProperties = {}): boolean {

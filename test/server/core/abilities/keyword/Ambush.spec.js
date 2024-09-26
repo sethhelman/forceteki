@@ -14,20 +14,16 @@ describe('Ambush keyword', function() {
                 });
             });
 
-            it('enters play, Ambush is optional', function () {
-                this.player1.clickCard(this.syndicateLackeys);
-                expect(this.player1).toHavePassAbilityPrompt();
-            });
-
             it('enters play, Ambush allows readying and attacking an enemy unit', function () {
                 this.player1.clickCard(this.syndicateLackeys);
-                this.player1.clickPrompt('Trigger');
-                expect(this.syndicateLackeys.exhausted).toBe(false);
+                expect(this.player1).toHavePassAbilityPrompt('Ambush');
+                this.player1.clickPrompt('Ambush');
+
+                expect(this.syndicateLackeys.exhausted).toBe(true);
                 expect(this.p2Base.damage).toBe(0);
                 expect(this.syndicateLackeys.damage).toBe(3);
                 expect(this.consularSecurityForce.damage).toBe(5);
-                expect(this.player1).toHaveEnabledPromptButtons(['']);
-                expect(this.player1).toBeAbleToSelectExactly([this.consularSecurityForce]);
+                expect(this.player2).toBeActivePlayer();
             });
         });
     });

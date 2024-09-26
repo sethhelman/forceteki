@@ -29,7 +29,7 @@ export class InitiateAttackSystem<TContext extends AbilityContext = AbilityConte
     public eventHandler(event, additionalProperties): void {
         const player = event.player;
         const newContext = (event.attackAbility as InitiateAttackAction).createContext(player);
-        event.context.game.queueStep(new AbilityResolver(event.context.game, newContext, true));
+        event.context.game.queueStep(new AbilityResolver(event.context.game, newContext, event.optional));
     }
 
     public override getEffectMessage(context: TContext): [string, any[]] {
@@ -44,6 +44,7 @@ export class InitiateAttackSystem<TContext extends AbilityContext = AbilityConte
         super.addPropertiesToEvent(event, attacker, context, additionalProperties);
 
         event.attackAbility = this.generateAttackAbilityNoTarget(attacker, properties);
+        event.optional = properties.optional == null ? context.ability.optional : properties.optional;
     }
 
     public override canAffect(card: Card, context: TContext, additionalProperties = {}): boolean {

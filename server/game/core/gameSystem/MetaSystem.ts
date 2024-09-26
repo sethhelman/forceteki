@@ -10,4 +10,19 @@ import { GameSystem, IGameSystemProperties } from './GameSystem';
 export abstract class MetaSystem<TContext extends AbilityContext = AbilityContext, TProperties extends IGameSystemProperties = IGameSystemProperties> extends GameSystem<TContext, TProperties> {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     public override eventHandler() {}
+
+    public abstract getInnerSystems(properties: TProperties): GameSystem<TContext>[];
+
+    public override generatePropertiesFromContext(context: TContext, additionalProperties = {}) {
+        const properties = super.generatePropertiesFromContext(context, additionalProperties);
+
+        // if we have an assigned target, overwrite the default target on all inner systems
+        if (properties.target !== null && (!Array.isArray(properties.target) || properties.target.length !== 0)) {
+            for (const gameSystem of this.getInnerSystems(properties)) {
+                gameSystem.setDefaultTargetFn(() => properties.target);
+            }
+        }
+
+        return properties;
+    }
 }
