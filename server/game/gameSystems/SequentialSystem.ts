@@ -72,9 +72,4 @@ export class SequentialSystem<TContext extends AbilityContext = AbilityContext> 
             gameSystem.hasTargetsChosenByInitiatingPlayer(context, additionalProperties)
         );
     }
-
-    // TODO: refactor GameSystem so this class doesn't need to override this method (it isn't called since we override hasLegalTarget)
-    protected override isTargetTypeValid(target: any): boolean {
-        return false;
-    }
 }

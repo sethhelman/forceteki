@@ -25,4 +25,11 @@ export abstract class MetaSystem<TContext extends AbilityContext = AbilityContex
 
         return properties;
     }
+
+    public abstract override hasLegalTarget(context: TContext, additionalProperties?: any): boolean;
+
+    // TODO: refactor GameSystem so this class doesn't need to override this method (it isn't called since we override hasLegalTarget)
+    protected override isTargetTypeValid(target: any): boolean {
+        return false;
+    }
 }

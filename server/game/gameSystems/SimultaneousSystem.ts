@@ -85,9 +85,4 @@ export class SimultaneousGameSystem<TContext extends AbilityContext = AbilityCon
         const properties = this.generatePropertiesFromContext(context);
         return properties.gameSystems.some((gameSystem) => gameSystem.hasTargetsChosenByInitiatingPlayer(context));
     }
-
-    // TODO: refactor GameSystem so this class doesn't need to override this method (it isn't called since we override hasLegalTarget)
-    protected override isTargetTypeValid(target: any): boolean {
-        return false;
-    }
 }
