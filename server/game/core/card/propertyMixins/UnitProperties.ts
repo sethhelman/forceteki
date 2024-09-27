@@ -260,39 +260,13 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
         }
 
         // ***************************************** STAT HELPERS *****************************************
-        public override addOngoingEffect(ongoingEffect: IOngoingCardEffect) {
-            super.addOngoingEffect(ongoingEffect);
-
-            // if this is applying an effect that's decreasing hp, check if the unit has been defeated
-            if (ongoingEffect.type === EffectName.ModifyStats) {
-                const effectValue = ongoingEffect.getValue(this) as StatsModifier;
-
-                if (effectValue.hp < 0) {
-                    this.checkDefeat();
-                }
-            }
-        }
-
-        public override removeOngoingEffect(ongoingEffect: IOngoingCardEffect) {
-            super.removeOngoingEffect(ongoingEffect);
-
-            // if this is removing an effect that was increasing hp, check if the unit has been defeated
-            if (ongoingEffect.type === EffectName.ModifyStats) {
-                const effectValue = ongoingEffect.getValue(this) as StatsModifier;
-
-                if (effectValue.hp > 0) {
-                    this.checkDefeat();
-                }
-            }
-        }
-
         public override addDamage(amount: number) {
             super.addDamage(amount);
 
-            this.checkDefeat();
+            this.checkDefeated();
         }
 
-        protected checkDefeat() {
+        public checkDefeated() {
             if (this.damage >= this.getHp()) {
                 this.owner.defeatCard(this);
             }

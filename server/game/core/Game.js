@@ -262,7 +262,7 @@ class Game extends EventEmitter {
      * @param {Function} predicate - card => Boolean
      * @returns {Array} Array of DrawCard objects
      */
-    findAnyCardsInPlay(predicate) {
+    findAnyCardsInPlay(predicate = () => true) {
         var foundCards = [];
 
         this.getPlayers().forEach((player) => {
@@ -1073,14 +1073,8 @@ class Game extends EventEmitter {
             // this.checkWinCondition();
             // if the state has changed, check for:
 
-            // for (const player of this.getPlayers()) {
-            //     player.getArenaCards().each((card) => {
-            //         if (card.getModifiedController() !== player) {
-            //             // any card being controlled by the wrong player
-            //             this.takeControl(card.getModifiedController(), card);
-            //         }
-            //     });
-            // }
+            // - any defeated units
+            this.findAnyCardsInPlay((card) => card.isUnit()).forEach((card) => card.checkDefeated());
         }
         if (events.length > 0) {
             // check for any delayed effects which need to fire
