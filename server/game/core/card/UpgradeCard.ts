@@ -104,6 +104,7 @@ export class UpgradeCard extends UpgradeCardParent {
         });
     }
 
+    // TODO: add "gainOnAttack", "gainWhenPlayed", "gainWhenDefeated" helpers
     /**
      * Adds an "attached card gains [X]" ability, where X is a triggered ability. You can provide a match function
      * to narrow down whether the effect is applied (for cases where the effect has conditions).
