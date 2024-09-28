@@ -153,6 +153,7 @@ class EventWindow extends BaseStepWithPipeline {
 
     // resolve any events queued for a subwindow (typically defeat events)
     checkSubwindowEvents() {
+        // TODO THIS PR: nesting level guard
         if (this.subwindowEvents.length > 0) {
             this.queueStep(new EventWindow(this.game, this.subwindowEvents));
         }
