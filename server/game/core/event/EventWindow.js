@@ -30,6 +30,8 @@ class EventWindow extends BaseStepWithPipeline {
 
         this.ownsTriggerWindow = ownsTriggerWindow;
 
+        this.subwindowEvents = [];
+
         this.initialise();
     }
 
@@ -42,6 +44,7 @@ class EventWindow extends BaseStepWithPipeline {
             new SimpleStep(this.game, () => this.preResolutionEffects(), 'preResolutionEffects'),
             new SimpleStep(this.game, () => this.executeHandler(), 'executeHandler'),
             new SimpleStep(this.game, () => this.resolveGameState(), 'resolveGameState'),    // TODO EFFECTS: uncomment this (and other places the method is used, + missing ones from l5r)
+            new SimpleStep(this.game, () => this.checkSubwindowEvents(), 'checkSubwindowEvents'),
             new SimpleStep(this.game, () => this.checkThenAbilitySteps(), 'checkThenAbilitySteps'),
             new SimpleStep(this.game, () => this.resolveTriggersIfNecessary(), 'resolveTriggersIfNecessary'),
             new SimpleStep(this.game, () => this.resetCurrentEventWindow(), 'resetCurrentEventWindow')
@@ -61,6 +64,10 @@ class EventWindow extends BaseStepWithPipeline {
 
     addThenAbilityStep(ability, context, condition = (event) => event.isFullyResolved(event)) {
         this.thenAbilitySteps.push({ ability, context, condition });
+    }
+
+    addSubwindowEvents(events) {
+        this.subwindowEvents = this.subwindowEvents.concat(events);
     }
 
     setCurrentEventWindow() {
@@ -141,6 +148,13 @@ class EventWindow extends BaseStepWithPipeline {
             if (cardAbilityStep.context.events.every((event) => cardAbilityStep.condition(event))) {
                 this.game.resolveAbility(cardAbilityStep.ability.createContext(cardAbilityStep.context.player));
             }
+        }
+    }
+
+    // resolve any events queued for a subwindow (typically defeat events)
+    checkSubwindowEvents() {
+        if (this.subwindowEvents.length > 0) {
+            this.queueStep(new EventWindow(this.game, this.subwindowEvents));
         }
     }
 

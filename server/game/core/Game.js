@@ -868,6 +868,11 @@ class Game extends EventEmitter {
         return this.queueStep(new EventWindow(this, events, ownsTriggerWindow));
     }
 
+    // TODO THIS PR: docstr
+    addSubwindowEvents(events) {
+        this.currentEventWindow.addSubwindowEvents(events);
+    }
+
     /**
      * Raises a custom event window for checking for any cancels to a card
      * ability
