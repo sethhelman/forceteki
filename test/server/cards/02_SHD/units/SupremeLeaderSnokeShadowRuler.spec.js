@@ -9,7 +9,8 @@ describe('Supreme Leader Snoke, Shadow Ruler', function() {
                         groundArena: ['battlefield-marine'],
                     },
                     player2: {
-                        groundArena: ['wampa'],
+                        hand: ['death-star-stormtrooper'],
+                        groundArena: ['wampa', 'specforce-soldier'],
                         spaceArena: ['cartel-spacer'],
                         leader: { card: 'jyn-erso#resisting-oppression', deployed: true }
                     }
@@ -28,8 +29,13 @@ describe('Supreme Leader Snoke, Shadow Ruler', function() {
                 expect(this.cartelSpacer.getPower()).toBe(0);
                 expect(this.cartelSpacer.getHp()).toBe(1);
 
+                expect(this.specforceSoldier).toBeInLocation('discard');
+
                 expect(this.jynErso.getPower()).toBe(4);
                 expect(this.jynErso.getHp()).toBe(7);
+
+                this.player2.clickCard(this.deathStarStormtrooper);
+                expect(this.deathStarStormtrooper).toBeInLocation('discard');
             });
         });
     });
