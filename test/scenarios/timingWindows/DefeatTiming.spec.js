@@ -60,5 +60,34 @@ describe('Defeat timing', function() {
                 expect(this.player1).toBeActivePlayer();
             });
         });
+
+        describe('When a unit leaves play which had a constant ability that was keeping other units alive,', function() {
+            beforeEach(function () {
+                this.setupTest({
+                    phase: 'action',
+                    player1: {
+                        groundArena: [{ card: 'vanguard-infantry', damage: 2 }, 'general-dodonna#massassi-group-commander'],
+                    },
+                    player2: {
+                        hand: ['vanquish']
+                    }
+                });
+            });
+
+            it('all "when defeated" triggers should go in the same window', function () {
+                this.player1.clickCard(this.supremeLeaderSnoke);
+                expect(this.player1).toHavePrompt('Both players have triggered abilities in response. Choose a player to resolve all of their abilities first:');
+                expect(this.player2).toHavePrompt('Waiting for opponent to choose a player to resolve their triggers first');
+
+                this.player1.clickPrompt('You');
+                expect(this.mazKanata).toHaveExactUpgradeNames(['experience']);
+
+                // vanguard on-defeat trigger happens next automatically
+                expect(this.player2).toBeAbleToSelectExactly([this.mazKanata, this.supremeLeaderSnoke]);
+                this.player2.clickPrompt('Pass ability');
+
+                expect(this.player2).toBeActivePlayer();
+            });
+        });
     });
 });
