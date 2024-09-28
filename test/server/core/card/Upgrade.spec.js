@@ -1,6 +1,6 @@
 describe('Upgrade cards', function() {
     integration(function() {
-        describe('When an upgrade is attached,', function() {
+        describe('When an upgrade is attached', function() {
             beforeEach(function () {
                 this.setupTest({
                     phase: 'action',
@@ -50,6 +50,34 @@ describe('Upgrade cards', function() {
 
                 this.player2.clickCard(this.confiscate);
                 this.player2.clickCard(this.entrenched);
+                expect(this.entrenched).toBeInLocation('discard');
+                expect(this.tielnFighter).toBeInLocation('discard');
+            });
+        });
+
+        describe('When an upgrade is attached,', function() {
+            beforeEach(function () {
+                this.setupTest({
+                    phase: 'action',
+                    player1: {
+                        spaceArena: [{ card: 'tieln-fighter', upgrades: ['entrenched'] }]
+                    },
+                    player2: {
+                        groundArena: ['supreme-leader-snoke#shadow-ruler'],
+                        hand: ['confiscate']
+                    }
+                });
+            });
+
+            it('its stat bonuses should be correctly applied on top of constant effects modifying stats', function () {
+                expect(this.tielnFighter.getPower()).toBe(3);
+                expect(this.tielnFighter.getHp()).toBe(2);
+            });
+
+            it('and is giving an hp boost keeping the attached unit alive against stat modifying effects, the attached unit should be defeated when the upgrade is defeated', function () {
+                this.player1.passAction();
+
+                this.player2.clickCard(this.confiscate);
                 expect(this.entrenched).toBeInLocation('discard');
                 expect(this.tielnFighter).toBeInLocation('discard');
             });

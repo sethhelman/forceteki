@@ -76,7 +76,7 @@ export class OngoingEffectEngine {
                     const actionEvents = [];
                     properties.gameAction.queueGenerateEventGameSteps(actionEvents, context);
                     this.game.queueSimpleStep(() => this.game.openEventWindow(actionEvents), 'openDelayedActionsWindow');
-                    this.game.queueSimpleStep(() => context.refill(), 'context.refill');  // TODO EFFECTS: this is supposed to be calling resolveGameState
+                    this.game.queueSimpleStep(() => this.game.resolveGameState(true), 'resolveGameState');
                 }
             };
         });
@@ -115,7 +115,7 @@ export class OngoingEffectEngine {
         // Check each effect's condition and find new targets
         stateChanged = this.effects.reduce((stateChanged, effect) => effect.checkCondition(stateChanged), stateChanged);
         if (loops === 10) {
-            throw new Error('OngoingEffectEngine.checkEffects looped 10 times');
+            throw new Error('OngoingEffectEngine.resolveEffects looped 10 times');
         } else {
             this.resolveEffects(stateChanged, loops + 1);
         }

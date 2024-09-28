@@ -43,7 +43,7 @@ class EventWindow extends BaseStepWithPipeline {
             new SimpleStep(this.game, () => this.createContingentEvents(), 'createContingentEvents'),
             new SimpleStep(this.game, () => this.preResolutionEffects(), 'preResolutionEffects'),
             new SimpleStep(this.game, () => this.executeHandler(), 'executeHandler'),
-            new SimpleStep(this.game, () => this.resolveGameState(), 'resolveGameState'),    // TODO EFFECTS: uncomment this (and other places the method is used, + missing ones from l5r)
+            new SimpleStep(this.game, () => this.resolveGameState(), 'resolveGameState'),
             new SimpleStep(this.game, () => this.checkSubwindowEvents(), 'checkSubwindowEvents'),
             new SimpleStep(this.game, () => this.checkThenAbilitySteps(), 'checkThenAbilitySteps'),
             new SimpleStep(this.game, () => this.resolveTriggersIfNecessary(), 'resolveTriggersIfNecessary'),

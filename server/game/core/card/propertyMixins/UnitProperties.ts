@@ -279,8 +279,6 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
 
             const stat = wrappedModifiers.reduce((total, wrappedModifier) => total + wrappedModifier.modifier[statType], baseStatValue.modifier[statType]);
 
-            // TODO EFFECTS: need a check around here somewhere to defeat the unit if effects have brought hp to 0
-
             return floor ? Math.max(0, stat) : stat;
         }
 
