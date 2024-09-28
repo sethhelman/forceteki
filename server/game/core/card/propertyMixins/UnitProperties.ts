@@ -39,8 +39,10 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
         public readonly defaultArena: Arena;
 
         protected _upgrades?: UpgradeCard[] = null;
+
         private _attackKeywordAbilities?: (TriggeredAbility | IConstantAbility)[] = null;
         private _whenPlayedKeywordAbilities?: (TriggeredAbility | IConstantAbility)[] = null;
+        private defeatEventEmitted = false;
 
         public get upgrades(): UpgradeCard[] {
             this.assertPropertyEnabled(this._upgrades, 'upgrades');
@@ -267,8 +269,9 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
         }
 
         public checkDefeated() {
-            if (this.damage >= this.getHp()) {
+            if (this.damage >= this.getHp() && !this.defeatEventEmitted) {
                 this.owner.defeatCard(this);
+                this.defeatEventEmitted = true;
             }
         }
 

@@ -42,5 +42,28 @@ describe('Stat modifying effects', function() {
                 expect(this.cartelSpacer.getPower()).toBe(1);
             });
         });
+
+        describe('HP increasing effects', function() {
+            beforeEach(function () {
+                this.setupTest({
+                    phase: 'action',
+                    player1: {
+                        groundArena: [{ card: 'battlefield-marine', damage: 3 }, 'general-dodonna#massassi-group-commander'],
+                    },
+                    player2: {
+                        hand: ['vanquish']
+                    }
+                });
+            });
+
+            it('should cause a unit to die when they are removed and its hp is now too low', function () {
+                this.player1.passAction();
+
+                this.player2.clickCard(this.vanquish);
+                this.player2.clickCard(this.generalDodonna);
+                expect(this.generalDodonna).toBeInLocation('discard');
+                expect(this.battlefieldMarine).toBeInLocation('discard');
+            });
+        });
     });
 });
