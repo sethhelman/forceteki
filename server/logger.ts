@@ -3,7 +3,6 @@ import DailyRotateFile from 'winston-daily-rotate-file';
 
 const rotate = new DailyRotateFile({
     filename: __dirname + '/logs/forceteki',
-    datePattern: '-yyyy-MM-dd.log',
     json: false,
     zippedArchive: true
 });
