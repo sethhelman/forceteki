@@ -27,8 +27,8 @@ export class GameServer {
         let privateKey: undefined | string;
         let certificate: undefined | string;
         try {
-            privateKey = fs.readFileSync(env.gameNodeKeyPath).toString();
-            certificate = fs.readFileSync(env.gameNodeCertPath).toString();
+            // privateKey = fs.readFileSync(env.gameNodeKeyPath).toString();
+            // certificate = fs.readFileSync(env.gameNodeCertPath).toString();
         } catch (e) {
             this.protocol = 'http';
         }
@@ -47,10 +47,10 @@ export class GameServer {
                 : https.createServer({ key: privateKey, cert: certificate });
 
         server.listen(env.gameNodeSocketIoPort);
+        console.log(`Game server listening on port ${env.gameNodeSocketIoPort}`);
 
         this.io = new Server(server, {
-            perMessageDeflate: false,
-            path: `/${env.gameNodeName}/socket.io`
+            perMessageDeflate: false
         });
         // @ts-ignore
         // this.io.use(this.handshake.bind(this));
@@ -60,7 +60,7 @@ export class GameServer {
         //     this.io.set('origins', env.gameNodeOrigin);
         // }
 
-        this.io.on('connection', this.onConnection.bind(this));
+        this.io.on('connection', socket => this.onConnection(socket));
     }
 
     public debugDump() {
