@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { all } from 'axios';
 import fs from 'fs';
 import http from 'http';
 import https from 'https';
@@ -8,17 +8,15 @@ import { Server } from 'socket.io';
 import { logger } from '../logger';
 import Game from '../game/core/Game';
 import type Player from '../game/core/Player';
-// import type PendingGame from '../pendinggame';
+// import type PendingGame from './PendingGame';
 import Socket from '../socket';
-import { detectBinary } from '../utils/util';
-// import { ZmqSocket } from './ZmqSocket';
 import * as env from '../env';
+import { spec } from 'node:test/reporters';
 
 export class GameServer {
     private games = new Map<string, Game>();
     private protocol = 'https';
     private host = env.gameNodeHost;
-    // private zmqSocket: ZmqSocket;
     private io: Server;
     private titleCardData: any;
     private shortCardData: any;
@@ -33,32 +31,17 @@ export class GameServer {
             this.protocol = 'http';
         }
 
-        // this.zmqSocket = new ZmqSocket(this.host, this.protocol);
-        // this.zmqSocket.on('onStartGame', this.onStartGame.bind(this));
-        // this.zmqSocket.on('onSpectator', this.onSpectator.bind(this));
-        // this.zmqSocket.on('onGameSync', this.onGameSync.bind(this));
-        // this.zmqSocket.on('onFailedConnect', this.onFailedConnect.bind(this));
-        // this.zmqSocket.on('onCloseGame', this.onCloseGame.bind(this));
-        // this.zmqSocket.on('onCardData', this.onCardData.bind(this));
-
         const server =
             !privateKey || !certificate
                 ? http.createServer()
                 : https.createServer({ key: privateKey, cert: certificate });
 
         server.listen(env.gameNodeSocketIoPort);
-        console.log(`Game server listening on port ${env.gameNodeSocketIoPort}`);
+        logger.info(`Game server listening on port ${env.gameNodeSocketIoPort}`);
 
         this.io = new Server(server, {
             perMessageDeflate: false
         });
-        // @ts-ignore
-        // this.io.use(this.handshake.bind(this));
-
-        // if (env.gameNodeOrigin) {
-        //     // @ts-ignore
-        //     this.io.set('origins', env.gameNodeOrigin);
-        // }
 
         this.io.on('connection', socket => this.onConnection(socket));
     }
@@ -177,17 +160,24 @@ export class GameServer {
         //     .catch(() => {});
     }
 
-    // onStartGame(pendingGame: PendingGame): void {
-    //     const game = new Game(pendingGame, { router: this, shortCardData: this.shortCardData });
-    //     this.games.set(pendingGame.id, game);
+    onStartGame(): void {
+        let details = {
+            id: '0001',
+            name: 'Test Game',
+            allowSpectators: false,
+            spectatorSquelch: true,
+            owner: 'TestUser',
+        }
+        const game = new Game(details, { router: this, shortCardData: this.shortCardData });
+        this.games.set(details.id, game);
 
-    //     game.started = true;
-    //     for (const player of Object.values<Player>(pendingGame.players)) {
-    //         game.selectDeck(player.name, player.deck);
-    //     }
+        game.started = true;
+        // for (const player of Object.values<Player>(pendingGame.players)) {
+        //     game.selectDeck(player.name, player.deck);
+        // }
 
-    //     game.initialise();
-    // }
+        game.initialise();
+    }
 
     // onSpectator(pendingGame: PendingGame, user) {
     //     const game = this.games.get(pendingGame.id);

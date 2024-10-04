@@ -19,7 +19,6 @@ const GameSystems = require('../gameSystems/GameSystemLibrary');
 const { GameEvent } = require('./event/GameEvent');
 const InitiateCardAbilityEvent = require('./event/InitiateCardAbilityEvent');
 const EventWindow = require('./event/EventWindow');
-const ThenEventWindow = require('./event/ThenEventWindow');
 const InitiateAbilityEventWindow = require('./gameSteps/abilityWindow/InitiateAbilityEventWindow');
 const AbilityResolver = require('./gameSteps/AbilityResolver');
 const { SimultaneousEffectWindow } = require('./gameSteps/SimultaneousEffectWindow');
@@ -32,7 +31,7 @@ const { cards } = require('../cards/Index');
 
 const { EffectName, EventName, Location, TokenName } = require('./Constants');
 const { BaseStepWithPipeline } = require('./gameSteps/BaseStepWithPipeline');
-const { default: Shield } = require('../cards/01_SOR/Shield');
+const { default: Shield } = require('../cards/01_SOR/tokens/Shield');
 const { StateWatcherRegistrar } = require('./stateWatcher/StateWatcherRegistrar');
 
 class Game extends EventEmitter {
@@ -52,8 +51,8 @@ class Game extends EventEmitter {
         this.started = false;
         this.playStarted = false;
         this.createdAt = new Date();
-        this.savedGameId = details.savedGameId;
-        this.gameType = details.gameType;
+        // this.savedGameId = details.savedGameId;
+        // this.gameType = details.gameType;
         this.currentAbilityWindow = null;
         this.currentActionWindow = null;
         this.currentEventWindow = null;
