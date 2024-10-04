@@ -1,8 +1,10 @@
 # Forceteki
-Proof-of-concept for web based implementation of Star Wars Unlimited TCG. Very WIP.
+Implementation of the Star Wars Unlimited game rules, based on the [Ringteki](https://github.com/ringteki/ringteki) architecture.
 
-## Contributing
-For details on how to get started adding cards, see the [contributor's guide](./docs/implementing-cards.md).
+We have a [Discord server](https://discord.gg/N6ZgcZ3SfA) for updates, bug reports, and coordinating dev work.
+
+### Contributing
+For details on how to get started adding cards, see the [wiki](https://github.com/SWU-Karabast/forceteki/wiki).
 
 ## Development Quickstart
 Follow these instructions to get to the point of being able to run the [unit tests](./test/server/) locally.
@@ -33,13 +35,16 @@ npm run lint-verbose
 # runs tsc and executes tests
 npm test
 
+# run all tests in parallel for higher speed
+# NOTE: there is a known issue with this method, see below
+npm run test-parallel
+
 # run a specific test file only
 npm test test/server/cards/01_SOR/LukeSkywalkerFaithfulFriend.spec.js
 npm test **/LukeSkywalkerFaithfulFriend.spec.js # use path globbing (may look different depending on your shell)
-
-# this currently has a bug, do not use
-#npm run test-parallel   # runs tests in parallel for higher speed
 ```
+
+**Known issue with `test-parallel`**: in some cases when a test fails using `npm run test-parallel`, there will be a json stringify and it will not explain which test failed, only which suite. In this case you must re-run the tests using the standard `npm test` to determine the specifics.
 
 ### Linting
 We've configured a set of eslint rules to keep the repo looking consistent and help catch potential bugs. These rules are checked at PR time.
@@ -54,3 +59,4 @@ Once you have vscode set up, use the `Debug All Jasmine Tests` profile or open a
 #### Debugging Tips
 - You can use the `debugger;` command in node to create a breakpoint in code that will be respected by the vscode debugger
 - VSCode has advanced breakpoint features such as conditional breakpoints that are extremely useful for debugging complex situations, we highly recommend reading the "Advanced breakpoint topics" section of this guide if you haven't used it before: https://code.visualstudio.com/docs/editor/debugging#_advanced-breakpoint-topics
+- See our [Debugging Guide](https://github.com/SWU-Karabast/forceteki/wiki/Debugging-Guide) for detailed guides on debugging cards

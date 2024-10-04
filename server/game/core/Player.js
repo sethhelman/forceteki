@@ -250,9 +250,7 @@ class Player extends GameObject {
      * @param {Function} predicate - BaseCard => Boolean
      */
     findCards(cardList, predicate) {
-        if (!Contract.assertNotNullLike(cardList)) {
-            return null;
-        }
+        Contract.assertNotNullLike(cardList);
 
         var cardsToReturn = [];
 
@@ -273,14 +271,7 @@ class Player extends GameObject {
      * @returns {boolean} true/false if the trait is in pay
      */
     isTraitInPlay(trait) {
-        return this.game.allCards.some((card) => {
-            return (
-                card.controller === this &&
-                card.hasSomeTrait(trait) &&
-                card.isFaceup() &&
-                EnumHelpers.isArena(card.location)
-            );
-        });
+        return this.getUnitsInPlay().some((card) => card.hasSomeTrait(trait));
     }
 
     /**
@@ -332,7 +323,7 @@ class Player extends GameObject {
      */
     isCardInPlayableLocation(card, playingType = null) {
         // use an effect check to see if this card is in an out of play location but can still be played from
-        if (card.getEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card)).length > 0) {
+        if (card.getOngoingEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card)).length > 0) {
             return true;
         }
 
@@ -342,8 +333,8 @@ class Player extends GameObject {
     }
 
     findPlayType(card) {
-        if (card.getEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card)).length > 0) {
-            let effects = card.getEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card));
+        if (card.getOngoingEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card)).length > 0) {
+            let effects = card.getOngoingEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card));
             return effects[effects.length - 1].playType || PlayType.PlayFromHand;
         }
 
@@ -440,7 +431,7 @@ class Player extends GameObject {
     //     } else {
     //         let refillAmount = 1;
     //         if (province) {
-    //             let amount = province.mostRecentEffect(EffectName.RefillProvinceTo);
+    //             let amount = province.mostRecentOngoingEffect(EffectName.RefillProvinceTo);
     //             if (amount) {
     //                 refillAmount = amount;
     //             }
@@ -536,9 +527,7 @@ class Player extends GameObject {
     }
 
     addPlayableLocation(type, player, location, cards = []) {
-        if (!Contract.assertNotNullLike(player)) {
-            return null;
-        }
+        Contract.assertNotNullLike(player);
         let playableLocation = new PlayableLocation(type, player, location, new Set(cards));
         this.playableLocations.push(playableLocation);
         return playableLocation;
@@ -665,12 +654,12 @@ class Player extends GameObject {
     //     }
 
     //     const playerCostToTargetEffects = abilitySource.controller
-    //         ? abilitySource.controller.getEffectValues(EffectName.PlayerFateCostToTargetCard)
+    //         ? abilitySource.controller.getOngoingEffectValues(EffectName.PlayerFateCostToTargetCard)
     //         : [];
 
     //     let targetCost = 0;
     //     for (const target of targets) {
-    //         for (const cardCostToTarget of target.getEffectValues(EffectName.FateCostToTarget)) {
+    //         for (const cardCostToTarget of target.getOngoingEffectValues(EffectName.FateCostToTarget)) {
     //             if (
     //                 // no card type restriction
     //                 (!cardCostToTarget.cardType ||
@@ -827,7 +816,7 @@ class Player extends GameObject {
      * @param {Location} location
      */
     isLegalLocationForCardType(cardType, location) {
-        //if we're trying to go into an additional pile, we're probably supposed to be there
+        // if we're trying to go into an additional pile, we're probably supposed to be there
         if (this.additionalPiles[location]) {
             return true;
         }
@@ -847,7 +836,7 @@ class Player extends GameObject {
     }
 
     // get skillModifier() {
-    //     return this.getEffectValues(EffectName.ChangePlayerSkillModifier).reduce((total, value) => total + value, 0);
+    //     return this.getOngoingEffectValues(EffectName.ChangePlayerSkillModifier).reduce((total, value) => total + value, 0);
     // }
 
     /**
@@ -901,8 +890,7 @@ class Player extends GameObject {
             return;
         }
 
-        // TODO: does this get resolved in the right place in the attack process?
-        this.game.openEventWindow(GameSystems.defeat().generateEvent(card, this.game.getFrameworkContext()));
+        this.game.addSubwindowEvents(GameSystems.defeat().generateEvent(card, this.game.getFrameworkContext()));
     }
 
     /**
@@ -922,13 +910,9 @@ class Player extends GameObject {
 
         var targetPile = this.getCardPile(targetLocation);
 
-        if (!Contract.assertTrue(this.isLegalLocationForCardType(card.type, targetLocation), `Tried to move card ${card.name} to ${targetLocation} but it is not a legal location`)) {
-            return;
-        }
+        Contract.assertTrue(this.isLegalLocationForCardType(card.type, targetLocation), `Tried to move card ${card.name} to ${targetLocation} but it is not a legal location`);
 
-        if (!Contract.assertFalse(targetPile.includes(card), `Tried to move card ${card.name} to ${targetLocation} but it is already there`)) {
-            return;
-        }
+        Contract.assertFalse(targetPile.includes(card), `Tried to move card ${card.name} to ${targetLocation} but it is already there`);
 
         let currentLocation = card.location;
 
@@ -1033,18 +1017,12 @@ class Player extends GameObject {
      * Other card types (or other types of upgrade move) must use {@link Player.moveCard}.
      */
     putUpgradeInArena(upgrade, location) {
-        if (
-            !Contract.assertTrue(upgrade.isUpgrade()) ||
-            !Contract.assertTrue(EnumHelpers.isArena(location))
-        ) {
-            return;
-        }
+        Contract.assertTrue(upgrade.isUpgrade());
+        Contract.assertTrue(EnumHelpers.isArena(location));
 
         const pile = this.getCardPile(location);
 
-        if (!Contract.assertFalse(pile.includes(upgrade), `Tried to move upgrade ${upgrade.name} to ${location} for ${this.name} but it is already there`)) {
-            return;
-        }
+        Contract.assertFalse(pile.includes(upgrade), `Tried to move upgrade ${upgrade.name} to ${location} for ${this.name} but it is already there`);
 
         pile.push(upgrade);
     }
@@ -1133,19 +1111,19 @@ class Player extends GameObject {
 
         if (activePlayer === this) {
             return (
-                this.getEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Any) ||
-                this.getEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Self)
+                this.getOngoingEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Any) ||
+                this.getOngoingEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Self)
             );
         }
 
         return (
-            this.getEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Any) ||
-            this.getEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Opponent)
+            this.getOngoingEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Any) ||
+            this.getOngoingEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Opponent)
         );
     }
 
     // eventsCannotBeCancelled() {
-    //     return this.hasEffect(EffectName.EventsCannotBeCancelled);
+    //     return this.hasOngoingEffect(EffectName.EventsCannotBeCancelled);
     // }
 
     // // TODO STATE SAVE: what stats are we interested in?

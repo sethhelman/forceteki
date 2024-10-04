@@ -52,11 +52,11 @@ const binaryCardEffects = [
 //     setBaseMilitarySkill: (card) => card.effects.filter((effect) => effect.type === EffectName.SetMilitarySkill),
 //     setBasePoliticalSkill: (card) => card.effects.filter((effect) => effect.type === EffectName.SetPoliticalSkill),
 //     setMaxConflicts: (player, value) =>
-//         player.mostRecentEffect(EffectName.SetMaxConflicts) === value
+//         player.mostRecentOngoingEffect(EffectName.SetMaxConflicts) === value
 //             ? [_.last(player.effects.filter((effect) => effect.type === EffectName.SetMaxConflicts))]
 //             : [],
 //     takeControl: (card, player) =>
-//         card.mostRecentEffect(EffectName.TakeControl) === player
+//         card.mostRecentOngoingEffect(EffectName.TakeControl) === player
 //             ? [_.last(card.effects.filter((effect) => effect.type === EffectName.TakeControl))]
 //             : []
 // };
@@ -72,16 +72,15 @@ export default class StaticOngoingEffectImpl<TValue> extends OngoingEffectImpl<T
         } else {
             this.valueWrapper = new OngoingEffectValueWrapper(value);
         }
-        this.valueWrapper.reset();
     }
 
     public apply(target) {
-        target.addEffect(this);
+        target.addOngoingEffect(this);
         this.valueWrapper.apply(target);
     }
 
     public unapply(target) {
-        target.removeEffect(this);
+        target.removeOngoingEffect(this);
         this.valueWrapper.unapply(target);
     }
 
@@ -100,6 +99,7 @@ export default class StaticOngoingEffectImpl<TValue> extends OngoingEffectImpl<T
 
     // effects can't be applied to facedown cards
     // TODO: do we have any exceptions to that rule?
+    // TODO: can this know that it, for example, grants sentinel and so only return true here for unit cards?
     public canBeApplied(target) {
         return !target.facedown;
     }

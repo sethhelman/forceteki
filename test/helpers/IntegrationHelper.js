@@ -4,7 +4,8 @@
 const { select } = require('underscore');
 const { GameMode } = require('../../build/GameMode.js');
 const Contract = require('../../build/game/core/utils/Contract.js');
-const { checkNullCard, formatPrompt } = require('./Util.js');
+const TestSetupError = require('./TestSetupError.js');
+const { checkNullCard, formatPrompt, getPlayerPromptState, promptStatesEqual, stringArraysEqual } = require('./Util.js');
 
 require('./ObjectFormatters.js');
 
@@ -41,7 +42,7 @@ var customMatchers = {
                 if (result.pass) {
                     result.message = `Expected ${actual.name} not to have prompt '${expected}' but it did.`;
                 } else {
-                    result.message = `Expected ${actual.name} to have prompt '${expected}' but the prompt is:\n${formatPrompt(actual.currentPrompt(), actual.currentActionTargets)}.`;
+                    result.message = `Expected ${actual.name} to have prompt '${expected}' but the prompt is:\n${formatPrompt(actual.currentPrompt(), actual.currentActionTargets)}`;
                 }
 
                 return result;
@@ -175,6 +176,37 @@ var customMatchers = {
                         } else {
                             result.message += 'but it had no buttons';
                         }
+                    }
+                }
+
+                result.message += `\n\n${generatePromptHelpMessage(actual)}`;
+
+                return result;
+            }
+        };
+    },
+    toHavePassAbilityButton: function (util, customEqualityMatchers) {
+        return {
+            compare: function (actual) {
+                var buttons = actual.currentPrompt().buttons;
+                var result = {};
+
+                result.pass = buttons.some(
+                    (button) => !button.disabled && util.equals(button.text, 'Pass ability', customEqualityMatchers)
+                );
+
+                if (result.pass) {
+                    result.message = `Expected ${actual.name} not to have enabled prompt button 'Pass ability' but it did.`;
+                } else {
+                    result.message = `Expected ${actual.name} to have enabled prompt button 'Pass ability' `;
+
+                    if (buttons.length > 0) {
+                        var buttonText = buttons.map(
+                            (button) => '[' + button.text + (button.disabled ? ' (disabled) ' : '') + ']'
+                        ).join('\n');
+                        result.message += `but it had buttons:\n${buttonText}`;
+                    } else {
+                        result.message += 'but it had no buttons';
                     }
                 }
 
@@ -344,7 +376,7 @@ var customMatchers = {
             }
         };
     },
-    toHaveAvailableActionWhenClickedInActionPhaseBy: function () {
+    toHaveAvailableActionWhenClickedBy: function () {
         return {
             compare: function (card, player) {
                 checkNullCard(card);
@@ -353,10 +385,14 @@ var customMatchers = {
                 }
                 let result = {};
 
+                const beforeClick = getPlayerPromptState(player.player);
+
                 player.clickCardNonChecking(card);
 
-                // this is the default action window prompt (meaning no action was available)
-                result.pass = !player.hasPrompt('Action Window');
+                const afterClick = getPlayerPromptState(player.player);
+
+                // if the prompt state changed after click, there was an action available
+                result.pass = !promptStatesEqual(beforeClick, afterClick);
 
                 if (result.pass) {
                     result.message = `Expected ${card.name} not to have an action available when clicked by ${player.name} but it has ability prompt:\n${generatePromptHelpMessage(player)}`;
@@ -388,10 +424,14 @@ var customMatchers = {
     },
     toHavePassAbilityPrompt: function () {
         return {
-            compare: function (player) {
+            compare: function (player, abilityText) {
                 var result = {};
-                const passPromptText = 'Do you want to trigger this ability or pass?';
-                var currentPrompt = player.currentPrompt();
+
+                if (abilityText == null) {
+                    throw new TestSetupError('toHavePassAbilityPrompt requires an abilityText parameter');
+                }
+
+                const passPromptText = `Trigger the ability '${abilityText}' or pass`;
                 result.pass = player.hasPrompt(passPromptText);
 
                 if (result.pass) {
@@ -488,7 +528,7 @@ var customMatchers = {
         return {
             compare: function (card, location, player = null) {
                 if (typeof card === 'string') {
-                    throw new Error('This expectation requires a card object, not a name');
+                    throw new TestSetupError('This expectation requires a card object, not a name');
                 }
                 let result = {};
 
@@ -521,39 +561,51 @@ var customMatchers = {
                 let result = {};
 
                 if (!card.upgrades) {
-                    throw new Error(`Card ${card.internalName} does not have an upgrades property`);
+                    throw new TestSetupError(`Card ${card.internalName} does not have an upgrades property`);
                 }
                 if (!Array.isArray(upgradeNames)) {
-                    // TODO: create a "TestError" class to make it easier to tell when an error is coming from the test infra
-                    throw new Error(`Parameter upgradeNames is not an array: ${upgradeNames}`);
+                    throw new TestSetupError(`Parameter upgradeNames is not an array: ${upgradeNames}`);
                 }
 
                 const actualUpgradeNames = card.upgrades.map((upgrade) => upgrade.internalName);
 
                 const expectedUpgradeNames = [...upgradeNames];
 
-                let expectedUpgrades = expectedUpgradeNames.filter((x) => actualUpgradeNames.includes(x));
-                let missingUpgrades = expectedUpgradeNames.filter((x) => !actualUpgradeNames.includes(x));
-                let unexpectedUpgrades = actualUpgradeNames.filter((x) => !expectedUpgradeNames.includes(x));
-
-                result.pass = unexpectedUpgrades.length === 0 && missingUpgrades.length === 0;
+                result.pass = stringArraysEqual(actualUpgradeNames, expectedUpgradeNames);
 
                 if (result.pass) {
-                    result.message = `Expected ${card.internalName} not to have this exact set of upgrades but it does: ${expectedUpgrades.join(', ')}`;
+                    result.message = `Expected ${card.internalName} not to have this exact set of upgrades but it does: ${expectedUpgradeNames.join(', ')}`;
                 } else {
-                    let message = '';
-
-                    if (missingUpgrades.length > 0) {
-                        message = `Expected ${card.internalName} to have the following upgrades but it does not: ${missingUpgrades.join(', ')}`;
-                    }
-                    if (unexpectedUpgrades.length > 0) {
-                        if (message.length > 0) {
-                            message += '\n';
-                        }
-                        message += `Expected ${card.internalName} not to have the following upgrades but it does: ${unexpectedUpgrades.join(', ')}`;
-                    }
-                    result.message = message;
+                    result.message = `Expected ${card.internalName} to have this exact set of upgrades: '${expectedUpgradeNames.join(', ')}' but it has: '${actualUpgradeNames.join(', ')}'`;
                 }
+
+                return result;
+            }
+        };
+    },
+    // TODO: could add a field to expect enabled or disabled per button
+    toHaveExactPromptButtons: function () {
+        return {
+            compare: function (player, buttons) {
+                let result = {};
+
+                if (!Array.isArray(buttons)) {
+                    throw new TestSetupError(`Parameter 'buttons' is not an array: ${buttons}`);
+                }
+
+                const actualButtons = player.currentPrompt().buttons.map((button) => button.text);
+
+                const expectedButtons = [...buttons];
+
+                result.pass = stringArraysEqual(actualButtons, expectedButtons);
+
+                if (result.pass) {
+                    result.message = `Expected ${player.name} not to have this exact set of buttons but it does: ${expectedButtons.join(', ')}`;
+                } else {
+                    result.message = `Expected ${player.name} to have this exact set of buttons: '${expectedButtons.join(', ')}'`;
+                }
+
+                result.message += `\n\n${generatePromptHelpMessage(player)}`;
 
                 return result;
             }
@@ -572,8 +624,6 @@ beforeEach(function () {
 global.integration = function (definitions) {
     describe('- integration -', function () {
         beforeEach(function () {
-            Contract.configureAssertMode(Contract.AssertMode.Assert, true);
-
             this.flow = new GameFlowWrapper();
 
             this.game = this.flow.game;
@@ -595,7 +645,7 @@ global.integration = function (definitions) {
              * @param {Object} [options = {}] - specifies the state of the game
              */
             this.setupTest = function (options = {}) {
-                //Set defaults
+                // Set defaults
                 if (!options.player1) {
                     options.player1 = {};
                 }
@@ -621,11 +671,11 @@ global.integration = function (definitions) {
                     this.player1.player.promptedActionWindows[options.phase] = true;
                     this.player2.player.promptedActionWindows[options.phase] = true;
 
-                    //Advance the phases to the specified
+                    // Advance the phases to the specified
                     this.advancePhases(options.phase);
                 }
 
-                //Player stats
+                // Player stats
                 this.player1.damageToBase = options.player1.damageToBase ?? 0;
                 this.player2.damageToBase = options.player2.damageToBase ?? 0;
 
@@ -653,6 +703,10 @@ global.integration = function (definitions) {
                 this.player1.setLeaderStatus(options.player1.leader);
                 this.player2.setLeaderStatus(options.player2.leader);
 
+                // Set Base damage
+                this.player1.setBaseStatus(options.player1.base);
+                this.player2.setBaseStatus(options.player2.base);
+
                 // Deck
                 this.player1.setDeck(options.player1.deck, ['removed from game']);
                 this.player2.setDeck(options.player2.deck, ['removed from game']);
@@ -674,10 +728,7 @@ global.integration = function (definitions) {
                 this.p2Base = this.player2.base;
                 this.p2Leader = this.player2.leader;
 
-                // TODO: re-enable when we have tests to do during setup phase
-                // if (options.phase !== 'setup') {
-                //     this.game.resolveGameState(true);
-                // }
+                this.game.resolveGameState(true);
             };
         });
 

@@ -9,7 +9,7 @@ import * as EnumHelpers from '../utils/EnumHelpers';
 import { IActionAbilityProps, IConstantAbilityProps, IReplacementEffectAbilityProps, ITriggeredAbilityProps } from '../../Interfaces';
 import * as Helpers from '../utils/Helpers';
 import AbilityHelper from '../../AbilityHelper';
-import Contract from '../utils/Contract';
+import * as Contract from '../utils/Contract';
 
 const LeaderUnitCardParent = WithUnitProperties(WithCost(LeaderCard));
 
@@ -25,7 +25,7 @@ export class LeaderUnitCard extends LeaderUnitCardParent {
         this.setupLeaderUnitSideAbilities();
 
         // leaders are always in a zone where they are allowed to be exhausted
-        this.enableExhaust(true);
+        this.setExhaustEnabled(true);
 
         // add deploy leader action
         this.addActionAbility({
@@ -47,9 +47,7 @@ export class LeaderUnitCard extends LeaderUnitCardParent {
 
     /** Deploy the leader to the arena. Handles the move operation and state changes. */
     public override deploy() {
-        if (!Contract.assertFalse(this._deployed, `Attempting to deploy already deployed leader ${this.internalName}`)) {
-            return;
-        }
+        Contract.assertFalse(this._deployed, `Attempting to deploy already deployed leader ${this.internalName}`);
 
         this._deployed = true;
         this.controller.moveCard(this, this.defaultArena);
@@ -57,9 +55,7 @@ export class LeaderUnitCard extends LeaderUnitCardParent {
 
     /** Return the leader from the arena to the base zone. Handles the move operation and state changes. */
     public undeploy() {
-        if (!Contract.assertTrue(this._deployed, `Attempting to un-deploy leader ${this.internalName} while it is not deployed`)) {
-            return;
-        }
+        Contract.assertTrue(this._deployed, `Attempting to un-deploy leader ${this.internalName} while it is not deployed`);
 
         this._deployed = false;
         this.controller.moveCard(this, Location.Base);
@@ -82,12 +78,12 @@ export class LeaderUnitCard extends LeaderUnitCardParent {
         super.addConstantAbility(properties);
     }
 
-    protected override addReplacementEffectAbility(properties: IReplacementEffectAbilityProps): void {
+    protected override addReplacementEffectAbility(properties: IReplacementEffectAbilityProps<this>): void {
         properties.locationFilter = this.getAbilityLocationsForSide(properties.locationFilter);
         super.addReplacementEffectAbility(properties);
     }
 
-    protected override addTriggeredAbility(properties: ITriggeredAbilityProps): void {
+    protected override addTriggeredAbility(properties: ITriggeredAbilityProps<this>): void {
         properties.locationFilter = this.getAbilityLocationsForSide(properties.locationFilter);
         super.addTriggeredAbility(properties);
     }
@@ -108,13 +104,17 @@ export class LeaderUnitCard extends LeaderUnitCardParent {
             case Location.GroundArena:
             case Location.SpaceArena:
                 this._deployed = true;
-                this.enableDamage(true);
+                this.setDamageEnabled(true);
+                this.setActiveAttackEnabled(true);
+                this.setUpgradesEnabled(true);
                 this.exhausted = false;
                 break;
 
             case Location.Base:
                 this._deployed = false;
-                this.enableDamage(false);
+                this.setDamageEnabled(false);
+                this.setActiveAttackEnabled(false);
+                this.setUpgradesEnabled(false);
                 this.exhausted = EnumHelpers.isArena(prevLocation);
                 break;
         }

@@ -158,14 +158,10 @@ class Game extends EventEmitter {
      * @returns {Player}
      */
     getPlayerByName(playerName) {
-        if (!Contract.assertHasProperty(this.playersAndSpectators, playerName)) {
-            return null;
-        }
+        Contract.assertHasProperty(this.playersAndSpectators, playerName);
 
         let player = this.playersAndSpectators[playerName];
-        if (!Contract.assertFalse(this.isSpectator(player), `Player ${playerName} is a spectator`)) {
-            return null;
-        }
+        Contract.assertFalse(this.isSpectator(player), `Player ${playerName} is a spectator`);
 
         return player;
     }
@@ -215,6 +211,7 @@ class Game extends EventEmitter {
             this.createEventAndOpenWindow(
                 EventName.OnPassActionPhasePriority,
                 { player: this.actionPhaseActivePlayer, actionWindow: this },
+                false,
                 () => {
                     this.actionPhaseActivePlayer = this.actionPhaseActivePlayer.opponent;
                 }
@@ -267,7 +264,7 @@ class Game extends EventEmitter {
      * @param {Function} predicate - card => Boolean
      * @returns {Array} Array of DrawCard objects
      */
-    findAnyCardsInPlay(predicate) {
+    findAnyCardsInPlay(predicate = () => true) {
         var foundCards = [];
 
         this.getPlayers().forEach((player) => {
@@ -588,9 +585,7 @@ class Game extends EventEmitter {
      * @param {Object} properties - see menuprompt.js
      */
     promptWithMenu(player, contextObj, properties) {
-        if (!Contract.assertNotNullLike(player)) {
-            return;
-        }
+        Contract.assertNotNullLike(player);
 
         this.queueStep(new MenuPrompt(this, player, contextObj, properties));
     }
@@ -601,9 +596,7 @@ class Game extends EventEmitter {
      * @param {Object} properties - see handlermenuprompt.js
      */
     promptWithHandlerMenu(player, properties) {
-        if (!Contract.assertNotNullLike(player)) {
-            return;
-        }
+        Contract.assertNotNullLike(player);
 
         this.queueStep(new HandlerMenuPrompt(this, player, properties));
     }
@@ -614,9 +607,7 @@ class Game extends EventEmitter {
      * @param {Object} properties - see selectcardprompt.js
      */
     promptForSelect(player, properties) {
-        if (!Contract.assertNotNullLike(player)) {
-            return;
-        }
+        Contract.assertNotNullLike(player);
 
         this.queueStep(new SelectCardPrompt(this, player, properties));
     }
@@ -768,7 +759,7 @@ class Game extends EventEmitter {
     beginRound() {
         this.roundNumber++;
         this.actionPhaseActivePlayer = this.initiativePlayer;
-        this.createEventAndOpenWindow(EventName.OnBeginRound);
+        this.createEventAndOpenWindow(EventName.OnBeginRound, {}, true);
         this.queueStep(new ActionPhase(this));
         this.queueStep(new RegroupPhase(this));
         this.queueSimpleStep(() => this.roundEnded(), 'roundEnded');
@@ -776,7 +767,7 @@ class Game extends EventEmitter {
     }
 
     roundEnded() {
-        this.createEventAndOpenWindow(EventName.OnRoundEnded);
+        this.createEventAndOpenWindow(EventName.OnRoundEnded, {}, true);
     }
 
     claimInitiative(player) {
@@ -843,13 +834,15 @@ class Game extends EventEmitter {
      * Creates a game GameEvent, and opens a window for it.
      * @param {String} eventName
      * @param {Object} params - parameters for this event
+     * @param {boolean} ownsTriggerWindow - whether the EventWindow should make its own TriggeredAbilityWindow to resolve
+     * after its events and any nested events
      * @param {(GameEvent) => void} handler - (GameEvent + params) => undefined
      * returns {GameEvent} - this allows the caller to track GameEvent.resolved and
      * tell whether or not the handler resolved successfully
      */
-    createEventAndOpenWindow(eventName, params = {}, handler = () => true) {
+    createEventAndOpenWindow(eventName, params = {}, ownsTriggerWindow = false, handler = () => true) {
         let event = new GameEvent(eventName, params, handler);
-        this.openEventWindow([event]);
+        this.openEventWindow([event], ownsTriggerWindow);
         return event;
     }
 
@@ -867,23 +860,25 @@ class Game extends EventEmitter {
      * Creates an EventWindow which will open windows for each kind of triggered
      * ability which can respond any passed events, and execute their handlers.
      * @param events
+     * @param ownsTriggerWindow
      * @returns {EventWindow}
      */
-    openEventWindow(events) {
+    openEventWindow(events, ownsTriggerWindow = false) {
         if (!Array.isArray(events)) {
             events = [events];
         }
-        return this.queueStep(new EventWindow(this, events));
+        return this.queueStep(new EventWindow(this, events, ownsTriggerWindow));
     }
 
-    openThenEventWindow(events) {
-        if (this.currentEventWindow) {
-            if (!Array.isArray(events)) {
-                events = [events];
-            }
-            return this.queueStep(new ThenEventWindow(this, events));
-        }
-        return this.openEventWindow(events);
+    /**
+     * Creates a "sub-window" for events which will have priority resolution and
+     * be resolved immediately after the currently resolving set of events, preceding
+     * the next steps of any ability being triggered.
+     *
+     * Typically used for defeat events.
+     */
+    addSubwindowEvents(events) {
+        this.currentEventWindow.addSubwindowEvents(events);
     }
 
     /**
@@ -1091,14 +1086,8 @@ class Game extends EventEmitter {
             // this.checkWinCondition();
             // if the state has changed, check for:
 
-            // for (const player of this.getPlayers()) {
-            //     player.getArenaCards().each((card) => {
-            //         if (card.getModifiedController() !== player) {
-            //             // any card being controlled by the wrong player
-            //             this.takeControl(card.getModifiedController(), card);
-            //         }
-            //     });
-            // }
+            // - any defeated units
+            this.findAnyCardsInPlay((card) => card.isUnit()).forEach((card) => card.checkDefeated());
         }
         if (events.length > 0) {
             // check for any delayed effects which need to fire
@@ -1153,13 +1142,9 @@ class Game extends EventEmitter {
      * @param {import('./card/CardTypes.js').TokenCard} token
      */
     removeTokenFromPlay(token) {
-        if (
-            !Contract.assertEqual(token.location, Location.OutsideTheGame,
-                `Tokens must be moved to location ${Location.OutsideTheGame} before removing from play, instead found token at ${token.location}`
-            )
-        ) {
-            return;
-        }
+        Contract.assertEqual(token.location, Location.OutsideTheGame,
+            `Tokens must be moved to location ${Location.OutsideTheGame} before removing from play, instead found token at ${token.location}`
+        );
 
         const player = token.owner;
         this.filterCardFromList(token, this.allCards);

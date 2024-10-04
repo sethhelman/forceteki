@@ -3,14 +3,14 @@ import { ActionAbility } from '../ability/ActionAbility';
 import PlayerOrCardAbility from '../ability/PlayerOrCardAbility';
 import OngoingEffectSource from '../ongoingEffect/OngoingEffectSource';
 import type Player from '../Player';
-import Contract from '../utils/Contract';
+import * as Contract from '../utils/Contract';
 import { AbilityRestriction, AbilityType, Arena, Aspect, CardType, EffectName, EventName, KeywordName, Location, Trait } from '../Constants';
 import * as EnumHelpers from '../utils/EnumHelpers';
 import AbilityHelper from '../../AbilityHelper';
 import * as Helpers from '../utils/Helpers';
 import { AbilityContext } from '../ability/AbilityContext';
 import CardAbility from '../ability/CardAbility';
-import type Shield from '../../cards/01_SOR/Shield';
+import type Shield from '../../cards/01_SOR/tokens/Shield';
 import { KeywordInstance } from '../ability/KeywordInstance';
 import * as KeywordHelpers from '../ability/KeywordHelpers';
 import { StateWatcherRegistrar } from '../stateWatcher/StateWatcherRegistrar';
@@ -57,6 +57,7 @@ export class Card extends OngoingEffectSource {
     protected hiddenForController = true;      // TODO: is this correct handling of hidden / visible card state? not sure how this integrates with the client
     protected hiddenForOpponent = true;
 
+    private nextAbilityIdx = 0;
     private _location: Location;
 
 
@@ -123,9 +124,20 @@ export class Card extends OngoingEffectSource {
      * abilities have a cost in brackets that must be paid in order to use the ability.
      */
     public getActionAbilities(): ActionAbility[] {
-        return this.isBlank() ? []
-            : this.actionAbilities
-                .concat(this.getGainedAbilityEffects<ActionAbility>(AbilityType.Action));
+        const deduplicatedActionAbilities: ActionAbility[] = [];
+
+        const seenSourceUuids = new Set<string>();
+        for (const action of this.actionAbilities) {
+            if (action.printedAbility) {
+                deduplicatedActionAbilities.push(action);
+            } else if (!seenSourceUuids.has(action.gainAbilitySource.uuid)) {
+                // Deduplicate any identical gained action abilities from the same source card (e.g., two Heroic Resolve actions)
+                deduplicatedActionAbilities.push(action);
+                seenSourceUuids.add(action.gainAbilitySource.uuid);
+            }
+        }
+
+        return deduplicatedActionAbilities;
     }
 
     /**
@@ -133,8 +145,7 @@ export class Card extends OngoingEffectSource {
      * actions such as playing a card or attacking, as well as any action abilities from card text.
      */
     public getActions(): PlayerOrCardAbility[] {
-        return this.isBlank() ? []
-            : this.getActionAbilities();
+        return this.getActionAbilities();
     }
 
 
@@ -215,9 +226,23 @@ export class Card extends OngoingEffectSource {
     protected setupStateWatchers(registrar: StateWatcherRegistrar) {
     }
 
-    public createActionAbility(properties: IActionAbilityProps): ActionAbility {
-        properties.cardName = this.title;
-        return new ActionAbility(this.game, this, properties);
+    public createActionAbility<TSource extends Card = this>(properties: IActionAbilityProps<TSource>): ActionAbility {
+        return new ActionAbility(this.game, this, Object.assign(this.buildGeneralAbilityProps('action'), properties));
+    }
+
+    protected buildGeneralAbilityProps(abilityTypeDescriptor: string) {
+        return {
+            cardName: this.title,
+
+            // example: "wampa_triggered_0"
+            abilityIdentifier: `${this.internalName}_${abilityTypeDescriptor}_${this.getNextAbilityIdx()}`,
+        };
+    }
+
+    /** Increments the ability index counter used for adding an index number to an ability's ID */
+    private getNextAbilityIdx() {
+        this.nextAbilityIdx++;
+        return this.nextAbilityIdx - 1;
     }
 
 
@@ -258,9 +283,14 @@ export class Card extends OngoingEffectSource {
         return false;
     }
 
-    /** Returns true if the card is in a location where it can legally be damaged */
+    /** Returns true if the card is of a type that can legally be damaged. Note that the card might still be in a zone where damage is not legal. */
     public canBeDamaged(): this is CardWithDamageProperty {
         return false;
+    }
+
+    /** Returns true if the card is of a type that can legally be involved in an attack. Note that the card might still be in a zone where attacks are not legal. */
+    public canBeInvolvedInAttack(): this is CardWithDamageProperty {
+        return this.canBeDamaged();
     }
 
     /**
@@ -294,10 +324,10 @@ export class Card extends OngoingEffectSource {
         let keywords = [...this.printedKeywords];
 
         // TODO: this is currently wrong, lost keywords should be able to be re-added by later effects
-        for (const gainedKeyword of this.getEffectValues(EffectName.GainKeyword)) {
+        for (const gainedKeyword of this.getOngoingEffectValues(EffectName.GainKeyword)) {
             keywords.push(gainedKeyword);
         }
-        for (const lostKeyword of this.getEffectValues(EffectName.LoseKeyword)) {
+        for (const lostKeyword of this.getOngoingEffectValues(EffectName.LoseKeyword)) {
             keywords = keywords.filter((keyword) => keyword.name === lostKeyword);
         }
 
@@ -316,16 +346,12 @@ export class Card extends OngoingEffectSource {
     // ******************************************* TRAIT HELPERS *******************************************
     /** Helper method for {@link Card.traits} */
     private getTraits() {
-        const traits = new Set(
-            this.getEffectValues(EffectName.Blank).some((blankTraits: boolean) => blankTraits)
-                ? []
-                : this.printedTraits
-        );
+        const traits = new Set(this.printedTraits);
 
-        for (const gainedTrait of this.getEffectValues(EffectName.AddTrait)) {
+        for (const gainedTrait of this.getOngoingEffectValues(EffectName.AddTrait)) {
             traits.add(gainedTrait);
         }
-        for (const lostTrait of this.getEffectValues(EffectName.LoseTrait)) {
+        for (const lostTrait of this.getOngoingEffectValues(EffectName.LoseTrait)) {
             traits.delete(lostTrait);
         }
 
@@ -353,7 +379,7 @@ export class Card extends OngoingEffectSource {
 
     // *************************************** EFFECT HELPERS ***************************************
     public isBlank(): boolean {
-        return this.hasEffect(EffectName.Blank);
+        return this.hasOngoingEffect(EffectName.Blank);
     }
 
     public canTriggerAbilities(context: AbilityContext, ignoredRequirements = []): boolean {
@@ -368,10 +394,6 @@ export class Card extends OngoingEffectSource {
         return !this.facedown && !this.hasRestriction(AbilityRestriction.InitiateKeywords, context);
     }
 
-    protected getGainedAbilityEffects<TAbility>(abilityType: AbilityType): TAbility[] {
-        return this.getEffectValues(EffectName.GainAbility).filter((ability) => ability.type === abilityType);
-    }
-
 
     // ******************************************* LOCATION MANAGEMENT *******************************************
     public moveTo(targetLocation: Location) {
@@ -381,6 +403,7 @@ export class Card extends OngoingEffectSource {
             return;
         }
 
+        this.cleanupBeforeMove(targetLocation);
         const prevLocation = this._location;
         this._location = targetLocation;
         this.initializeForCurrentLocation(prevLocation);
@@ -391,6 +414,12 @@ export class Card extends OngoingEffectSource {
             newLocation: targetLocation
         });
     }
+
+    /**
+     * Deals with any engine effects of leaving the current location before the move happens
+     */
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    protected cleanupBeforeMove(nextLocation: Location) {}
 
     /**
      * Deals with the engine effects of entering a new location, making sure all statuses are set with legal values.
@@ -452,8 +481,39 @@ export class Card extends OngoingEffectSource {
     }
 
     // ******************************************* MISC *******************************************
+    /**
+     * Adds a dynamically gained action ability to the unit. Used for "gain ability" effects.
+     *
+     * Duplicates of the same gained action from duplicates of the same source card can be added,
+     * but only one will be presented to the user as an available action.
+     *
+     * @returns The uuid of the created action ability
+     */
+    public addGainedActionAbility(properties: IActionAbilityProps): string {
+        const addedAbility = this.createActionAbility(properties);
+        this.actionAbilities.push(addedAbility);
+
+        return addedAbility.uuid;
+    }
+
+    /** Removes a dynamically gained action ability */
+    public removeGainedActionAbility(removeAbilityUuid: string): void {
+        const updatedAbilityList = this.actionAbilities.filter((ability) => ability.uuid !== removeAbilityUuid);
+        Contract.assertEqual(updatedAbilityList.length, this.actionAbilities.length - 1, `Expected to find one instance of gained action ability to remove but instead found ${this.actionAbilities.length - updatedAbilityList.length}`);
+
+        this.actionAbilities = updatedAbilityList;
+    }
+
     protected assertPropertyEnabled(propertyVal: any, propertyName: string) {
-        Contract.assertNotNullLike(propertyVal, `Attempting to read property '${propertyName}' on '${this.internalName}' but it is in location '${this.location}' where the property does not apply`);
+        Contract.assertNotNullLike(propertyVal, this.buildPropertyDisabledStr(propertyName));
+    }
+
+    protected assertPropertyEnabledBoolean(enabled: boolean, propertyName: string) {
+        Contract.assertTrue(enabled, this.buildPropertyDisabledStr(propertyName));
+    }
+
+    private buildPropertyDisabledStr(propertyName: string) {
+        return `Attempting to read property '${propertyName}' on '${this.internalName}' but it is in location '${this.location}' where the property does not apply`;
     }
 
     protected resetLimits() {
@@ -470,7 +530,7 @@ export class Card extends OngoingEffectSource {
 
     public getModifiedController() {
         if (EnumHelpers.isArena(this.location)) {
-            return this.mostRecentEffect(EffectName.TakeControl) || this.defaultController;
+            return this.mostRecentOngoingEffect(EffectName.TakeControl) || this.defaultController;
         }
         return this.owner;
     }
@@ -555,7 +615,7 @@ export class Card extends OngoingEffectSource {
     }
 
     public getModifiedAbilityLimitMax(player: Player, ability: CardAbility, max: number): number {
-        const effects = this.getEffects().filter((effect) => effect.type === EffectName.IncreaseLimitOnAbilities);
+        const effects = this.getOngoingEffects().filter((effect) => effect.type === EffectName.IncreaseLimitOnAbilities);
         let total = max;
         effects.forEach((effect) => {
             const value = effect.getValue(this);
@@ -647,7 +707,7 @@ export class Card extends OngoingEffectSource {
     //     if (
     //         isActivePlayer
     //             ? this.isFacedown() && this.hideWhenFacedown()
-    //             : this.isFacedown() || hideWhenFaceup || this.hasEffect(EffectName.HideWhenFaceUp)
+    //             : this.isFacedown() || hideWhenFaceup || this.hasOngoingEffect(EffectName.HideWhenFaceUp)
     //     ) {
     //         let state = {
     //             controller: this.controller.getShortSummary(),

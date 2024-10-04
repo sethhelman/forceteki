@@ -4,6 +4,7 @@ import { putIntoPlay } from '../gameSystems/GameSystemLibrary.js';
 import { Card } from '../core/card/Card';
 import { GameEvent } from '../core/event/GameEvent.js';
 import { PlayCardContext, PlayCardAction } from '../core/ability/PlayCardAction.js';
+import * as Contract from '../core/utils/Contract.js';
 
 export class PlayUnitAction extends PlayCardAction {
     public constructor(card: Card) {
@@ -11,6 +12,8 @@ export class PlayUnitAction extends PlayCardAction {
     }
 
     public override executeHandler(context: PlayCardContext): void {
+        Contract.assertTrue(context.source.isUnit());
+
         const cardPlayedEvent = new GameEvent(EventName.OnCardPlayed, {
             player: context.player,
             card: context.source,
@@ -27,7 +30,7 @@ export class PlayUnitAction extends PlayCardAction {
             context.player,
             context.source,
         );
-        const effect = context.source.getEffectValues(EffectName.EntersPlayForOpponent);
+        const effect = context.source.getOngoingEffectValues(EffectName.EntersPlayForOpponent);
         const player = effect.length > 0 ? RelativePlayer.Opponent : RelativePlayer.Self;
         context.source.registerWhenPlayedKeywords();
         context.game.openEventWindow([
@@ -35,7 +38,7 @@ export class PlayUnitAction extends PlayCardAction {
                 controller: player
             }).generateEvent(context.source, context),
             cardPlayedEvent
-        ]);
+        ], this.resolveTriggersAfter);
     }
 
     public override meetsRequirements(context = this.createContext(), ignoredRequirements: string[] = []): string {

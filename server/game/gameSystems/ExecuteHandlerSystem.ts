@@ -3,17 +3,16 @@ import { GameSystem, type IGameSystemProperties } from '../core/gameSystem/GameS
 import { Card } from '../core/card/Card';
 import { GameEvent } from '../core/event/GameEvent';
 
-export interface IExecuteHandlerSystemProperties extends IGameSystemProperties {
-    handler: (context: AbilityContext) => void;
+export interface IExecuteHandlerSystemProperties<TContext extends AbilityContext = AbilityContext> extends IGameSystemProperties {
+    handler: (context: TContext) => void;
     hasTargetsChosenByInitiatingPlayer?: boolean;
 }
 
-// TODO: this is sometimes getting used as a no-op, see if we can add an explicit implementation for that
 /**
  * A {@link GameSystem} which executes a handler function
  * @override This was copied from L5R but has not been tested yet
  */
-export class ExecuteHandlerSystem extends GameSystem {
+export class ExecuteHandlerSystem<TContext extends AbilityContext = AbilityContext> extends GameSystem<TContext, IExecuteHandlerSystemProperties<TContext>> {
     protected override readonly defaultProperties: IExecuteHandlerSystemProperties = {
         handler: () => true,
         hasTargetsChosenByInitiatingPlayer: false
@@ -28,15 +27,15 @@ export class ExecuteHandlerSystem extends GameSystem {
         return true;
     }
 
-    public override canAffect(card: Card, context: AbilityContext): boolean {
+    public override canAffect(card: Card, context: TContext): boolean {
         return true;
     }
 
-    public override queueGenerateEventGameSteps(events: GameEvent[], context: AbilityContext, additionalProperties = {}): void {
+    public override queueGenerateEventGameSteps(events: GameEvent[], context: TContext, additionalProperties = {}): void {
         events.push(this.generateEvent(null, context, additionalProperties));
     }
 
-    public override hasTargetsChosenByInitiatingPlayer(context: AbilityContext, additionalProperties = {}) {
+    public override hasTargetsChosenByInitiatingPlayer(context: TContext, additionalProperties = {}) {
         const { hasTargetsChosenByInitiatingPlayer } = this.generatePropertiesFromContext(
             context,
             additionalProperties

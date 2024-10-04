@@ -3,7 +3,7 @@ const CardAbilityStep = require('./CardAbilityStep.js');
 const Costs = require('../../costs/CostLibrary.js');
 const { Location, CardType, EffectName, WildcardLocation, AbilityType, PhaseName } = require('../Constants.js');
 const EnumHelpers = require('../utils/EnumHelpers.js');
-const { default: Contract } = require('../utils/Contract.js');
+const Contract = require('../utils/Contract.js');
 
 class CardAbility extends CardAbilityStep {
     constructor(game, card, properties, type = AbilityType.Action) {
@@ -15,17 +15,15 @@ class CardAbility extends CardAbilityStep {
         this.limit.registerEvents(game);
         this.limit.ability = this;
         this.abilityCost = this.cost;
-        this.locationFilter = this.locationOrDefault(card, properties.locationFilter);
         this.printedAbility = properties.printedAbility === false ? false : true;
+        this.locationFilter = this.locationOrDefault(card, properties.locationFilter);
         this.cannotBeCancelled = properties.cannotBeCancelled;
         this.cannotTargetFirst = !!properties.cannotTargetFirst;
         this.cannotBeMirrored = !!properties.cannotBeMirrored;
-        this.abilityIdentifier = properties.abilityIdentifier;
-        this.origin = properties.origin;
-        if (!this.abilityIdentifier) {
-            // TODO: improve this so it at least increments the ability number
-            this.abilityIdentifier = this.printedAbility ? this.card.internalName + '_1' : '';
-        }
+        this.gainAbilitySource = properties.gainAbilitySource;
+
+        // if an ability name wasn't provided, assume this ability was created for some one-off purpose and not attached to the card
+        this.abilityIdentifier = properties.abilityIdentifier || `${this.card.internalName}_anonymous`;
     }
 
     locationOrDefault(card, location) {
@@ -37,7 +35,10 @@ class CardAbility extends CardAbilityStep {
             return Location.Hand;
         }
         if (card.isLeader()) {
-            Contract.fail('Leader card abilities must explicitly assign properties.locationFilter for the correct active zone of the ability');
+            // check that this is a gained ability - if it's a printed leader ability, it should have an explicit locationFilter based on which side of the card it's on
+            Contract.assertFalse(this.printedAbility, 'Leader card abilities must explicitly assign properties.locationFilter for the correct active zone of the ability');
+
+            return WildcardLocation.AnyArena;
         }
         if (card.isBase()) {
             return Location.Base;
@@ -87,21 +88,21 @@ class CardAbility extends CardAbilityStep {
     /** @override */
     getCosts(context, playCosts = true, triggerCosts = true) {
         let costs = super.getCosts(context, playCosts);
-        if (!context.subResolution && triggerCosts && context.player.hasEffect(EffectName.AdditionalTriggerCost)) {
+        if (!context.subResolution && triggerCosts && context.player.hasOngoingEffect(EffectName.AdditionalTriggerCost)) {
             const additionalTriggerCosts = context.player
-                .getEffectValues(EffectName.AdditionalTriggerCost)
+                .getOngoingEffectValues(EffectName.AdditionalTriggerCost)
                 .map((effect) => effect(context));
             costs = costs.concat(...additionalTriggerCosts);
         }
-        if (!context.subResolution && triggerCosts && context.source.hasEffect(EffectName.AdditionalTriggerCost)) {
+        if (!context.subResolution && triggerCosts && context.source.hasOngoingEffect(EffectName.AdditionalTriggerCost)) {
             const additionalTriggerCosts = context.source
-                .getEffectValues(EffectName.AdditionalTriggerCost)
+                .getOngoingEffectValues(EffectName.AdditionalTriggerCost)
                 .map((effect) => effect(context));
             costs = costs.concat(...additionalTriggerCosts);
         }
-        if (!context.subResolution && playCosts && context.player.hasEffect(EffectName.AdditionalPlayCost)) {
+        if (!context.subResolution && playCosts && context.player.hasOngoingEffect(EffectName.AdditionalPlayCost)) {
             const additionalPlayCosts = context.player
-                .getEffectValues(EffectName.AdditionalPlayCost)
+                .getOngoingEffectValues(EffectName.AdditionalPlayCost)
                 .map((effect) => effect(context));
             return costs.concat(...additionalPlayCosts);
         }
@@ -121,7 +122,7 @@ class CardAbility extends CardAbilityStep {
 
     getLocationMessage(location, context) {
         if (location.matchTarget(/^\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b$/i)) {
-            //it's a uuid
+            // it's a uuid
             let source = context.game.findAnyCardInPlayByUuid(location);
             if (source) {
                 return `cards set aside by ${source.name}`;
@@ -158,15 +159,10 @@ class CardAbility extends CardAbilityStep {
             return;
         }
 
-        let origin = context.ability && context.ability.origin;
-        // if origin is the same as source then ignore it
-        if (origin === context.source) {
-            origin = null;
-        }
+        let gainAbilitySource = context.ability && context.ability.gainAbilitySource;
 
-        // Player1 plays Assassination
-        let gainedAbility = origin ? '\'s gained ability from ' : '';
-        let messageArgs = [context.player, ' ' + messageVerb + ' ', context.source, gainedAbility, origin];
+        let gainedAbility = gainAbilitySource ? '\'s gained ability from ' : '';
+        let messageArgs = [context.player, ' ' + messageVerb + ' ', context.source, gainedAbility, gainAbilitySource];
         let costMessages = this.cost
             .map((cost) => {
                 if (cost.getCostMessage && cost.getCostMessage(context)) {

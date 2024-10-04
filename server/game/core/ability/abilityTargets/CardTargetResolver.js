@@ -1,17 +1,21 @@
 const Helpers = require('../../utils/Helpers.js');
 const CardSelector = require('../../cardSelector/CardSelector.js');
 const { Stage, RelativePlayer, EffectName, TargetMode } = require('../../Constants.js');
-const { default: Contract } = require('../../utils/Contract.js');
+const Contract = require('../../utils/Contract.js');
 const EnumHelpers = require('../../utils/EnumHelpers.js');
+const { GameSystem } = require('../../gameSystem/GameSystem.js');
 
 // TODO: the TargetResolver classes need a base class and then converted to TS
-/** Target resolver for selecting cards for the target of an effect */
+/**
+ * Target resolver for selecting cards for the target of an effect.
+ * @param {GameSystem} [properties.immediateEffect] - Optional GameSystem for effect(s)
+ */
 class CardTargetResolver {
     constructor(name, properties, ability) {
         this.name = name;
         this.properties = properties;
-        for (let gameSystem of this.properties.immediateEffect) {
-            gameSystem.setDefaultTargetFn((context) => context.targets[name]);
+        if (this.properties.immediateEffect) {
+            this.properties.immediateEffect.setDefaultTargetFn((context) => context.targets[name]);
         }
         this.selector = this.getSelector(properties);
         this.dependentTarget = null;
@@ -20,9 +24,7 @@ class CardTargetResolver {
             let dependsOnTarget = ability.targetResolvers.find((target) => target.name === this.properties.dependsOn);
 
             // assert that the target we depend on actually exists
-            if (!Contract.assertNotNullLike(dependsOnTarget)) {
-                return null;
-            }
+            Contract.assertNotNullLike(dependsOnTarget);
 
             dependsOnTarget.dependentTarget = this;
         }
@@ -37,7 +39,7 @@ class CardTargetResolver {
                 return false;
             }
             return (!this.dependentTarget || this.dependentTarget.hasLegalTarget(contextCopy)) &&
-                   (properties.immediateEffect.length === 0 || properties.immediateEffect.some((gameSystem) => gameSystem.hasLegalTarget(contextCopy)) &&
+                   (properties.immediateEffect == null || properties.immediateEffect.hasLegalTarget(contextCopy) &&
                    (!properties.cardCondition || properties.cardCondition(card, contextCopy)));
         };
         return CardSelector.for(Object.assign({}, properties, { cardCondition: cardCondition, targets: true }));
@@ -61,8 +63,9 @@ class CardTargetResolver {
         return this.selector.optional || this.selector.hasEnoughTargets(context, this.getChoosingPlayer(context));
     }
 
-    getGameSystem(context) {
-        return Helpers.asArray(this.properties.immediateEffect).filter((gameSystem) => gameSystem.hasLegalTarget(context));
+    /** @returns {GameSystem[]} */
+    getGameSystems() {
+        return this.properties.immediateEffect ? [this.properties.immediateEffect] : [];
     }
 
     getAllLegalTargets(context) {
@@ -122,7 +125,7 @@ class CardTargetResolver {
             }
         }
         let mustSelect = legalTargets.filter((card) =>
-            card.getEffectValues(EffectName.MustBeChosen).some((restriction) => restriction.isMatch('target', context))
+            card.getOngoingEffectValues(EffectName.MustBeChosen).some((restriction) => restriction.isMatch('target', context))
         );
         let promptProperties = {
             waitingPromptTitle: waitingPromptTitle,
@@ -192,7 +195,7 @@ class CardTargetResolver {
     checkGameActionsForTargetsChosenByInitiatingPlayer(context) {
         return this.getAllLegalTargets(context).some((card) => {
             let contextCopy = this.getContextCopy(card, context);
-            if (this.properties.immediateEffect.some((action) => action.hasTargetsChosenByInitiatingPlayer(contextCopy))) {
+            if (this.properties.immediateEffect && this.properties.immediateEffect.hasTargetsChosenByInitiatingPlayer(contextCopy)) {
                 return true;
             } else if (this.dependentTarget) {
                 return this.dependentTarget.checkGameActionsForTargetsChosenByInitiatingPlayer(contextCopy);
