@@ -50,9 +50,9 @@ describe('Qi\'ra, I Alone Survived', function () {
                         resources: 5,
                     },
                     player2: {
-                        groundArena: [{card:'rugged-survivors',upgrades: ['academy-training']}],
+                        groundArena: [{ card: 'rugged-survivors', upgrades: ['academy-training'] }],
                         spaceArena: ['grey-squadron-ywing'],
-                        base:{card:'echo-base', damage:5}
+                        base: { card: 'echo-base', damage: 5 }
                     }
                 });
             });
@@ -63,12 +63,12 @@ describe('Qi\'ra, I Alone Survived', function () {
 
                 expect(this.player2).toBeActivePlayer();
                 expect(this.qira.damage).toBe(4); // 8/2 = 4
-                expect(this.deathStarStormtrooper.damage).toBe(0); //1/2 = 0
+                expect(this.deathStarStormtrooper.damage).toBe(0); // 1/2 = 0
                 expect(this.greenSquadronAwing.damage).toBe(0); // shield => 0
                 expect(this.greenSquadronAwing.isUpgraded()).toBeFalse(); // lost his shield
-                expect(this.ruggedSurvivors.damage).toBe(3); //(5+2=7)/2 = 3
-                expect(this.greySquadronYwing.damage).toBe(1); //3/2=1
-                expect(this.hylobonEnforcer.damage).toBe(2);//4/2=1
+                expect(this.ruggedSurvivors.damage).toBe(3); // (5+2=7)/2 = 3
+                expect(this.greySquadronYwing.damage).toBe(1); // 3/2 = 1
+                expect(this.hylobonEnforcer.damage).toBe(2);// 4/2 = 1
 
                 expect(this.p1Base.damage).toBe(0);
                 expect(this.p2Base.damage).toBe(5);

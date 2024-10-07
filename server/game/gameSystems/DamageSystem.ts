@@ -6,7 +6,7 @@ import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/game
 import { GameEvent } from '../core/event/GameEvent';
 import * as Contract from '../core/utils/Contract';
 import AbilityHelper from '../AbilityHelper';
-import { UnitCard } from "../core/card/CardTypes";
+import { UnitCard } from '../core/card/CardTypes';
 
 export type DamageFunction = (card: UnitCard) => number;
 
@@ -29,7 +29,7 @@ export class DamageSystem<TContext extends AbilityContext = AbilityContext> exte
         if (typeof event.damage === 'number') {
             event.card.addDamage(event.damage);
         } else {
-            event.card.addDamage(event.damage(event.card))
+            event.card.addDamage(event.damage(event.card));
         }
     }
 
