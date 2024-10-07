@@ -8,10 +8,8 @@ import * as Contract from '../core/utils/Contract';
 import AbilityHelper from '../AbilityHelper';
 import { UnitCard } from '../core/card/CardTypes';
 
-export type DamageFunction = (card: UnitCard) => number;
-
 export interface IDamageProperties extends ICardTargetSystemProperties {
-    amount: number | DamageFunction;
+    amount: number | ((card: UnitCard) => number);
     isCombatDamage?: boolean;
     isOverwhelmDamage?: boolean;
 }
