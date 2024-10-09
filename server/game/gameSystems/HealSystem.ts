@@ -5,10 +5,10 @@ import * as EnumHelpers from '../core/utils/EnumHelpers';
 import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
 import * as Contract from '../core/utils/Contract';
 import * as CardHelpers from '../core/card/CardHelpers';
-import { CardWithDamageProperty } from '../core/card/CardTypes';
+import { CardWithDamageProperty, UnitCard } from '../core/card/CardTypes';
 
 export interface IHealProperties extends ICardTargetSystemProperties {
-    amount: number;
+    amount: number | ((card: UnitCard) => number);
 }
 
 export class HealSystem<TContext extends AbilityContext = AbilityContext> extends CardTargetSystem<TContext, IHealProperties> {
@@ -17,7 +17,11 @@ export class HealSystem<TContext extends AbilityContext = AbilityContext> extend
     protected override readonly targetTypeFilter = [WildcardCardType.Unit, CardType.Base];
 
     public eventHandler(event): void {
-        event.card.removeDamage(event.healAmount);
+        if (typeof event.healAmount === 'number') {
+            event.card.removeDamage(event.healAmount);
+        } else {
+            event.card.removeDamage(event.healAmount(event.card));
+        }
     }
 
     public override getEffectMessage(context: TContext): [string, any[]] {
