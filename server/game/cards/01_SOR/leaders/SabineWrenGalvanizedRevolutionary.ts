@@ -13,20 +13,14 @@ export default class SabineWrenGalvanizedRevolutionary extends LeaderUnitCard {
         this.addActionAbility({
             title: 'Deal 1 damage to each base',
             cost: AbilityHelper.costs.exhaustSelf(),
-            immediateEffect: AbilityHelper.immediateEffects.simultaneous([
-                AbilityHelper.immediateEffects.damage((context) => ({ amount: 1, target: context.source.controller.base })),
-                AbilityHelper.immediateEffects.damage((context) => ({ amount: 1, target: context.source.controller.opponent.base }))
-            ])
+            immediateEffect: AbilityHelper.immediateEffects.damage((context) => ({ amount: 1, target: [context.source.controller.base, context.source.controller.opponent.base] })),
         });
     }
 
     protected override setupLeaderUnitSideAbilities () {
         this.addOnAttackAbility({
             title: 'Deal 1 damage to each base',
-            immediateEffect: AbilityHelper.immediateEffects.simultaneous([
-                AbilityHelper.immediateEffects.damage((context) => ({ amount: 1, target: context.source.controller.base })),
-                AbilityHelper.immediateEffects.damage((context) => ({ amount: 1, target: context.source.controller.opponent.base }))
-            ])
+            immediateEffect: AbilityHelper.immediateEffects.damage((context) => ({ amount: 1, target: [context.source.controller.base, context.source.controller.opponent.base] })),
         });
     }
 }
