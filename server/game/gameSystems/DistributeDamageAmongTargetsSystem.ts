@@ -1,6 +1,6 @@
 import type { AbilityContext } from '../core/ability/AbilityContext';
 import type { Card } from '../core/card/Card';
-import { AbilityRestriction, CardType, CardTypeFilter, EffectName, EventName, LocationFilter, RelativePlayer, TargetMode, WildcardCardType } from '../core/Constants';
+import { CardType, CardTypeFilter, LocationFilter, RelativePlayer, TargetMode, WildcardCardType } from '../core/Constants';
 import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
 import CardSelector from '../core/cardSelector/CardSelector';
 import BaseCardSelector from '../core/cardSelector/BaseCardSelector';
@@ -17,6 +17,12 @@ export enum DistributionType {
 export interface IDistributeDamageSystemProperties<TContext extends AbilityContext = AbilityContext> extends ICardTargetSystemProperties {
     amountToDistribute: number;
     distributionType: DistributionType;
+
+    /**
+     * If true, the player can choose to target 0 cards with the ability.
+     * This needs to be set for any card that says "among any number of [X]" in its effect text.
+     */
+    canChooseNoTargets: boolean;
 
     activePromptTitle?: string;
     player?: RelativePlayer;
@@ -39,6 +45,7 @@ export class DistributeDamageAmongTargetsSystem<TContext extends AbilityContext 
         amountToDistribute: null,
         cardCondition: () => true,
         checkTarget: false,
+        canChooseNoTargets: null
     };
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -68,22 +75,26 @@ export class DistributeDamageAmongTargetsSystem<TContext extends AbilityContext 
             //             .some((restriction) => restriction.isMatch('target', context))
             //     );
         }
+
         if (!properties.selector.hasEnoughTargets(context, player)) {
+            return;
+        }
+
+        const legalTargets = properties.selector.getAllLegalTargets(context);
+
+        if (!properties.canChooseNoTargets && legalTargets.length === 1) {
+            events.push(this.generateDamageEvent(properties.distributionType, legalTargets[0], context, properties.amountToDistribute));
             return;
         }
 
         // build prompt with handler that will push damage events into execution window on prompt resolution
         const promptProperties: IDistributeDamageOrHealingPromptProperties = {
             type: StatefulPromptType.DistributeDamage,
-            legalTargets: properties.selector.getAllLegalTargets(context),
+            legalTargets,
             source: context.source,
             amount: properties.amountToDistribute,
-            resultsHandler: (results: IDistributeDamageOrHealingPromptResults) => {
-                for (const [card, amount] of results.valueDistribution) {
-                    const effectSystem = this.generateEffectSystem(properties.distributionType, amount);
-                    events.push(effectSystem.generateEvent(card, context));
-                }
-            }
+            resultsHandler: (results: IDistributeDamageOrHealingPromptResults) =>
+                results.valueDistribution.forEach((amount, card) => events.push(this.generateDamageEvent(properties.distributionType, card, context, amount)))
         };
 
         context.game.promptStateful(player, promptProperties);
@@ -127,5 +138,10 @@ export class DistributeDamageAmongTargetsSystem<TContext extends AbilityContext 
             default:
                 throw new Error(`Unknown distribution type: ${distributionType}`);
         }
+    }
+
+    private generateDamageEvent(distributionType: DistributionType, card: Card, context: TContext, amount: number) {
+        const effectSystem = this.generateEffectSystem(distributionType, amount);
+        return effectSystem.generateEvent(card, context);
     }
 }

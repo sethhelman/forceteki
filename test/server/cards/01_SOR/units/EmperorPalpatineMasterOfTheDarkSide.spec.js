@@ -6,7 +6,7 @@ describe('Emperor Palpatine, Master of the Dark Side', function() {
                     phase: 'action',
                     player1: {
                         hand: ['emperor-palpatine#master-of-the-dark-side'],
-                        groundArena: ['admiral-piett#captain-of-the-executor']
+                        groundArena: ['battlefield-marine']
                     },
                     player2: {
                         groundArena: ['consular-security-force', 'wampa'],
@@ -52,7 +52,7 @@ describe('Emperor Palpatine, Master of the Dark Side', function() {
                     phase: 'action',
                     player1: {
                         hand: ['emperor-palpatine#master-of-the-dark-side'],
-                        groundArena: ['admiral-piett#captain-of-the-executor']
+                        groundArena: ['battlefield-marine']
                     },
                     player2: {
                         groundArena: ['general-krell#heartless-tactician', 'wampa'],
@@ -70,6 +70,48 @@ describe('Emperor Palpatine, Master of the Dark Side', function() {
                 ]));
 
                 expect(this.player2).toHaveExactPromptButtons(['Draw a card', 'Draw a card']);
+            });
+        });
+
+        describe('Palpatine\'s ability, if there is only one target,', function() {
+            beforeEach(function () {
+                this.setupTest({
+                    phase: 'action',
+                    player1: {
+                        hand: ['emperor-palpatine#master-of-the-dark-side'],
+                        groundArena: ['battlefield-marine']
+                    },
+                    player2: {
+                        groundArena: ['consular-security-force']
+                    }
+                });
+            });
+
+            it('should automatically deal all damage to that target', function () {
+                this.player1.clickCard(this.emperorPalpatine);
+                expect(this.consularSecurityForce.damage).toBe(6);
+                expect(this.battlefieldMarine.damage).toBe(0);
+                expect(this.player2).toBeActivePlayer();
+            });
+        });
+
+        describe('Palpatine\'s ability', function() {
+            beforeEach(function () {
+                this.setupTest({
+                    phase: 'action',
+                    player1: {
+                        hand: ['emperor-palpatine#master-of-the-dark-side'],
+                        groundArena: ['battlefield-marine']
+                    },
+                    player2: {
+                    }
+                });
+            });
+
+            it('should do nothing if there are no enemy units', function () {
+                this.player1.clickCard(this.emperorPalpatine);
+                expect(this.battlefieldMarine.damage).toBe(0);
+                expect(this.player2).toBeActivePlayer();
             });
         });
     });

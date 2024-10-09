@@ -17,6 +17,7 @@ export default class EmperorPalpatineMasterOfTheDarkSide extends NonLeaderUnitCa
             title: 'Deal 6 damage divided as you choose among enemy units',
             immediateEffect: AbilityHelper.immediateEffects.distributeDamageAmong({
                 amountToDistribute: 6,
+                canChooseNoTargets: false,
                 distributionType: DistributionType.Damage,
                 controller: RelativePlayer.Opponent,
                 cardTypeFilter: WildcardCardType.Unit
