@@ -2,7 +2,7 @@ import AbilityHelper from '../../../AbilityHelper';
 import { Attack } from '../../../core/attack/Attack';
 import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
 import { RelativePlayer, Trait, WildcardCardType } from '../../../core/Constants';
-import { DistributionType } from '../../../gameSystems/DistributeDamageAmongTargetsSystem';
+import { DistributedEffectType } from '../../../gameSystems/DistributeDamageAmongTargetsSystem';
 
 export default class EmperorPalpatineMasterOfTheDarkSide extends NonLeaderUnitCard {
     protected override getImplementationId() {
@@ -18,7 +18,7 @@ export default class EmperorPalpatineMasterOfTheDarkSide extends NonLeaderUnitCa
             immediateEffect: AbilityHelper.immediateEffects.distributeDamageAmong({
                 amountToDistribute: 6,
                 canChooseNoTargets: false,
-                distributionType: DistributionType.Damage,
+                effectType: DistributedEffectType.Damage,
                 controller: RelativePlayer.Opponent,
                 cardTypeFilter: WildcardCardType.Unit
             })

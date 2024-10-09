@@ -64,8 +64,8 @@ class EventWindow extends BaseStepWithPipeline {
         return event;
     }
 
-    addThenAbilityStep(ability, context, condition = (event) => event.isFullyResolved(event)) {
-        this.thenAbilitySteps.push({ ability, context, condition });
+    addThenAbilityStep(thenAbilityGenerator, context) {
+        this.thenAbilitySteps.push({ thenAbilityGenerator, context });
     }
 
     addSubwindowEvents(events) {
@@ -151,10 +151,13 @@ class EventWindow extends BaseStepWithPipeline {
     }
 
     // resolve any "then" abilities
+    // TODO THIS PR: clean this up
     checkThenAbilitySteps() {
-        for (const cardAbilityStep of this.thenAbilitySteps) {
-            if (cardAbilityStep.context.events.every((event) => cardAbilityStep.condition(event))) {
-                this.game.resolveAbility(cardAbilityStep.ability.createContext(cardAbilityStep.context.player));
+        for (const cardAbilityStepFn of this.thenAbilitySteps) {
+            const cardAbilityStep = cardAbilityStepFn.thenAbilityGenerator(cardAbilityStepFn.context);
+            const condition = cardAbilityStep.condition || (() => true);
+            if (cardAbilityStepFn.context.events.every((event) => condition(event))) {
+                this.game.resolveAbility(cardAbilityStep.createContext(cardAbilityStepFn.context.player));
             }
         }
     }

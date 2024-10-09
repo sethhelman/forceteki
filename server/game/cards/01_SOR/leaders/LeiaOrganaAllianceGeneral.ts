@@ -17,6 +17,7 @@ export default class LeiaOrganaAllianceGeneral extends LeaderUnitCard {
             initiateAttack: {
                 attackerCondition: (card) => card.hasSomeTrait(Trait.Rebel)
             },
+            // TODO THIS PR: fix the targeting bug here (needs to not be allowed to choose the same attacker twice)
             then: {
                 title: 'Attack with a second Rebel unit',
                 optional: true,

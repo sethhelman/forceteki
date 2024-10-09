@@ -9,18 +9,18 @@ import { IDistributeDamageOrHealingPromptProperties, IDistributeDamageOrHealingP
 import { DamageSystem } from './DamageSystem';
 import { HealSystem } from './HealSystem';
 
-export enum DistributionType {
+export enum DistributedEffectType {
     Damage = 'damage',
     Healing = 'healing'
 }
 
 export interface IDistributeDamageSystemProperties<TContext extends AbilityContext = AbilityContext> extends ICardTargetSystemProperties {
-    amountToDistribute: number;
-    distributionType: DistributionType;
+    amountToDistribute: number | ((context: TContext) => number);
+    effectType: DistributedEffectType;
 
     /**
      * If true, the player can choose to target 0 cards with the ability.
-     * This needs to be set for any card that says "among any number of [X]" in its effect text.
+     * This needs to be set for any card that says "choose among any number of units" in its effect text.
      */
     canChooseNoTargets: boolean;
 
@@ -41,7 +41,7 @@ export class DistributeDamageAmongTargetsSystem<TContext extends AbilityContext 
 
     protected override readonly targetTypeFilter = [WildcardCardType.Unit, CardType.Base];
     protected override defaultProperties: IDistributeDamageSystemProperties<TContext> = {
-        distributionType: null,
+        effectType: null,
         amountToDistribute: null,
         cardCondition: () => true,
         checkTarget: false,
@@ -83,7 +83,8 @@ export class DistributeDamageAmongTargetsSystem<TContext extends AbilityContext 
         const legalTargets = properties.selector.getAllLegalTargets(context);
 
         if (!properties.canChooseNoTargets && legalTargets.length === 1) {
-            events.push(this.generateDamageEvent(properties.distributionType, legalTargets[0], context, properties.amountToDistribute));
+            const amountToDistribute = this.getAmountToDistribute(properties.amountToDistribute, context);
+            events.push(this.generateDamageEvent(properties.effectType, legalTargets[0], context, amountToDistribute));
             return;
         }
 
@@ -92,9 +93,9 @@ export class DistributeDamageAmongTargetsSystem<TContext extends AbilityContext 
             type: StatefulPromptType.DistributeDamage,
             legalTargets,
             source: context.source,
-            amount: properties.amountToDistribute,
+            amount: this.getAmountToDistribute(properties.amountToDistribute, context),
             resultsHandler: (results: IDistributeDamageOrHealingPromptResults) =>
-                results.valueDistribution.forEach((amount, card) => events.push(this.generateDamageEvent(properties.distributionType, card, context, amount)))
+                results.valueDistribution.forEach((amount, card) => events.push(this.generateDamageEvent(properties.effectType, card, context, amount)))
         };
 
         context.game.promptStateful(player, promptProperties);
@@ -103,7 +104,7 @@ export class DistributeDamageAmongTargetsSystem<TContext extends AbilityContext 
     public override generatePropertiesFromContext(context: TContext, additionalProperties = {}) {
         const properties = super.generatePropertiesFromContext(context, additionalProperties);
         if (!properties.selector) {
-            const effectSystem = this.generateEffectSystem(properties.distributionType);
+            const effectSystem = this.generateEffectSystem(properties.effectType);
             const cardCondition = (card, context) =>
                 effectSystem.canAffect(card, context) && properties.cardCondition(card, context);
             properties.selector = CardSelector.for(Object.assign({}, properties, { cardCondition, mode: TargetMode.Unlimited }));
@@ -129,19 +130,23 @@ export class DistributeDamageAmongTargetsSystem<TContext extends AbilityContext 
         return properties.selector.hasEnoughTargets(context, player);
     }
 
-    private generateEffectSystem(distributionType: DistributionType, amount = 1): DamageSystem | HealSystem {
-        switch (distributionType) {
-            case DistributionType.Damage:
+    private generateEffectSystem(effectType: DistributedEffectType, amount = 1): DamageSystem | HealSystem {
+        switch (effectType) {
+            case DistributedEffectType.Damage:
                 return new DamageSystem({ amount });
-            case DistributionType.Healing:
+            case DistributedEffectType.Healing:
                 return new HealSystem({ amount });
             default:
-                throw new Error(`Unknown distribution type: ${distributionType}`);
+                throw new Error(`Unknown distribution type: ${effectType}`);
         }
     }
 
-    private generateDamageEvent(distributionType: DistributionType, card: Card, context: TContext, amount: number) {
-        const effectSystem = this.generateEffectSystem(distributionType, amount);
+    private generateDamageEvent(effectType: DistributedEffectType, card: Card, context: TContext, amount: number) {
+        const effectSystem = this.generateEffectSystem(effectType, amount);
         return effectSystem.generateEvent(card, context);
+    }
+
+    private getAmountToDistribute(amountToDistributeOrFn: number | ((context: TContext) => number), context: TContext): number {
+        return typeof amountToDistributeOrFn === 'function' ? amountToDistributeOrFn(context) : amountToDistributeOrFn;
     }
 }
