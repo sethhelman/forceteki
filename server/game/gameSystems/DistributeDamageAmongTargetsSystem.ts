@@ -92,6 +92,7 @@ export class DistributeDamageAmongTargetsSystem<TContext extends AbilityContext 
         const promptProperties: IDistributeDamageOrHealingPromptProperties = {
             type: StatefulPromptType.DistributeDamage,
             legalTargets,
+            canChooseNoTargets: properties.canChooseNoTargets,
             source: context.source,
             amount: this.getAmountToDistribute(properties.amountToDistribute, context),
             resultsHandler: (results: IDistributeDamageOrHealingPromptResults) =>

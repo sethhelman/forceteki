@@ -76,20 +76,22 @@ export class DistributeDamageOrHealingPrompt extends UiPrompt {
     }
 
     public override onStatefulPromptResults(player: Player, results: IStatefulPromptResults): boolean {
-        this.assertPromptResultsValid(results);
+        this.assertPromptResultsValid(player, results);
         this.properties.resultsHandler(results);
         this.complete();
 
         return true;
     }
 
-    private assertPromptResultsValid(results: IStatefulPromptResults) {
+    private assertPromptResultsValid(player: Player, results: IStatefulPromptResults) {
+        Contract.assertEqual(player, this.player, `Received prompt results from unexpected player, expected '${this.player.name}' but received results for player '${player.name}'`);
+
         Contract.assertEqual(results.type, this.properties.type, `Unexpected prompt results type, expected '${this.properties.type}' but received result of type '${results.type}'`);
 
         const distributedValues = Array.from(results.valueDistribution.values());
         const distributedSum = distributedValues.reduce((sum, curr) => sum + curr, 0);
         Contract.assertTrue(
-            distributedSum === this.properties.amount,
+            (distributedValues.length === 0 && this.properties.canChooseNoTargets) || distributedSum === this.properties.amount,
             `Illegal prompt results for '${this._activePrompt.menuTitle}', distributed ${this.distributeType} should be equal to ${this.properties.amount} but instead received a total of ${distributedSum}`
         );
 

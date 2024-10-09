@@ -13,6 +13,7 @@ export interface IDistributeDamageOrHealingPromptProperties {
     type: StatefulPromptType.DistributeDamage | StatefulPromptType.DistributeHealing;
     amount: number;
     source: Card;
+    canChooseNoTargets: boolean;
     legalTargets: Card[];
     waitingPromptTitle?: string;
     promptTitle?: string;
