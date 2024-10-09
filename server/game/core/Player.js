@@ -875,7 +875,7 @@ class Player extends GameObject {
     }
 
     /**
-     * Returns the number of resources available to spend
+     * Returns the number of exhausted resources
      */
     countExhaustedResources() {
         return this.resources.reduce((count, card) => count += card.exhausted, 0);
@@ -902,6 +902,16 @@ class Player extends GameObject {
     }
 
     /**
+     * Ready the specified number of resources
+     */
+    readyResources(count) {
+        let exhaustedResources = this.resources.filter((card) => card.exhausted);
+        for (let i = 0; i < Math.min(count, exhaustedResources.length); i++) {
+            exhaustedResources[i].exhausted = false;
+        }
+    }
+
+    /**
      * Defeat the specified card
      */
     defeatCard(card) {
@@ -909,7 +919,7 @@ class Player extends GameObject {
             return;
         }
 
-        this.game.addSubwindowEvents(GameSystems.defeat().generateEvent(card, this.game.getFrameworkContext()));
+        this.game.addSubwindowEvents(GameSystems.defeat({ target: card }).generateEvent(card, this.game.getFrameworkContext()));
     }
 
     /**
