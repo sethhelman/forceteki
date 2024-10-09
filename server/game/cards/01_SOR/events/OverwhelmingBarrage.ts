@@ -1,7 +1,6 @@
 import AbilityHelper from '../../../AbilityHelper';
 import { EventCard } from '../../../core/card/EventCard';
 import { RelativePlayer, WildcardCardType } from '../../../core/Constants';
-import { DistributedEffectType } from '../../../gameSystems/DistributeDamageAmongTargetsSystem';
 
 export default class OverwhelmingBarrage extends EventCard {
     protected override getImplementationId () {
@@ -26,7 +25,6 @@ export default class OverwhelmingBarrage extends EventCard {
                 immediateEffect: AbilityHelper.immediateEffects.distributeDamageAmong({
                     amountToDistribute: thenContext.target.getPower(),
                     canChooseNoTargets: true,
-                    effectType: DistributedEffectType.Damage,
                     controller: RelativePlayer.Any,
                     cardTypeFilter: WildcardCardType.Unit,
                     cardCondition: (card) => card !== thenContext.target

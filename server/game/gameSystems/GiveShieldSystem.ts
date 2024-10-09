@@ -12,6 +12,7 @@ export class GiveShieldSystem<TContext extends AbilityContext = AbilityContext> 
         tokenType: TokenName.Shield
     };
 
+    // TODO THIS PR: use better pattern for overriding functionality, see if we still need this
     // constructor needs to do some extra work to ensure that the passed props object ends up as valid for the parent class
     public constructor(propertiesOrPropertyFactory: IGiveShieldProperties | ((context?: AbilityContext) => IGiveShieldProperties)) {
         const propsWithTokenType = GameSystem.appendToPropertiesOrPropertyFactory<IGiveTokenUpgradeProperties, 'tokenType'>(propertiesOrPropertyFactory, { tokenType: TokenName.Shield });

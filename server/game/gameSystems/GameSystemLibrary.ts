@@ -4,7 +4,7 @@ import { AbilityContext } from '../core/ability/AbilityContext';
 // import { AddTokenAction, AddTokenProperties } from './AddTokenAction';
 import { AttachUpgradeSystem, IAttachUpgradeProperties } from './AttachUpgradeSystem';
 import { CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
-import { DistributeDamageAmongTargetsSystem, IDistributeDamageSystemProperties } from './DistributeDamageAmongTargetsSystem';
+import { DistributeAmongTargetsSystem, IDistributeAmongTargetsSystemProperties } from './DistributeAmongTargetsSystem';
 import { DamageSystem, IDamageProperties } from './DamageSystem';
 import { DeployLeaderSystem, IDeployLeaderProperties } from './DeployLeaderSystem';
 import { DefeatCardSystem, IDefeatCardProperties } from './DefeatCardSystem';
@@ -65,6 +65,7 @@ import { ShuffleDeckSystem, IShuffleDeckProperties } from './ShuffleDeckSystem';
 import { SimultaneousGameSystem } from './SimultaneousSystem';
 import { MetaSystem } from '../core/gameSystem/MetaSystem';
 import { TriggeredAbilityContext } from '../core/ability/TriggeredAbilityContext';
+import { DistributeDamageAmongTargetsSystem, IDistributeDamageAmongTargetsSystemProperties } from './DistributeDamageAmongTargetsSystem';
 // import { TakeControlAction, TakeControlProperties } from './TakeControlAction';
 // import { TriggerAbilityAction, TriggerAbilityProperties } from './TriggerAbilityAction';
 // import { TurnCardFacedownAction, TurnCardFacedownProperties } from './TurnCardFacedownAction';
@@ -92,7 +93,7 @@ export function cardLastingEffect<TContext extends AbilityContext = AbilityConte
 // export function createToken(propertyFactory: PropsFactory<CreateTokenProperties> = {}): GameSystem {
 //     return new CreateTokenAction(propertyFactory);
 // }
-export function distributeDamageAmong<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDistributeDamageSystemProperties, TContext>): GameSystem<TContext> {
+export function distributeDamageAmong<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDistributeDamageAmongTargetsSystemProperties, TContext>) {
     return new DistributeDamageAmongTargetsSystem<TContext>(propertyFactory);
 }
 export function damage<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDamageProperties, TContext>) {
