@@ -4,6 +4,7 @@ import { AbilityContext } from '../core/ability/AbilityContext';
 // import { AddTokenAction, AddTokenProperties } from './AddTokenAction';
 import { AttachUpgradeSystem, IAttachUpgradeProperties } from './AttachUpgradeSystem';
 import { CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
+import { DistributeDamageAmongTargetsSystem, IDistributeDamageSystemProperties } from './DistributeDamageAmongTargetsSystem';
 import { DamageSystem, IDamageProperties } from './DamageSystem';
 import { DeployLeaderSystem, IDeployLeaderProperties } from './DeployLeaderSystem';
 import { DefeatCardSystem, IDefeatCardProperties } from './DefeatCardSystem';
@@ -91,7 +92,10 @@ export function cardLastingEffect<TContext extends AbilityContext = AbilityConte
 // export function createToken(propertyFactory: PropsFactory<CreateTokenProperties> = {}): GameSystem {
 //     return new CreateTokenAction(propertyFactory);
 // }
-export function damage<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDamageProperties, TContext>): GameSystem<TContext> {
+export function distributeDamageAmong<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDistributeDamageSystemProperties, TContext>): GameSystem<TContext> {
+    return new DistributeDamageAmongTargetsSystem<TContext>(propertyFactory);
+}
+export function damage<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDamageProperties, TContext>) {
     return new DamageSystem<TContext>(propertyFactory);
 }
 // export function detach(propertyFactory: PropsFactory<DetachActionProperties> = {}): GameSystem {
@@ -112,7 +116,7 @@ export function defeat<TContext extends AbilityContext = AbilityContext>(propert
 export function exhaust<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IExhaustSystemProperties, TContext> = {}): CardTargetSystem<TContext> {
     return new ExhaustSystem<TContext>(propertyFactory);
 }
-export function forThisPhaseCardEffect<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<ICardPhaseLastingEffectProperties, TContext>): GameSystem<TContext> {
+export function forThisPhaseCardEffect<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<ICardPhaseLastingEffectProperties, TContext>) {
     return new CardPhaseLastingEffectSystem<TContext>(propertyFactory);
 }
 export function giveExperience<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IGiveExperienceProperties, TContext> = {}): CardTargetSystem<TContext> {

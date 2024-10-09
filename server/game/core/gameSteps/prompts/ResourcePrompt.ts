@@ -1,6 +1,7 @@
 import { Card } from '../../card/Card';
 import type Game from '../../Game';
 import type Player from '../../Player';
+import { IPlayerPromptStateProperties } from '../../PlayerPromptState';
 import * as Contract from '../../utils/Contract';
 import { AllPlayerPrompt } from './AllPlayerPrompt';
 
@@ -43,7 +44,7 @@ export class ResourcePrompt extends AllPlayerPrompt {
         });
     }
 
-    public override activePrompt() {
+    public override activePrompt(): IPlayerPromptStateProperties {
         let promptText = null;
         if (this.nCardsToResource !== 1) {
             promptText = `Select ${this.nCardsToResource} cards to resource`;

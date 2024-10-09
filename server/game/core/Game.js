@@ -33,6 +33,7 @@ const { EffectName, EventName, Location, TokenName } = require('./Constants.js')
 const { BaseStepWithPipeline } = require('./gameSteps/BaseStepWithPipeline.js');
 const { default: Shield } = require('../cards/01_SOR/tokens/Shield.js');
 const { StateWatcherRegistrar } = require('./stateWatcher/StateWatcherRegistrar.js');
+const { DistributeDamageOrHealingPrompt } = require('./gameSteps/prompts/DistributeDamageOrHealingPrompt.js');
 
 class Game extends EventEmitter {
     constructor(details, options = {}) {
@@ -610,6 +611,13 @@ class Game extends EventEmitter {
         this.queueStep(new SelectCardPrompt(this, player, properties));
     }
 
+    // TODO THIS PR: docstr
+    promptStateful(player, properties) {
+        Contract.assertNotNullLike(player);
+
+        this.queueStep(new DistributeDamageOrHealingPrompt(this, player, properties));
+    }
+
     /**
      * This function is called by the client whenever a player clicks a button
      * in a prompt
@@ -621,12 +629,16 @@ class Game extends EventEmitter {
      */
     menuButton(playerName, arg, uuid, method) {
         var player = this.getPlayerByName(playerName);
-        if (!player) {
-            return false;
-        }
 
         // check to see if the current step in the pipeline is waiting for input
         return this.pipeline.handleMenuCommand(player, arg, uuid, method);
+    }
+
+    statefulPromptResults(playerName, result) {
+        var player = this.getPlayerByName(playerName);
+
+        // check to see if the current step in the pipeline is waiting for input
+        return this.pipeline.handleStatefulPromptResults(player, result);
     }
 
     /**
