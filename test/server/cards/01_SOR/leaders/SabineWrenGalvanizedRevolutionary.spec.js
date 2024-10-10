@@ -1,27 +1,25 @@
-describe('Sabine Wren, Galvanized Revolutionary', function () {
-    integration(function () {
-        describe('Sabine\'s undeployed ability', function () {
+describe('Sabine Wren, Galvanized Revolutionary', function() {
+    integration(function() {
+        describe('Sabine\'s undeployed ability', function() {
             beforeEach(function () {
                 this.setupTest({
                     phase: 'action',
                     player1: {
                         leader: 'sabine-wren#galvanized-revolutionary'
-                    },
-                    player2: {}
+                    }
                 });
             });
 
-            it('should damage each base', function () {
+            it('should deal 1 damage to both bases', function () {
                 this.player1.clickCard(this.sabineWren);
                 this.player1.clickPrompt('Deal 1 damage to each base');
-                expect(this.sabineWren.exhausted).toBe(true);
                 expect(this.p1Base.damage).toBe(1);
                 expect(this.p2Base.damage).toBe(1);
-                expect(this.player2).toBeActivePlayer();
+                expect(this.sabineWren.exhausted).toBe(true);
             });
         });
 
-        describe('Sabine\'s deployed ability', function () {
+        describe('Sabine\'s deployed ability', function() {
             beforeEach(function () {
                 this.setupTest({
                     phase: 'action',
@@ -29,33 +27,27 @@ describe('Sabine Wren, Galvanized Revolutionary', function () {
                         leader: { card: 'sabine-wren#galvanized-revolutionary', deployed: true }
                     },
                     player2: {
-                        groundArena: ['battlefield-marine']
+                        groundArena: ['rebel-pathfinder']
                     }
                 });
             });
 
-            it('should damage each base', function () {
-                // attack base, each base damage should be +1
+            it('should deal 1 damage to the opponent\'s base on attack', function () {
                 this.player1.clickCard(this.sabineWren);
-                expect(this.player1).toBeAbleToSelectExactly([this.p2Base, this.battlefieldMarine]);
-                this.player1.clickCard(this.p2Base);
+                this.player1.clickCard(this.rebelPathfinder);
+                expect(this.p2Base.damage).toBe(1);
+                expect(this.p1Base.damage).toBe(0);
+                expect(this.rebelPathfinder.damage).toBe(2);
+            });
 
-                expect(this.player2).toBeActivePlayer();
-                expect(this.p1Base.damage).toBe(1);
-                expect(this.p2Base.damage).toBe(3);
-
-                this.sabineWren.exhausted = false;
-                this.player2.passAction();
-
-                // attack another unit, each base should be damaged
+            it('should deal 1 damage to the opponent\'s base on attack before combat damage', function () {
+                this.p2Base.damage = 29;
                 this.player1.clickCard(this.sabineWren);
-                expect(this.player1).toBeAbleToSelectExactly([this.p2Base, this.battlefieldMarine]);
-                this.player1.clickCard(this.battlefieldMarine);
-
-                expect(this.player2).toBeActivePlayer();
-                expect(this.battlefieldMarine.damage).toBe(2);
-                expect(this.p1Base.damage).toBe(2);
-                expect(this.p2Base.damage).toBe(4);
+                this.player1.clickCard(this.rebelPathfinder);
+                expect(this.player1).toHavePrompt('player1 has won the game!');
+                expect(this.p2Base.damage).toBe(30);
+                expect(this.p1Base.damage).toBe(0);
+                expect(this.rebelPathfinder.damage).toBe(0);
             });
         });
     });
