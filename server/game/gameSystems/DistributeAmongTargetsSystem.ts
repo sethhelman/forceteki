@@ -18,6 +18,9 @@ export interface IDistributeAmongTargetsSystemProperties<TContext extends Abilit
      */
     canChooseNoTargets: boolean;
 
+    /** If true, the amount distributed can be less than the provided amount */
+    canDistributeLess?: boolean;
+
     activePromptTitle?: string;
     player?: RelativePlayer;
     cardTypeFilter?: CardTypeFilter | CardTypeFilter[];
@@ -31,17 +34,18 @@ export interface IDistributeAmongTargetsSystemProperties<TContext extends Abilit
 }
 
 export abstract class DistributeAmongTargetsSystem<TContext extends AbilityContext = AbilityContext> extends CardTargetSystem<TContext, IDistributeAmongTargetsSystemProperties> {
-    public override readonly name = 'distributeDamage';
-
     protected override readonly targetTypeFilter = [WildcardCardType.Unit, CardType.Base];
     protected override defaultProperties: IDistributeAmongTargetsSystemProperties<TContext> = {
         amountToDistribute: null,
         cardCondition: () => true,
         checkTarget: false,
-        canChooseNoTargets: null
+        canChooseNoTargets: null,
+        canDistributeLess: this.canDistributeLessDefault()
     };
 
+    public abstract promptType: StatefulPromptType.DistributeDamage | StatefulPromptType.DistributeHealing;
     protected abstract generateEffectSystem(amount?: number): DamageSystem | HealSystem;
+    protected abstract canDistributeLessDefault(): boolean;
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     public eventHandler(event): void { }
@@ -85,9 +89,10 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
 
         // build prompt with handler that will push damage events into execution window on prompt resolution
         const promptProperties: IDistributeDamageOrHealingPromptProperties = {
-            type: StatefulPromptType.DistributeDamage,
+            type: this.promptType,
             legalTargets,
             canChooseNoTargets: properties.canChooseNoTargets,
+            canDistributeLess: properties.canDistributeLess,
             source: context.source,
             amount: this.getAmountToDistribute(properties.amountToDistribute, context),
             resultsHandler: (results: IDistributeDamageOrHealingPromptResults) =>

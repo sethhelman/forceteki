@@ -475,6 +475,10 @@ class PlayerInteractionWrapper {
         this.setDistributeDamageOrHealingPromptState(cardDistributionMap, 'distributeDamage');
     }
 
+    setDistributeHealingPromptState(cardDistributionMap) {
+        this.setDistributeDamageOrHealingPromptState(cardDistributionMap, 'distributeHealing');
+    }
+
     setDistributeDamageOrHealingPromptState(cardDistributionMap, type) {
         const promptResults = {
             valueDistribution: cardDistributionMap,

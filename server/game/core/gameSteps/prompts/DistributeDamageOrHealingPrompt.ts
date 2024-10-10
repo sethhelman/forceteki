@@ -7,6 +7,7 @@ import { IDistributeDamageOrHealingPromptProperties, IDistributeDamageOrHealingP
 import { UiPrompt } from './UiPrompt';
 
 // TODO THIS PR: docstr
+// TODO THIS PR: add "AmongTargets"
 export class DistributeDamageOrHealingPrompt extends UiPrompt {
     private readonly _activePrompt: IPlayerPromptStateProperties;
     private readonly distributeType: string;
@@ -90,15 +91,26 @@ export class DistributeDamageOrHealingPrompt extends UiPrompt {
 
         const distributedValues = Array.from(results.valueDistribution.values());
         const distributedSum = distributedValues.reduce((sum, curr) => sum + curr, 0);
-        Contract.assertTrue(
-            (distributedValues.length === 0 && this.properties.canChooseNoTargets) || distributedSum === this.properties.amount,
-            `Illegal prompt results for '${this._activePrompt.menuTitle}', distributed ${this.distributeType} should be equal to ${this.properties.amount} but instead received a total of ${distributedSum}`
-        );
 
-        Contract.assertFalse(
-            distributedValues.some((value) => value < 0),
-            `Illegal prompt results for '${this._activePrompt.menuTitle}', result contained negative values`
-        );
+        // skip checks on distributed values if player is allowed to choose no targets and did so
+        if (distributedValues.length !== 0 || !this.properties.canChooseNoTargets) {
+            if (this.properties.canDistributeLess) {
+                Contract.assertTrue(
+                    distributedSum <= this.properties.amount,
+                    `Illegal prompt results for '${this._activePrompt.menuTitle}', distributed ${this.distributeType} should be less than or equal to ${this.properties.amount} but instead received a total of ${distributedSum}`
+                );
+            } else {
+                Contract.assertTrue(
+                    distributedSum === this.properties.amount,
+                    `Illegal prompt results for '${this._activePrompt.menuTitle}', distributed ${this.distributeType} should be equal to ${this.properties.amount} but instead received a total of ${distributedSum}`
+                );
+            }
+
+            Contract.assertFalse(
+                distributedValues.some((value) => value < 0),
+                `Illegal prompt results for '${this._activePrompt.menuTitle}', result contained negative values`
+            );
+        }
 
         const cardsDistributedTo = Array.from(results.valueDistribution.keys());
         const illegalCardsDistributedTo = cardsDistributedTo.filter((card) => !this.properties.legalTargets.includes(card));

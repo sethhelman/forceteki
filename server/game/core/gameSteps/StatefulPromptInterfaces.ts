@@ -14,6 +14,7 @@ export interface IDistributeDamageOrHealingPromptProperties {
     amount: number;
     source: Card;
     canChooseNoTargets: boolean;
+    canDistributeLess: boolean;
     legalTargets: Card[];
     waitingPromptTitle?: string;
     promptTitle?: string;
