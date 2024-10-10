@@ -17,7 +17,7 @@ export default class RuthlessAssassin extends NonLeaderUnitCard {
                 controller: RelativePlayer.Self,
                 immediateEffect: AbilityHelper.immediateEffects.damage({ amount: 2 })
             }
-        })
+        });
     }
 }
 

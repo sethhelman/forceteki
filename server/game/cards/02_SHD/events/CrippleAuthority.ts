@@ -14,9 +14,9 @@ export default class CrippleAuthority extends EventCard {
         this.setEventAbility({
             title: 'Each opponent discards a card from their hand. Draw a card',
             immediateEffect: AbilityHelper.immediateEffects.simultaneous([
-                AbilityHelper.immediateEffects.draw(context => ({ target: context.source.controller, amount: 1 })),
+                AbilityHelper.immediateEffects.draw((context) => ({ target: context.source.controller, amount: 1 })),
                 AbilityHelper.immediateEffects.conditional({
-                    condition: context => context.source.controller.opponent.resources.length > context.source.controller.resources.length,
+                    condition: (context) => context.source.controller.opponent.resources.length > context.source.controller.resources.length,
                     onFalse: AbilityHelper.immediateEffects.noAction(),
                     onTrue: AbilityHelper.immediateEffects.selectCard({
                         controller: RelativePlayer.Opponent,

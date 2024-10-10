@@ -13,11 +13,11 @@ export default class WildRancor extends NonLeaderUnitCard {
     public override setupCardAbilities () {
         this.addWhenPlayedAbility({
             title: 'Deal 2 damage to each other ground unit',
-            immediateEffect: AbilityHelper.immediateEffects.damage(context => ({
+            immediateEffect: AbilityHelper.immediateEffects.damage((context) => ({
                 target: context.source.controller.getOtherUnitsInPlay(context.source, Location.GroundArena).concat(context.source.controller.opponent.getUnitsInPlay(Location.GroundArena)),
                 amount: 2
             }))
-        })
+        });
     }
 }
 

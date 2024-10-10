@@ -16,7 +16,7 @@ export default class RhokaiGunship extends NonLeaderUnitCard {
             targetResolver: {
                 immediateEffect: AbilityHelper.immediateEffects.damage({ amount: 1 })
             }
-        })
+        });
     }
 }
 

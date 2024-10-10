@@ -22,7 +22,7 @@ export default class KoskaReeves extends NonLeaderUnitCard {
                     onFalse: AbilityHelper.immediateEffects.noAction()
                 })
             },
-        })
+        });
     }
 }
 

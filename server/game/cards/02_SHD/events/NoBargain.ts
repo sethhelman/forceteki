@@ -19,7 +19,7 @@ export default class NoBargain extends EventCard {
                 locationFilter: Location.Hand,
                 immediateEffect: AbilityHelper.immediateEffects.simultaneous([
                     AbilityHelper.immediateEffects.discardCard(),
-                    AbilityHelper.immediateEffects.draw(context => ({ target: context.source.controller, amount: 1 }))
+                    AbilityHelper.immediateEffects.draw((context) => ({ target: context.source.controller, amount: 1 }))
                 ])
             },
         });

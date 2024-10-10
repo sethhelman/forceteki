@@ -32,8 +32,8 @@ export default class QiraIAloneSurvived extends LeaderUnitCard {
                 [EventName.OnLeaderDeployed]: (event, context) => event.card === context.source
             },
             immediateEffect: AbilityHelper.immediateEffects.sequential([
-                AbilityHelper.immediateEffects.heal((context) => ({ target: context.source.controller.getUnitsInPlay().concat(context.source.controller.opponent.getUnitsInPlay()), amount: c => c.damage })),
-                AbilityHelper.immediateEffects.damage((context) => ({ target: context.source.controller.getUnitsInPlay().concat(context.source.controller.opponent.getUnitsInPlay()), amount: c => Math.floor(c.getHp() / 2) })),
+                AbilityHelper.immediateEffects.heal((context) => ({ target: context.source.controller.getUnitsInPlay().concat(context.source.controller.opponent.getUnitsInPlay()), amount: (c) => c.damage })),
+                AbilityHelper.immediateEffects.damage((context) => ({ target: context.source.controller.getUnitsInPlay().concat(context.source.controller.opponent.getUnitsInPlay()), amount: (c) => Math.floor(c.getHp() / 2) })),
             ]),
         });
     }

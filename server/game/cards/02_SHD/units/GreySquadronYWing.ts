@@ -18,7 +18,7 @@ export default class GreySquadronYWing extends NonLeaderUnitCard {
                 controller: RelativePlayer.Opponent,
                 immediateEffect: AbilityHelper.immediateEffects.damage({ optional: true, amount: 2 })
             },
-        })
+        });
     }
 }
 

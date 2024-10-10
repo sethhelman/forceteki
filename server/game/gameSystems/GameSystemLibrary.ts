@@ -64,7 +64,7 @@ import { ShuffleDeckSystem, IShuffleDeckProperties } from './ShuffleDeckSystem';
 import { SimultaneousGameSystem } from './SimultaneousSystem';
 import { MetaSystem } from '../core/gameSystem/MetaSystem';
 import { TriggeredAbilityContext } from '../core/ability/TriggeredAbilityContext';
-import { DiscardCardFromHandSystem, IDiscardCardFromHandProperties } from "./DiscardCardFromHandSystem";
+import { DiscardCardFromHandSystem, IDiscardCardFromHandProperties } from './DiscardCardFromHandSystem';
 // import { TakeControlAction, TakeControlProperties } from './TakeControlAction';
 // import { TriggerAbilityAction, TriggerAbilityProperties } from './TriggerAbilityAction';
 // import { TurnCardFacedownAction, TurnCardFacedownProperties } from './TurnCardFacedownAction';
