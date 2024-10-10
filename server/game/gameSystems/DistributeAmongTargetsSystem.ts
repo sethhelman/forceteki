@@ -8,6 +8,7 @@ import { GameEvent } from '../core/event/GameEvent';
 import { IDistributeDamageOrHealingPromptProperties, IDistributeDamageOrHealingPromptResults, StatefulPromptType } from '../core/gameSteps/StatefulPromptInterfaces';
 import { DamageSystem } from './DamageSystem';
 import { HealSystem } from './HealSystem';
+import * as Contract from '../core/utils/Contract';
 
 export interface IDistributeAmongTargetsSystemProperties<TContext extends AbilityContext = AbilityContext> extends ICardTargetSystemProperties {
     amountToDistribute: number | ((context: TContext) => number);
@@ -83,11 +84,11 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
 
         if (!properties.canChooseNoTargets && legalTargets.length === 1) {
             const amountToDistribute = this.getAmountToDistribute(properties.amountToDistribute, context);
-            events.push(this.generateDamageEvent(legalTargets[0], context, amountToDistribute));
+            events.push(this.generateEffectEvent(legalTargets[0], context, amountToDistribute));
             return;
         }
 
-        // build prompt with handler that will push damage events into execution window on prompt resolution
+        // build prompt with handler that will push damage / heal events into execution window on prompt resolution
         const promptProperties: IDistributeDamageOrHealingPromptProperties = {
             type: this.promptType,
             legalTargets,
@@ -96,7 +97,7 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
             source: context.source,
             amount: this.getAmountToDistribute(properties.amountToDistribute, context),
             resultsHandler: (results: IDistributeDamageOrHealingPromptResults) =>
-                results.valueDistribution.forEach((amount, card) => events.push(this.generateDamageEvent(card, context, amount)))
+                results.valueDistribution.forEach((amount, card) => events.push(this.generateEffectEvent(card, context, amount)))
         };
 
         context.game.promptStateful(player, promptProperties);
@@ -104,6 +105,9 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
 
     public override generatePropertiesFromContext(context: TContext, additionalProperties = {}) {
         const properties = super.generatePropertiesFromContext(context, additionalProperties);
+
+        Contract.assertFalse(properties.canDistributeLess && !properties.canChooseNoTargets, 'Must set properties.canDistributeLess to true if properties.canChooseNoTargets is true');
+
         if (!properties.selector) {
             const effectSystem = this.generateEffectSystem();
             const cardCondition = (card, context) =>
@@ -131,7 +135,7 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
         return properties.selector.hasEnoughTargets(context, player);
     }
 
-    private generateDamageEvent(card: Card, context: TContext, amount: number) {
+    private generateEffectEvent(card: Card, context: TContext, amount: number) {
         const effectSystem = this.generateEffectSystem(amount);
         return effectSystem.generateEvent(card, context);
     }

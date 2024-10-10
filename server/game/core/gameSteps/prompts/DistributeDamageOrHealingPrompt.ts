@@ -8,6 +8,7 @@ import { UiPrompt } from './UiPrompt';
 
 // TODO THIS PR: docstr
 // TODO THIS PR: add "AmongTargets"
+// TODO THIS PR: add explicitly provided "Choose no targets" button
 export class DistributeDamageOrHealingPrompt extends UiPrompt {
     private readonly _activePrompt: IPlayerPromptStateProperties;
     private readonly distributeType: string;
