@@ -2,10 +2,8 @@ import type { AbilityContext } from '../core/ability/AbilityContext';
 import type { Card } from '../core/card/Card';
 import { AbilityRestriction, CardType, EventName, WildcardCardType } from '../core/Constants';
 import * as EnumHelpers from '../core/utils/EnumHelpers';
-import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
-import { GameEvent } from '../core/event/GameEvent';
+import { CardTargetSystem, type ICardTargetSystemProperties } from '../core/gameSystem/CardTargetSystem';
 import * as Contract from '../core/utils/Contract';
-import AbilityHelper from '../AbilityHelper';
 import { UnitCard } from '../core/card/CardTypes';
 
 export interface IDamageProperties extends ICardTargetSystemProperties {

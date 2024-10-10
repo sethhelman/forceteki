@@ -2,10 +2,8 @@ import type { AbilityContext } from '../core/ability/AbilityContext';
 import type { Card } from '../core/card/Card';
 import { AbilityRestriction, CardType, EventName, WildcardCardType } from '../core/Constants';
 import * as EnumHelpers from '../core/utils/EnumHelpers';
-import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
-import * as Contract from '../core/utils/Contract';
-import * as CardHelpers from '../core/card/CardHelpers';
-import { CardWithDamageProperty, UnitCard } from '../core/card/CardTypes';
+import { CardTargetSystem, type ICardTargetSystemProperties } from '../core/gameSystem/CardTargetSystem';
+import { UnitCard } from '../core/card/CardTypes';
 
 export interface IHealProperties extends ICardTargetSystemProperties {
     amount: number | ((card: UnitCard) => number);
