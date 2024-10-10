@@ -11,6 +11,15 @@
             "type": "node",
         },
         {
+            "name": "Debug Gameserver",
+            "program": "${workspaceFolder}/build/gamenode/index.js",
+            "request": "launch",
+            "env": {
+                "NODE_OPTIONS": "--enable-source-maps"
+            },
+            "type": "node",
+        },
+        {
             // UP NEXT: add rm -r build to preLaunchTask
             "name": "Debug All Jasmine Tests",
             "type": "node",
