@@ -20,9 +20,9 @@ describe('Overwhelming Barrage', function() {
             it('should give a friendly unit +2/+2 for the phase and allow it to distribute its power as damage across other units', function () {
                 this.player1.clickCard(this.overwhelmingBarrage);
                 expect(this.player1).toBeAbleToSelectExactly([this.wampa, this.battlefieldMarine, this.jynErso]);
-
                 this.player1.clickCard(this.wampa);
                 expect(this.player1).toBeAbleToSelectExactly([this.battlefieldMarine, this.jynErso, this.atst, this.tielnFighter, this.bobaFett]);
+                expect(this.player1).toHaveChooseNoTargetButton();
                 this.player1.setDistributeDamagePromptState(new Map([
                     [this.atst, 2],
                     [this.battlefieldMarine, 2],
@@ -67,7 +67,7 @@ describe('Overwhelming Barrage', function() {
                 this.player1.clickCard(this.overwhelmingBarrage);
                 this.player1.clickCard(this.wampa);
                 expect(this.player1).toBeAbleToSelectExactly([this.battlefieldMarine, this.jynErso, this.atst, this.tielnFighter, this.bobaFett]);
-                this.player1.setDistributeDamagePromptState(new Map([]));
+                this.player1.clickPrompt('Choose no targets');
 
                 expect(this.jynErso.damage).toBe(0);
                 expect(this.wampa.damage).toBe(0);
@@ -75,6 +75,7 @@ describe('Overwhelming Barrage', function() {
                 expect(this.wampa.damage).toBe(0);
                 expect(this.tielnFighter.damage).toBe(0);
                 expect(this.bobaFett.damage).toBe(0);
+                expect(this.player2).toBeActivePlayer();
             });
         });
 

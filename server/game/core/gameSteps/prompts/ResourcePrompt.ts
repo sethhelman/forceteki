@@ -84,8 +84,8 @@ export class ResourcePrompt extends AllPlayerPrompt {
         };
     }
 
-    public override menuCommand(player, arg) {
-        return false;
+    public override menuCommand(player, arg): boolean {
+        Contract.fail(`Unexpected menu command: '${arg}'`);
     }
 
     protected resourceSelectedCards(player: Player) {

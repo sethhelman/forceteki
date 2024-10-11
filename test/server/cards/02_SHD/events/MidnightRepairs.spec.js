@@ -20,6 +20,7 @@ describe('Midnight Repairs', function () {
             it('should remove 8 total damage from friendly and enemy units', function () {
                 this.player1.clickCard(this.midnightRepairs);
                 expect(this.player1).toBeAbleToSelectExactly([this.pykeSentinel, this.cartelSpacer, this.sabineWren, this.wampa, this.imperialInterceptor]);
+                expect(this.player1).toHaveChooseNoTargetButton();
                 this.player1.setDistributeHealingPromptState(new Map([
                     [this.pykeSentinel, 2],
                     [this.cartelSpacer, 2],
@@ -53,7 +54,7 @@ describe('Midnight Repairs', function () {
             it('should be able to choose 0 targets', function () {
                 this.player1.clickCard(this.midnightRepairs);
                 expect(this.player1).toBeAbleToSelectExactly([this.pykeSentinel, this.cartelSpacer, this.sabineWren, this.wampa, this.imperialInterceptor]);
-                this.player1.setDistributeHealingPromptState(new Map([]));
+                this.player1.clickPrompt('Choose no targets');
 
                 expect(this.pykeSentinel.damage).toBe(1);
                 expect(this.cartelSpacer.damage).toBe(0);

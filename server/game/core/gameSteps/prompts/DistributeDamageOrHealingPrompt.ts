@@ -8,7 +8,6 @@ import { UiPrompt } from './UiPrompt';
 
 // TODO THIS PR: docstr
 // TODO THIS PR: add "AmongTargets"
-// TODO THIS PR: add explicitly provided "Choose no targets" button
 export class DistributeDamageOrHealingPrompt extends UiPrompt {
     private readonly _activePrompt: IPlayerPromptStateProperties;
     private readonly distributeType: string;
@@ -47,7 +46,8 @@ export class DistributeDamageOrHealingPrompt extends UiPrompt {
         this._activePrompt = {
             menuTitle,
             promptTitle: this.properties.promptTitle || (this.properties.source ? this.properties.source.name : undefined),
-            distributeDamageOrHealing: promptData
+            distributeDamageOrHealing: promptData,
+            buttons: this.properties.canChooseNoTargets ? [{ text: 'Choose no targets', arg: 'noTargets' }] : null
         };
     }
 
@@ -74,7 +74,12 @@ export class DistributeDamageOrHealingPrompt extends UiPrompt {
     }
 
     public override menuCommand(player: Player, arg: string, method: string): boolean {
-        return false;
+        if (arg === 'noTargets') {
+            this.complete();
+            return true;
+        }
+
+        Contract.fail(`Unexpected menu command: '${arg}'`);
     }
 
     public override onStatefulPromptResults(player: Player, results: IStatefulPromptResults): boolean {
@@ -93,25 +98,27 @@ export class DistributeDamageOrHealingPrompt extends UiPrompt {
         const distributedValues = Array.from(results.valueDistribution.values());
         const distributedSum = distributedValues.reduce((sum, curr) => sum + curr, 0);
 
-        // skip checks on distributed values if player is allowed to choose no targets and did so
-        if (distributedValues.length !== 0 || !this.properties.canChooseNoTargets) {
-            if (this.properties.canDistributeLess) {
-                Contract.assertTrue(
-                    distributedSum <= this.properties.amount,
-                    `Illegal prompt results for '${this._activePrompt.menuTitle}', distributed ${this.distributeType} should be less than or equal to ${this.properties.amount} but instead received a total of ${distributedSum}`
-                );
-            } else {
-                Contract.assertTrue(
-                    distributedSum === this.properties.amount,
-                    `Illegal prompt results for '${this._activePrompt.menuTitle}', distributed ${this.distributeType} should be equal to ${this.properties.amount} but instead received a total of ${distributedSum}`
-                );
-            }
+        Contract.assertNonEmpty(
+            distributedValues,
+            `Illegal prompt results for '${this._activePrompt.menuTitle}', no targets were selected`
+        );
 
-            Contract.assertFalse(
-                distributedValues.some((value) => value < 0),
-                `Illegal prompt results for '${this._activePrompt.menuTitle}', result contained negative values`
+        if (this.properties.canDistributeLess) {
+            Contract.assertTrue(
+                distributedSum <= this.properties.amount,
+                `Illegal prompt results for '${this._activePrompt.menuTitle}', distributed ${this.distributeType} should be less than or equal to ${this.properties.amount} but instead received a total of ${distributedSum}`
+            );
+        } else {
+            Contract.assertTrue(
+                distributedSum === this.properties.amount,
+                `Illegal prompt results for '${this._activePrompt.menuTitle}', distributed ${this.distributeType} should be equal to ${this.properties.amount} but instead received a total of ${distributedSum}`
             );
         }
+
+        Contract.assertFalse(
+            distributedValues.some((value) => value < 0),
+            `Illegal prompt results for '${this._activePrompt.menuTitle}', result contained negative values`
+        );
 
         const cardsDistributedTo = Array.from(results.valueDistribution.keys());
         const illegalCardsDistributedTo = cardsDistributedTo.filter((card) => !this.properties.legalTargets.includes(card));
