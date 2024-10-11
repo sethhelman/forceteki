@@ -29,9 +29,6 @@ export interface IDistributeAmongTargetsSystemProperties<TContext extends Abilit
     locationFilter?: LocationFilter | LocationFilter[];
     cardCondition?: (card: Card, context: TContext) => boolean;
     selector?: BaseCardSelector;
-
-    // TODO THIS PR: what is this for? same in selectCard()
-    checkTarget?: boolean;
 }
 
 export abstract class DistributeAmongTargetsSystem<TContext extends AbilityContext = AbilityContext> extends CardTargetSystem<TContext, IDistributeAmongTargetsSystemProperties> {
@@ -39,7 +36,6 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
     protected override defaultProperties: IDistributeAmongTargetsSystemProperties<TContext> = {
         amountToDistribute: null,
         cardCondition: () => true,
-        checkTarget: false,
         canChooseNoTargets: null,
         canDistributeLess: this.canDistributeLessDefault()
     };
@@ -56,18 +52,7 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
         if (properties.player === RelativePlayer.Opponent && !context.player.opponent) {
             return;
         }
-        let player = properties.player === RelativePlayer.Opponent ? context.player.opponent : context.player;
-        // const mustSelect = [];
-        if (properties.checkTarget) {
-            player = context.choosingPlayerOverride || player;
-            // mustSelect = properties.selector
-            //     .getAllLegalTargets(context, player)
-            //     .filter((card) =>
-            //         card
-            //             .getOngoingEffectValues(EffectName.MustBeChosen)
-            //             .some((restriction) => restriction.isMatch('target', context))
-            //     );
-        }
+        const player = properties.player === RelativePlayer.Opponent ? context.player.opponent : context.player;
 
         if (!properties.selector.hasEnoughTargets(context, player)) {
             return;
@@ -113,7 +98,6 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
     public override canAffect(card: Card, context: TContext, additionalProperties = {}): boolean {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
         const player =
-            (properties.checkTarget && context.choosingPlayerOverride) ||
             (properties.player === RelativePlayer.Opponent && context.player.opponent) ||
             context.player;
         return properties.selector.canTarget(card, context, player);
@@ -122,7 +106,6 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
     public override hasLegalTarget(context: TContext, additionalProperties = {}): boolean {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
         const player =
-            (properties.checkTarget && context.choosingPlayerOverride) ||
             (properties.player === RelativePlayer.Opponent && context.player.opponent) ||
             context.player;
         return properties.selector.hasEnoughTargets(context, player);
