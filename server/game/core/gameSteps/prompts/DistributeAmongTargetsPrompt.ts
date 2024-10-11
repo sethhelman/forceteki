@@ -6,7 +6,10 @@ import * as Contract from '../../utils/Contract';
 import { IDistributeAmongTargetsPromptProperties, IDistributeAmongTargetsPromptData, StatefulPromptType, IStatefulPromptResults } from '../StatefulPromptInterfaces';
 import { UiPrompt } from './UiPrompt';
 
-// TODO THIS PR: docstr
+/**
+ * Prompt for distributing healing or damage among target cards.
+ * Response data must be returned via {@link Game.statefulPromptResults}.
+ */
 export class DistributeAmongTargetsPrompt extends UiPrompt {
     private readonly _activePrompt: IPlayerPromptStateProperties;
     private readonly distributeType: string;

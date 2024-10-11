@@ -611,7 +611,10 @@ class Game extends EventEmitter {
         this.queueStep(new SelectCardPrompt(this, player, properties));
     }
 
-    // TODO THIS PR: docstr
+    /**
+     * Prompt for distributing healing or damage among target cards.
+     * Response data must be returned via {@link Game.statefulPromptResults}.
+     */
     promptDistributeAmongTargets(player, properties) {
         Contract.assertNotNullLike(player);
 

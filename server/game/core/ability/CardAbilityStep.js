@@ -90,10 +90,6 @@ class CardAbilityStep extends PlayerOrCardAbility {
     executeGameActions(context) {
         context.events = [];
         let systems = this.getGameSystems(context);
-        // let then = this.properties.then;
-        // if (then && typeof then === 'function') {
-        //     then = then(context);
-        // }
         for (const system of systems) {
             this.game.queueSimpleStep(() => {
                 system.queueGenerateEventGameSteps(context.events, context);
@@ -106,7 +102,7 @@ class CardAbilityStep extends PlayerOrCardAbility {
                 let window = this.openEventWindow(eventsToResolve);
 
                 if (this.properties.then) {
-                    window.addThenAbilityStep((context) => new CardAbilityStep(this.game, this.card, this.getConcreteThen(this.properties.then, context)), context);
+                    window.setThenAbilityStep((context) => new CardAbilityStep(this.game, this.card, this.getConcreteThen(this.properties.then, context)), context);
                 }
             } else if (this.properties.then) {
                 const then = typeof this.properties.then === 'function' ? this.properties.then(context) : this.properties.then;

@@ -5,6 +5,10 @@ import { HealSystem } from './HealSystem';
 
 export type IDistributeHealingSystemProperties<TContext extends AbilityContext = AbilityContext> = Omit<IDistributeAmongTargetsSystemProperties<TContext>, 'effectType'>;
 
+/**
+ * System for distributing healing among target cards.
+ * Will prompt the user to select where to put the healing (unless auto-selecting a single target is possible).
+ */
 export class DistributeHealingSystem<TContext extends AbilityContext = AbilityContext> extends DistributeAmongTargetsSystem<TContext> {
     public override readonly name = 'distributeHealing';
 

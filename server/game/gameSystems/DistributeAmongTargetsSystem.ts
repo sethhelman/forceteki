@@ -51,13 +51,6 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     public eventHandler(event): void { }
 
-    // TODO THIS PR: fix
-    // public override getEffectMessage(context: TContext): [string, any[]] {
-    //     const { amount, target } = this.generatePropertiesFromContext(context);
-
-    //     return ['deal {1} damage to {0}', [amount, target]];
-    // }
-
     public override queueGenerateEventGameSteps(events: GameEvent[], context: TContext, additionalProperties = {}): void {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
         if (properties.player === RelativePlayer.Opponent && !context.player.opponent) {
