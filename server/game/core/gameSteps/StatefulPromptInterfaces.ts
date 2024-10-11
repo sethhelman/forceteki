@@ -7,9 +7,9 @@ export enum StatefulPromptType {
     DistributeHealing = 'distributeHealing'
 }
 
-export type IStatefulPromptResults = IDistributeDamageOrHealingPromptResults;
+export type IStatefulPromptResults = IDistributeAmongTargetsPromptResults;
 
-export interface IDistributeDamageOrHealingPromptProperties {
+export interface IDistributeAmongTargetsPromptProperties {
     type: StatefulPromptType.DistributeDamage | StatefulPromptType.DistributeHealing;
     amount: number;
     source: Card;
@@ -18,16 +18,16 @@ export interface IDistributeDamageOrHealingPromptProperties {
     legalTargets: Card[];
     waitingPromptTitle?: string;
     promptTitle?: string;
-    resultsHandler: (results: IDistributeDamageOrHealingPromptResults) => void;
+    resultsHandler: (results: IDistributeAmongTargetsPromptResults) => void;
 }
 
 // TODO: should these be passing something other than Card objects, such as uuids?
-export interface IDistributeDamageOrHealingPromptData {
+export interface IDistributeAmongTargetsPromptData {
     type: StatefulPromptType;
     amount: number;
 }
 
-export interface IDistributeDamageOrHealingPromptResults {
+export interface IDistributeAmongTargetsPromptResults {
     type: StatefulPromptType;
     valueDistribution: Map<Card, number>;
 }

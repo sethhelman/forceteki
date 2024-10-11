@@ -5,7 +5,7 @@ import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/game
 import CardSelector from '../core/cardSelector/CardSelector';
 import BaseCardSelector from '../core/cardSelector/BaseCardSelector';
 import { GameEvent } from '../core/event/GameEvent';
-import { IDistributeDamageOrHealingPromptProperties, IDistributeDamageOrHealingPromptResults, StatefulPromptType } from '../core/gameSteps/StatefulPromptInterfaces';
+import { IDistributeAmongTargetsPromptProperties, IDistributeAmongTargetsPromptResults, StatefulPromptType } from '../core/gameSteps/StatefulPromptInterfaces';
 import { DamageSystem } from './DamageSystem';
 import { HealSystem } from './HealSystem';
 import * as Contract from '../core/utils/Contract';
@@ -89,18 +89,18 @@ export abstract class DistributeAmongTargetsSystem<TContext extends AbilityConte
         }
 
         // build prompt with handler that will push damage / heal events into execution window on prompt resolution
-        const promptProperties: IDistributeDamageOrHealingPromptProperties = {
+        const promptProperties: IDistributeAmongTargetsPromptProperties = {
             type: this.promptType,
             legalTargets,
             canChooseNoTargets: properties.canChooseNoTargets,
             canDistributeLess: properties.canDistributeLess,
             source: context.source,
             amount: this.getAmountToDistribute(properties.amountToDistribute, context),
-            resultsHandler: (results: IDistributeDamageOrHealingPromptResults) =>
+            resultsHandler: (results: IDistributeAmongTargetsPromptResults) =>
                 results.valueDistribution.forEach((amount, card) => events.push(this.generateEffectEvent(card, context, amount)))
         };
 
-        context.game.promptStateful(player, promptProperties);
+        context.game.promptDistributeAmongTargets(player, promptProperties);
     }
 
     public override generatePropertiesFromContext(context: TContext, additionalProperties = {}) {

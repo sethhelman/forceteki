@@ -8,8 +8,8 @@ import { DistributeAmongTargetsSystem, IDistributeAmongTargetsSystemProperties }
 import { DamageSystem, IDamageProperties } from './DamageSystem';
 import { DeployLeaderSystem, IDeployLeaderProperties } from './DeployLeaderSystem';
 import { DefeatCardSystem, IDefeatCardProperties } from './DefeatCardSystem';
-import { DistributeDamageAmongTargetsSystem, IDistributeDamageAmongTargetsSystemProperties } from './DistributeDamageAmongTargetsSystem';
-import { DistributeHealingAmongTargetsSystem, IDistributeHealingAmongTargetsSystemProperties } from './DistributeHealingAmongTargetsSystem';
+import { DistributeDamageSystem, IDistributeDamageSystemProperties } from './DistributeDamageSystem';
+import { DistributeHealingSystem, IDistributeHealingSystemProperties } from './DistributeHealingSystem';
 // import { CardMenuAction, CardMenuProperties } from './CardMenuAction';
 // import { ChooseActionProperties, ChooseGameAction } from './ChooseGameAction';
 // import { ChosenDiscardAction, ChosenDiscardProperties } from './ChosenDiscardAction';
@@ -97,11 +97,11 @@ export function cardLastingEffect<TContext extends AbilityContext = AbilityConte
 export function damage<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDamageProperties, TContext>) {
     return new DamageSystem<TContext>(propertyFactory);
 }
-export function distributeDamageAmong<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDistributeDamageAmongTargetsSystemProperties, TContext>) {
-    return new DistributeDamageAmongTargetsSystem<TContext>(propertyFactory);
+export function distributeDamageAmong<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDistributeDamageSystemProperties, TContext>) {
+    return new DistributeDamageSystem<TContext>(propertyFactory);
 }
-export function distributeHealingAmong<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDistributeHealingAmongTargetsSystemProperties, TContext>) {
-    return new DistributeHealingAmongTargetsSystem<TContext>(propertyFactory);
+export function distributeHealingAmong<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IDistributeHealingSystemProperties, TContext>) {
+    return new DistributeHealingSystem<TContext>(propertyFactory);
 }
 // export function detach(propertyFactory: PropsFactory<DetachActionProperties> = {}): GameSystem {
 //     return new DetachAction(propertyFactory);

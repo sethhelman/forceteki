@@ -472,14 +472,14 @@ class PlayerInteractionWrapper {
     }
 
     setDistributeDamagePromptState(cardDistributionMap) {
-        this.setDistributeDamageOrHealingPromptState(cardDistributionMap, 'distributeDamage');
+        this.setDistributeAmongTargetsPromptState(cardDistributionMap, 'distributeDamage');
     }
 
     setDistributeHealingPromptState(cardDistributionMap) {
-        this.setDistributeDamageOrHealingPromptState(cardDistributionMap, 'distributeHealing');
+        this.setDistributeAmongTargetsPromptState(cardDistributionMap, 'distributeHealing');
     }
 
-    setDistributeDamageOrHealingPromptState(cardDistributionMap, type) {
+    setDistributeAmongTargetsPromptState(cardDistributionMap, type) {
         const promptResults = {
             valueDistribution: cardDistributionMap,
             type

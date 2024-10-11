@@ -5,9 +5,9 @@ import { DamageSystem } from './DamageSystem';
 import { DistributeAmongTargetsSystem, IDistributeAmongTargetsSystemProperties } from './DistributeAmongTargetsSystem';
 import { HealSystem } from './HealSystem';
 
-export type IDistributeDamageAmongTargetsSystemProperties<TContext extends AbilityContext = AbilityContext> = Omit<IDistributeAmongTargetsSystemProperties<TContext>, 'effectType'>;
+export type IDistributeDamageSystemProperties<TContext extends AbilityContext = AbilityContext> = Omit<IDistributeAmongTargetsSystemProperties<TContext>, 'effectType'>;
 
-export class DistributeDamageAmongTargetsSystem<TContext extends AbilityContext = AbilityContext> extends DistributeAmongTargetsSystem<TContext> {
+export class DistributeDamageSystem<TContext extends AbilityContext = AbilityContext> extends DistributeAmongTargetsSystem<TContext> {
     public override readonly name = 'distributeDamage';
 
     public override promptType = StatefulPromptType.DistributeDamage;

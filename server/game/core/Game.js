@@ -33,7 +33,7 @@ const { EffectName, EventName, Location, TokenName } = require('./Constants.js')
 const { BaseStepWithPipeline } = require('./gameSteps/BaseStepWithPipeline.js');
 const { default: Shield } = require('../cards/01_SOR/tokens/Shield.js');
 const { StateWatcherRegistrar } = require('./stateWatcher/StateWatcherRegistrar.js');
-const { DistributeDamageOrHealingPrompt } = require('./gameSteps/prompts/DistributeDamageOrHealingPrompt.js');
+const { DistributeAmongTargetsPrompt } = require('./gameSteps/prompts/DistributeAmongTargetsPrompt.js');
 
 class Game extends EventEmitter {
     constructor(details, options = {}) {
@@ -612,10 +612,10 @@ class Game extends EventEmitter {
     }
 
     // TODO THIS PR: docstr
-    promptStateful(player, properties) {
+    promptDistributeAmongTargets(player, properties) {
         Contract.assertNotNullLike(player);
 
-        this.queueStep(new DistributeDamageOrHealingPrompt(this, player, properties));
+        this.queueStep(new DistributeAmongTargetsPrompt(this, player, properties));
     }
 
     /**

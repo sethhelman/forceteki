@@ -3,9 +3,9 @@ import { StatefulPromptType } from '../core/gameSteps/StatefulPromptInterfaces';
 import { DistributeAmongTargetsSystem, IDistributeAmongTargetsSystemProperties } from './DistributeAmongTargetsSystem';
 import { HealSystem } from './HealSystem';
 
-export type IDistributeHealingAmongTargetsSystemProperties<TContext extends AbilityContext = AbilityContext> = Omit<IDistributeAmongTargetsSystemProperties<TContext>, 'effectType'>;
+export type IDistributeHealingSystemProperties<TContext extends AbilityContext = AbilityContext> = Omit<IDistributeAmongTargetsSystemProperties<TContext>, 'effectType'>;
 
-export class DistributeHealingAmongTargetsSystem<TContext extends AbilityContext = AbilityContext> extends DistributeAmongTargetsSystem<TContext> {
+export class DistributeHealingSystem<TContext extends AbilityContext = AbilityContext> extends DistributeAmongTargetsSystem<TContext> {
     public override readonly name = 'distributeHealing';
 
     public override promptType = StatefulPromptType.DistributeHealing;

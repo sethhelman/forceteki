@@ -1,5 +1,5 @@
 import type { Card } from './card/Card';
-import { IDistributeDamageOrHealingPromptData } from './gameSteps/StatefulPromptInterfaces';
+import { IDistributeAmongTargetsPromptData } from './gameSteps/StatefulPromptInterfaces';
 import type Player from './Player';
 
 export interface IPlayerPromptStateProperties {
@@ -10,13 +10,13 @@ export interface IPlayerPromptStateProperties {
     controls?: { type: string; source: any; targets: any }[];
     selectCard?: boolean;
     selectOrder?: boolean;
-    distributeDamageOrHealing?: IDistributeDamageOrHealingPromptData;
+    distributeAmongTargets?: IDistributeAmongTargetsPromptData;
 }
 
 export class PlayerPromptState {
     public selectCard = false;
     public selectOrder = false;
-    public distributeDamageOrHealing?: IDistributeDamageOrHealingPromptData = null;
+    public distributeAmongTargets?: IDistributeAmongTargetsPromptData = null;
     public menuTitle = '';
     public promptTitle = '';
     public buttons = [];

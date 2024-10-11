@@ -3,19 +3,18 @@ import Game from '../../Game';
 import Player from '../../Player';
 import { IPlayerPromptStateProperties } from '../../PlayerPromptState';
 import * as Contract from '../../utils/Contract';
-import { IDistributeDamageOrHealingPromptProperties, IDistributeDamageOrHealingPromptData, StatefulPromptType, IStatefulPromptResults } from '../StatefulPromptInterfaces';
+import { IDistributeAmongTargetsPromptProperties, IDistributeAmongTargetsPromptData, StatefulPromptType, IStatefulPromptResults } from '../StatefulPromptInterfaces';
 import { UiPrompt } from './UiPrompt';
 
 // TODO THIS PR: docstr
-// TODO THIS PR: add "AmongTargets"
-export class DistributeDamageOrHealingPrompt extends UiPrompt {
+export class DistributeAmongTargetsPrompt extends UiPrompt {
     private readonly _activePrompt: IPlayerPromptStateProperties;
     private readonly distributeType: string;
 
     public constructor(
         game: Game,
         private readonly player: Player,
-        private readonly properties: IDistributeDamageOrHealingPromptProperties
+        private readonly properties: IDistributeAmongTargetsPromptProperties
     ) {
         super(game);
         this.player = player;
@@ -38,7 +37,7 @@ export class DistributeDamageOrHealingPrompt extends UiPrompt {
 
         const menuTitle = `Distribute ${this.distributeType} among targets`;
 
-        const promptData: IDistributeDamageOrHealingPromptData = {
+        const promptData: IDistributeAmongTargetsPromptData = {
             type: this.properties.type,
             amount: this.properties.amount
         };
@@ -46,7 +45,7 @@ export class DistributeDamageOrHealingPrompt extends UiPrompt {
         this._activePrompt = {
             menuTitle,
             promptTitle: this.properties.promptTitle || (this.properties.source ? this.properties.source.name : undefined),
-            distributeDamageOrHealing: promptData,
+            distributeAmongTargets: promptData,
             buttons: this.properties.canChooseNoTargets ? [{ text: 'Choose no targets', arg: 'noTargets' }] : null
         };
     }
