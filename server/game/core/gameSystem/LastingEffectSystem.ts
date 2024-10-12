@@ -7,6 +7,7 @@ import { GameSystem, type IGameSystemProperties } from './GameSystem';
 import { GameEvent } from '../event/GameEvent';
 import OngoingEffect from '../ongoingEffect/OngoingEffect';
 
+// TODO THIS PR: remove this file and move this to Interfaces or something
 export interface ILastingEffectGeneralProperties extends IGameSystemProperties {
     duration: Duration;
     condition?: (context: AbilityContext) => boolean;

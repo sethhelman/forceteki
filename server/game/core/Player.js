@@ -678,23 +678,24 @@ class Player extends GameObject {
             .reduce((cost, adjuster) => cost + adjuster.getAmount(card, this), 0);
         var costDecreases = matchingAdjusters
             .filter((adjuster) => adjuster.direction === CostAdjustDirection.Decrease)
-            .reduce((cost, adjuster) => cost - adjuster.getAmount(card, this), 0);
+            .reduce((cost, adjuster) => cost + adjuster.getAmount(card, this), 0);
 
         baseCost += costIncreases;
         var reducedCost = baseCost - costDecreases;
 
+        // TODO: not 100% sure what the use case for this line is
         var costFloor = Math.min(baseCost, Math.max(...matchingAdjusters.map((adjuster) => adjuster.costFloor)));
         return Math.max(reducedCost, costFloor);
     }
 
-    getTotalCostModifiers(playingType, card, target, ignoreType = false) {
-        var baseCost = 0;
-        var matchingAdjusters = this.costAdjusters.filter((adjuster) =>
-            adjuster.canAdjust(playingType, card, target, ignoreType)
-        );
-        var reducedCost = matchingAdjusters.reduce((cost, adjuster) => cost - adjuster.getAmount(card, this), baseCost);
-        return reducedCost;
-    }
+    // getTotalCostModifiers(playingType, card, target, ignoreType = false) {
+    //     var baseCost = 0;
+    //     var matchingAdjusters = this.costAdjusters.filter((adjuster) =>
+    //         adjuster.canAdjust(playingType, card, target, ignoreType)
+    //     );
+    //     var reducedCost = matchingAdjusters.reduce((cost, adjuster) => cost - adjuster.getAmount(card, this), baseCost);
+    //     return reducedCost;
+    // }
 
     // getTargetingCost(abilitySource, targets) {
     //     targets = Array.isArray(targets) ? targets : [targets];

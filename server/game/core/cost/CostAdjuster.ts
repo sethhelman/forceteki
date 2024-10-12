@@ -11,8 +11,13 @@ export enum CostAdjustDirection {
     Decrease = 'decrease'
 }
 
+// TODO THIS PR: cards to test
+// - Guardian of the Whills
+// - Force Choke
+// - Lando leader
+
 export interface ICostAdjusterProperties {
-    cardTypeFilter: CardType;
+    cardTypeFilter: CardTypeFilter;
     amount: number | ((card: Card, player: Player) => number);
     direction: CostAdjustDirection;
     costFloor?: number;
