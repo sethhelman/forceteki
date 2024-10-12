@@ -72,7 +72,7 @@ describe('Luke Skywalker, Faithful Friend', function() {
                 this.player1.clickCard(this.wampa);
 
                 expect(this.player1).toHavePrompt('Choose a card');
-                expect(this.player1).toHaveEnabledPromptButton('Pass ability');
+                expect(this.player1).toHavePassAbilityButton();
                 expect(this.player1).toBeAbleToSelectExactly([this.atst, this.tielnFighter, this.wampa, this.tieAdvanced]);
                 this.player1.clickCard(this.tielnFighter);
 
@@ -92,7 +92,7 @@ describe('Luke Skywalker, Faithful Friend', function() {
 
                 expect(this.lukeSkywalker.damage).toBe(4);
                 expect(this.wampa.damage).toBe(0);
-                expect(this.wampa.upgrades.length).toBe(0);
+                expect(this.wampa.isUpgraded()).toBe(false);
             });
         });
     });

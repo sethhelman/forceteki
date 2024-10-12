@@ -105,7 +105,6 @@ export enum TargetMode {
     MaxStat = 'maxStat',
     Select = 'select',
     Single = 'single',
-    Token = 'token',
     Unlimited = 'unlimited',
     UpTo = 'upTo',
     UpToVariable = 'upToVariable'
@@ -158,6 +157,7 @@ export enum EventName {
     OnCardAbilityTriggered = 'onCardAbilityTriggered',
     OnCardDefeated = 'onCardDefeated',
     OnCardExhausted = 'onCardExhausted',
+    OnCardLeavesPlay = 'onCardLeavesPlay',
     OnCardMoved = 'onCardMoved',
     OnCardPlayed = 'onCardPlayed',
     OnCardReadied = 'onCardReadied',
@@ -171,6 +171,7 @@ export enum EventName {
     OnDeckSearch = 'onDeckSearch',
     OnDeckShuffled = 'onDeckShuffled',
     OnEffectApplied = 'onEffectApplied',
+    onExhaustResources = 'onExhaustResources',
     OnInitiateAbilityEffects = 'onInitiateAbilityEffects',
     OnLeaderDeployed = 'onLeaderDeployed',
     OnLookAtCard = 'onLookAtCard',
@@ -179,14 +180,14 @@ export enum EventName {
     OnPhaseEnded = 'onPhaseEnded',
     OnPhaseEndedCleanup = 'onPhaseEndedCleanup',
     OnPhaseStarted = 'onPhaseStarted',
+    OnReadyResources = 'onReadyResources',
     OnRegroupPhaseReadyCards = 'onRegroupPhaseReadyCards',
     OnRoundEnded = 'onRoundEnded',
     OnRoundEndedCleanup = 'onRoundEndedCleanup',
-    OnSpendResources = 'onSpendResources',
     OnStatusTokenDiscarded = 'onStatusTokenDiscarded',
     OnStatusTokenGained = 'onStatusTokenGained',
     OnStatusTokenMoved = 'onStatusTokenMoved',
-    OnTakeInitiative = 'onTakeInitiative',
+    OnClaimInitiative = 'onClaimInitiative',
     OnUnitEntersPlay = 'onUnitEntersPlay',
     OnUpgradeAttached = 'onUpgradeAttached',
     Unnamed = 'unnamedEvent',
@@ -210,19 +211,16 @@ export enum Aspect {
 }
 
 export enum KeywordName {
-    /** @deprecated Not implemented yet */
     Ambush = 'ambush',
     /** @deprecated Not implemented yet */
     Bounty = 'bounty',
     Grit = 'grit',
-    /** @deprecated Not implemented yet */
     Overwhelm = 'overwhelm',
     Raid = 'raid',
     Restore = 'restore',
     Saboteur = 'saboteur',
     Sentinel = 'sentinel',
     Shielded = 'shielded',
-    /** @deprecated Not implemented yet */
     Smuggle = 'smuggle',
 }
 
@@ -319,8 +317,10 @@ export enum AbilityRestriction {
 
 export enum StateWatcherName {
     AttacksThisPhase = 'attacksThisPhase',
+    CardsLeftPlayThisPhase = 'cardsLeftPlayThisPhase',
     CardsPlayedThisPhase = 'cardsPlayedThisPhase',
     UnitsDefeatedThisPhase = 'unitsDefeatedThisPhase',
+    CardsEnteredPlayThisPhase = 'cardsEnteredPlayThisPhase',
 
     // TODO STATE WATCHERS: watcher types needed
     // - unit defeated: Iden, Emperor's Legion, Brutal Traditions, Spark of Hope, Bravado

@@ -1,4 +1,4 @@
-import { v1 as uuidV1 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import type { AbilityContext } from './ability/AbilityContext';
 import { AbilityRestriction, EffectName, Stage } from './Constants';
@@ -9,9 +9,9 @@ import * as GameSystems from '../gameSystems/GameSystemLibrary';
 import type Player from './Player';
 
 export abstract class GameObject {
-    public uuid = uuidV1();
+    public uuid = uuidv4();
     protected id: string;
-    private effects = [] as IOngoingCardEffect[];
+    private ongoingEffects = [] as IOngoingCardEffect[];
     private nameField: string;
 
     public get name() {
@@ -26,26 +26,21 @@ export abstract class GameObject {
         this.nameField = name;
     }
 
-    public addEffect(effect: IOngoingCardEffect) {
-        this.effects.push(effect);
+    public addOngoingEffect(ongoingEffect: IOngoingCardEffect) {
+        this.ongoingEffects.push(ongoingEffect);
     }
 
-    public removeEffect(effect: IOngoingCardEffect) {
-        this.effects = this.effects.filter((e) => e !== effect);
+    public removeOngoingEffect(ongoingEffect: IOngoingCardEffect) {
+        this.ongoingEffects = this.ongoingEffects.filter((e) => e !== ongoingEffect);
     }
 
-    public getEffectValues<V = any>(type: EffectName): V[] {
-        const filteredEffects = this.getEffects().filter((effect) => effect.type === type);
-        return filteredEffects.map((effect) => effect.getValue(this));
+    public getOngoingEffectValues<V = any>(type: EffectName): V[] {
+        const filteredEffects = this.getOngoingEffects().filter((ongoingEffect) => ongoingEffect.type === type);
+        return filteredEffects.map((ongoingEffect) => ongoingEffect.getValue(this));
     }
 
-    public sumEffects(type: EffectName) {
-        const filteredEffects = this.getEffectValues(type);
-        return filteredEffects.reduce((total, effect) => total + effect, 0);
-    }
-
-    public hasEffect(type: EffectName) {
-        return this.getEffectValues(type).length > 0;
+    public hasOngoingEffect(type: EffectName) {
+        return this.getOngoingEffectValues(type).length > 0;
     }
 
     public allowGameAction(actionType: string, context = this.game.getFrameworkContext()) {
@@ -62,7 +57,7 @@ export abstract class GameObject {
      * can be a value of {@link AbilityRestriction} or an arbitrary string such as a card name.
      */
     public hasRestriction(actionType: string, context?: AbilityContext) {
-        return this.getEffectValues(EffectName.AbilityRestrictions).some((restriction) =>
+        return this.getOngoingEffectValues(EffectName.AbilityRestrictions).some((restriction) =>
             restriction.isMatch(actionType, context, this)
         );
     }
@@ -89,18 +84,18 @@ export abstract class GameObject {
         // let targetingCost = context.player.getTargetingCost(context.source, targets);
 
         if (context.stage === Stage.PreTarget || context.stage === Stage.Cost) {
-            //We haven't paid the cost yet, so figure out what it will cost to play this so we can know how much fate we'll have available for targeting
+            // We haven't paid the cost yet, so figure out what it will cost to play this so we can know how much fate we'll have available for targeting
             let resourceCost = 0;
             // @ts-expect-error
             if (context.ability.getAdjustedCost) {
-                //we only want to consider the ability cost, not the card cost
+                // we only want to consider the ability cost, not the card cost
                 // @ts-expect-error
                 resourceCost = context.ability.getAdjustedCost(context);
             }
 
             // return (context.player.countSpendableResources() >= targetingCost);
         } else if (context.stage === Stage.Target || context.stage === Stage.Effect) {
-            //We paid costs first, or targeting has to be done after costs have been paid
+            // We paid costs first, or targeting has to be done after costs have been paid
             // return (context.player.countSpendableResources() >= targetingCost);
         }
 
@@ -111,14 +106,14 @@ export abstract class GameObject {
         return this.getShortSummary();
     }
 
-    public mostRecentEffect(type: EffectName) {
-        const effects = this.getEffectValues(type);
+    public mostRecentOngoingEffect(type: EffectName) {
+        const effects = this.getOngoingEffectValues(type);
         return effects[effects.length - 1];
     }
 
-    protected getEffects() {
-        const suppressEffects = this.effects.filter((effect) => effect.type === EffectName.SuppressEffects);
-        const suppressedEffects = suppressEffects.reduce((array, effect) => array.concat(effect.getValue(this)), []);
-        return this.effects.filter((effect) => !suppressedEffects.includes(effect));
+    protected getOngoingEffects() {
+        const suppressEffects = this.ongoingEffects.filter((ongoingEffect) => ongoingEffect.type === EffectName.SuppressEffects);
+        const suppressedEffects = suppressEffects.reduce((array, ongoingEffect) => array.concat(ongoingEffect.getValue(this)), []);
+        return this.ongoingEffects.filter((ongoingEffect) => !suppressedEffects.includes(ongoingEffect));
     }
 }

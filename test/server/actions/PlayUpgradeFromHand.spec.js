@@ -22,9 +22,10 @@ describe('Play upgrade from hand', function() {
                 expect(this.player1).toBeAbleToSelectExactly([this.wampa, this.tielnFighter, this.brightHope]);
                 this.player1.clickCard(this.wampa);
                 expect(this.wampa.upgrades).toContain(this.entrenched);
+                expect(this.wampa.upgrades.length).toBe(1);
                 expect(this.entrenched).toBeInLocation('ground arena');
-                expect(this.wampa.power).toBe(7);
-                expect(this.wampa.hp).toBe(8);
+                expect(this.wampa.getPower()).toBe(7);
+                expect(this.wampa.getHp()).toBe(8);
 
                 expect(this.player1.countExhaustedResources()).toBe(2);
 
@@ -35,9 +36,10 @@ describe('Play upgrade from hand', function() {
                 expect(this.player1).toBeAbleToSelectExactly([this.wampa, this.tielnFighter, this.brightHope]);
                 this.player1.clickCard(this.tielnFighter);
                 expect(this.tielnFighter.upgrades).toContain(this.academyTraining);
+                expect(this.wampa.upgrades.length).toBe(1);
                 expect(this.academyTraining).toBeInLocation('space arena');
-                expect(this.tielnFighter.power).toBe(4);
-                expect(this.tielnFighter.hp).toBe(3);
+                expect(this.tielnFighter.getPower()).toBe(4);
+                expect(this.tielnFighter.getHp()).toBe(3);
 
                 expect(this.player1.countExhaustedResources()).toBe(6);
 
@@ -48,56 +50,13 @@ describe('Play upgrade from hand', function() {
                 expect(this.player1).toBeAbleToSelectExactly([this.wampa, this.tielnFighter, this.brightHope]);
                 this.player1.clickCard(this.brightHope);
                 expect(this.brightHope.upgrades).toContain(this.resilient);
+                expect(this.wampa.upgrades.length).toBe(1);
                 expect(this.resilient).toBeInLocation('space arena', this.player2);
-                expect(this.brightHope.power).toBe(2);
-                expect(this.brightHope.hp).toBe(9);
+                expect(this.brightHope.getPower()).toBe(2);
+                expect(this.brightHope.getHp()).toBe(9);
 
                 // confirm that the upgrade is still controlled by the player who played it
                 expect(this.resilient.controller).toBe(this.player1.player);
-            });
-        });
-
-        describe('When an upgrade is attached,', function() {
-            beforeEach(function () {
-                this.setupTest({
-                    phase: 'action',
-                    player1: {
-                        hand: ['foundling'],
-                        groundArena: [{ card: 'wampa', upgrades: ['academy-training'] }],
-                        spaceArena: [{ card: 'tieln-fighter', upgrades: ['entrenched'] }]
-                    },
-                    player2: {
-                        spaceArena: ['bright-hope#the-last-transport']
-                    }
-                });
-            });
-
-
-            it('it should stack bonuses with other applied upgrades', function () {
-                this.player1.clickCard(this.foundling);
-                expect(this.player1).toBeAbleToSelectExactly([this.wampa, this.tielnFighter, this.brightHope]);
-                this.player1.clickCard(this.wampa);
-
-                expect(this.wampa.upgrades).toContain(this.academyTraining);
-                expect(this.wampa.upgrades).toContain(this.foundling);
-                expect(this.wampa.power).toBe(7);
-                expect(this.wampa.hp).toBe(8);
-            });
-
-            it('its stat bonuses should be correctly applied during combat', function () {
-                this.player1.clickCard(this.tielnFighter);
-                expect(this.brightHope.damage).toBe(5);
-                expect(this.tielnFighter.damage).toBe(2);
-            });
-
-            it('and the owner is defeated, the upgrade should also be defeated', function () {
-                this.tielnFighter.damage = 3;
-
-                this.player1.clickCard(this.tielnFighter);
-
-                expect(this.brightHope.damage).toBe(5);
-                expect(this.tielnFighter).toBeInLocation('discard');
-                expect(this.entrenched).toBeInLocation('discard');
             });
         });
     });

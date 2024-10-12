@@ -1,6 +1,7 @@
 import { Card } from '../../card/Card';
 import type Game from '../../Game';
 import type Player from '../../Player';
+import { IPlayerPromptStateProperties } from '../../PlayerPromptState';
 import * as Contract from '../../utils/Contract';
 import { AllPlayerPrompt } from './AllPlayerPrompt';
 
@@ -25,7 +26,7 @@ export class ResourcePrompt extends AllPlayerPrompt {
         if (!this.isComplete()) {
             this.highlightSelectableCards();
         } else {
-            this.game.getPlayers().forEach((player) => this.resourceSelectedCards(player));
+            this.complete();
         }
 
         return super.continue();
@@ -43,7 +44,7 @@ export class ResourcePrompt extends AllPlayerPrompt {
         });
     }
 
-    public override activePrompt() {
+    public override activePrompt(): IPlayerPromptStateProperties {
         let promptText = null;
         if (this.nCardsToResource !== 1) {
             promptText = `Select ${this.nCardsToResource} cards to resource`;
@@ -83,8 +84,8 @@ export class ResourcePrompt extends AllPlayerPrompt {
         };
     }
 
-    public override menuCommand(player, arg) {
-        return false;
+    public override menuCommand(player, arg): boolean {
+        Contract.fail(`Unexpected menu command: '${arg}'`);
     }
 
     protected resourceSelectedCards(player: Player) {
@@ -96,5 +97,16 @@ export class ResourcePrompt extends AllPlayerPrompt {
         } else {
             this.game.addMessage('{0} has not resourced any cards', player);
         }
+    }
+
+    public override complete() {
+        this.game.getPlayers().forEach((player) => this.resourceSelectedCards(player));
+
+        for (const player of this.game.getPlayers()) {
+            player.clearSelectedCards();
+            player.clearSelectableCards();
+        }
+
+        return super.complete();
     }
 }

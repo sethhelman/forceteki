@@ -1,9 +1,17 @@
-const { detectBinary } = require('../../build/Util.js');
-const { GameMode } = require('../../build/GameMode.js');
-
+const Game = require('../../server/game/core/Game.js');
+const Player = require('../../server/game/core/Player.js');
+const { detectBinary } = require('../../server/Util.js');
+const GameFlowWrapper = require('./GameFlowWrapper.js');
+const TestSetupError = require('./TestSetupError.js');
 const { checkNullCard, formatPrompt, getPlayerPromptState, promptStatesEqual } = require('./Util.js');
 
 class PlayerInteractionWrapper {
+    /**
+     *
+     * @param {Game} game
+     * @param {Player} player
+     * @param {GameFlowWrapper} testContext
+     */
     constructor(game, player, testContext) {
         this.game = game;
         this.player = player;
@@ -80,13 +88,13 @@ class PlayerInteractionWrapper {
         // leader as a string card name is a no-op unless it doesn't match the existing leader, then throw an error
         if (typeof leaderOptions === 'string') {
             if (leaderOptions !== this.player.leader.internalName) {
-                throw new Error(`Provided leader name ${leaderOptions} does not match player's leader ${this.player.leader.internalName}. Do not try to change leader after test has initialized.`);
+                throw new TestSetupError(`Provided leader name ${leaderOptions} does not match player's leader ${this.player.leader.internalName}. Do not try to change leader after test has initialized.`);
             }
             return;
         }
 
         if (leaderOptions.card !== this.player.leader.internalName) {
-            throw new Error(`Provided leader name ${leaderOptions.card} does not match player's leader ${this.player.leader.internalName}. Do not try to change leader after test has initialized.`);
+            throw new TestSetupError(`Provided leader name ${leaderOptions.card} does not match player's leader ${this.player.leader.internalName}. Do not try to change leader after test has initialized.`);
         }
 
         var leaderCard = this.player.leader;
@@ -100,9 +108,32 @@ class PlayerInteractionWrapper {
 
             leaderCard.damage = leaderOptions.damage || 0;
             leaderCard.exhausted = leaderOptions.exhausted || false;
+
+            // Get the upgrades
+            if (leaderOptions.upgrades) {
+                leaderOptions.upgrades.forEach((upgradeName) => {
+                    const isToken = ['shield', 'experience'].includes(upgradeName);
+                    let upgrade;
+                    if (isToken) {
+                        upgrade = this.game.generateToken(this.player, upgradeName);
+                    } else {
+                        upgrade = this.findCardByName(upgradeName);
+                    }
+
+                    upgrade.attachTo(leaderCard);
+                });
+            }
         } else {
+            if (leaderOptions.deployed === false) {
+                if (leaderCard.deployed === true) {
+                    leaderCard.undeploy();
+                }
+            }
             if (leaderOptions.damage) {
-                throw new Error('Leader should not have damage when not deployed');
+                throw new TestSetupError('Leader should not have damage when not deployed');
+            }
+            if (leaderOptions.upgrades) {
+                throw new TestSetupError('Leader should not have upgrades when not deployed');
             }
 
             leaderCard.exhausted = leaderOptions.exhausted || false;
@@ -119,13 +150,13 @@ class PlayerInteractionWrapper {
         // leader as a string card name is a no-op unless it doesn't match the existing leader, then throw an error
         if (typeof baseOptions === 'string') {
             if (baseOptions !== this.player.base.internalName) {
-                throw new Error(`Provided base name ${baseOptions} does not match player's base ${this.player.base.internalName}. Do not try to change base after test has initialized.`);
+                throw new TestSetupError(`Provided base name ${baseOptions} does not match player's base ${this.player.base.internalName}. Do not try to change base after test has initialized.`);
             }
             return;
         }
 
         if (baseOptions.card !== this.player.base.internalName) {
-            throw new Error(`Provided base name ${baseOptions.card} does not match player's base ${this.player.base.internalName}. Do not try to change base after test has initialized.`);
+            throw new TestSetupError(`Provided base name ${baseOptions.card} does not match player's base ${this.player.base.internalName}. Do not try to change base after test has initialized.`);
         }
 
         var baseCard = this.player.base;
@@ -186,7 +217,7 @@ class PlayerInteractionWrapper {
                 };
             }
             if (!options.card) {
-                throw new Error('You must provide a card name');
+                throw new TestSetupError('You must provide a card name');
             }
             var card = this.findCardByName(options.card, prevLocations);
             // Move card to play
@@ -202,8 +233,6 @@ class PlayerInteractionWrapper {
                 card.damage = options.damage;
             }
 
-            // Activate persistent effects of the card
-            //card.applyPersistentEffects();
             // Get the upgrades
             if (options.upgrades) {
                 options.upgrades.forEach((upgradeName) => {
@@ -223,7 +252,6 @@ class PlayerInteractionWrapper {
             }
         });
 
-        // TODO EFFECTS: make this part of the normal process of playing a card
         this.game.resolveGameState(true);
     }
 
@@ -275,6 +303,10 @@ class PlayerInteractionWrapper {
         });
     }
 
+    get handSize() {
+        return this.player.hand.length;
+    }
+
     countSpendableResources() {
         return this.player.countSpendableResources();
     }
@@ -291,22 +323,23 @@ class PlayerInteractionWrapper {
      * Sets the contents of the conflict discard pile
      * @param {String[]} newContents - list of names of cards to be put in conflict discard
      */
-    setDiscard(newContents = []) {
+    setDiscard(newContents = [], prevLocations = ['deck']) {
         //  Move cards to the deck
-        this.discard.forEach((card) => {
-            this.moveCard(card, 'deck');
-        });
+        this.discard.forEach((card) => this.moveCard(card, 'deck'));
         // Move cards to the discard in reverse order
         // (helps with referring to cards by index)
-        newContents.reverse()
-            .forEach((name) => {
-                var card = this.findCardByName(name, 'deck');
-                this.moveCard(card, 'discard');
-            });
+        newContents.reverse().forEach((name) => {
+            const card = typeof name === 'string' ? this.findCardByName(name, prevLocations) : name;
+            this.moveCard(card, 'discard');
+        });
     }
 
     get initiativePlayer() {
         return this.game.initiativePlayer;
+    }
+
+    get hasInitiative() {
+        return this.game.initiativePlayer != null && this.game.initiativePlayer.id === this.player.id;
     }
 
     get actionPhaseActivePlayer() {
@@ -378,7 +411,7 @@ class PlayerInteractionWrapper {
                 side
             );
         } catch (e) {
-            throw new Error(`Names: ${namesAra}, Location: ${locations}. Error thrown: ${e}`);
+            throw new TestSetupError(`Names: ${namesAra}, Location: ${locations}. Error thrown: ${e}`);
         }
         return cards;
     }
@@ -399,7 +432,7 @@ class PlayerInteractionWrapper {
         }
         var cards = player.decklist.allCards.filter(condition);
         if (cards.length === 0) {
-            throw new Error(`Could not find any matching cards for ${player.name}`);
+            throw new TestSetupError(`Could not find any matching cards for ${player.name}`);
         }
 
         return cards;
@@ -441,7 +474,7 @@ class PlayerInteractionWrapper {
         );
 
         if (!promptButton || promptButton.disabled) {
-            throw new Error(
+            throw new TestSetupError(
                 `Couldn't click on '${text}' for ${this.player.name}. Current prompt is:\n${formatPrompt(this.currentPrompt(), this.currentActionTargets)}`
             );
         }
@@ -451,18 +484,31 @@ class PlayerInteractionWrapper {
         // this.checkUnserializableGameState();
     }
 
-    passAction() {
-        this.clickPrompt('Pass');
+    setDistributeDamagePromptState(cardDistributionMap) {
+        this.setDistributeAmongTargetsPromptState(cardDistributionMap, 'distributeDamage');
     }
 
+    setDistributeHealingPromptState(cardDistributionMap) {
+        this.setDistributeAmongTargetsPromptState(cardDistributionMap, 'distributeHealing');
+    }
+
+    setDistributeAmongTargetsPromptState(cardDistributionMap, type) {
+        const promptResults = {
+            valueDistribution: cardDistributionMap,
+            type
+        };
+
+        this.game.statefulPromptResults(this.player.name, promptResults);
+        this.game.continue();
+        // this.checkUnserializableGameState();
+    }
 
     clickPromptButtonIndex(index) {
         var currentPrompt = this.player.currentPrompt();
 
         if (currentPrompt.buttons.length <= index) {
-            throw new Error(
-                `Couldn't click on Button '${index}' for ${
-                    this.player.name
+            throw new TestSetupError(
+                `Couldn't click on Button '${index}' for ${this.player.name
                 }. Current prompt is:\n${formatPrompt(this.currentPrompt(), this.currentActionTargets)}`
             );
         }
@@ -470,9 +516,8 @@ class PlayerInteractionWrapper {
         var promptButton = currentPrompt.buttons[index];
 
         if (!promptButton || promptButton.disabled) {
-            throw new Error(
-                `Couldn't click on Button '${index}' for ${
-                    this.player.name
+            throw new TestSetupError(
+                `Couldn't click on Button '${index}' for ${this.player.name
                 }. Current prompt is:\n${formatPrompt(this.currentPrompt(), this.currentActionTargets)}`
             );
         }
@@ -490,9 +535,8 @@ class PlayerInteractionWrapper {
         );
 
         if (!promptControl) {
-            throw new Error(
-                `Couldn't click card '${cardName}' for ${
-                    this.player.name
+            throw new TestSetupError(
+                `Couldn't click card '${cardName}' for ${this.player.name
                 } - unable to find control '${controlName}'. Current prompt is:\n${formatPrompt(this.currentPrompt(), this.currentActionTargets)}`
             );
         }
@@ -508,7 +552,7 @@ class PlayerInteractionWrapper {
         let availableCards = this.currentActionTargets;
 
         if (!availableCards || availableCards.length < nCardsToChoose) {
-            throw new Error(`Insufficient card targets available for control, expected ${nCardsToChoose} found ${availableCards?.length ?? 0} prompt:\n${formatPrompt(this.currentPrompt(), this.currentActionTargets)}`);
+            throw new TestSetupError(`Insufficient card targets available for control, expected ${nCardsToChoose} found ${availableCards?.length ?? 0} prompt:\n${formatPrompt(this.currentPrompt(), this.currentActionTargets)}`);
         }
 
         for (let i = 0; i < nCardsToChoose; i++) {
@@ -540,7 +584,7 @@ class PlayerInteractionWrapper {
         if (expectChange) {
             const afterClick = getPlayerPromptState(this.player);
             if (promptStatesEqual(beforeClick, afterClick)) {
-                throw new Error(`Expected player prompt state to change after clicking ${card.internalName} but it did not. Current prompt:\n${formatPrompt(this.currentPrompt(), this.currentActionTargets)}`);
+                throw new TestSetupError(`Expected player prompt state to change after clicking ${card.internalName} but it did not. Current prompt:\n${formatPrompt(this.currentPrompt(), this.currentActionTargets)}`);
             }
         }
 
@@ -556,7 +600,7 @@ class PlayerInteractionWrapper {
         var items = card.getMenu().filter((item) => item.text === menuText);
 
         if (items.length === 0) {
-            throw new Error(`Card ${card.name} does not have a menu item '${menuText}'`);
+            throw new TestSetupError(`Card ${card.name} does not have a menu item '${menuText}'`);
         }
 
         this.game.menuItemClick(this.player.name, card.uuid, items[0]);
@@ -593,11 +637,21 @@ class PlayerInteractionWrapper {
     /**
      * Player's action of passing priority
      */
-    pass() {
+    passAction() {
         if (!this.canAct) {
-            throw new Error(`${this.name} can't pass, because they don't have priority`);
+            throw new TestSetupError(`${this.name} can't pass, because they don't have priority`);
         }
         this.clickPrompt('Pass');
+    }
+
+    /**
+     * Player's action of passing priority
+     */
+    claimInitiative() {
+        if (!this.canAct) {
+            throw new TestSetupError(`${this.name} can't pass, because they don't have priority`);
+        }
+        this.clickPrompt('Claim Initiative');
     }
 
     /**
@@ -645,10 +699,10 @@ class PlayerInteractionWrapper {
         mixed = mixed.filter((card) => typeof card === 'string');
         // Find cards objects for the rest
         mixed.forEach((card) => {
-            //Find only those cards that aren't already in the list
+            // Find only those cards that aren't already in the list
             var cardObject = this.filterCardsByName(card, locations).find((card) => !cardList.includes(card));
             if (!cardObject) {
-                throw new Error(`Could not find card named ${card}`);
+                throw new TestSetupError(`Could not find card named ${card}`);
             }
             cardList.push(cardObject);
         });
@@ -674,7 +728,7 @@ class PlayerInteractionWrapper {
     //     let state = this.game.getState(this.player.name);
     //     let results = detectBinary(state);
     //     if (results.length !== 0) {
-    //         throw new Error('Unable to serialize game state back to client:\n' + JSON.stringify(results));
+    //         throw new TestSetupError('Unable to serialize game state back to client:\n' + JSON.stringify(results));
     //     }
     // }
 

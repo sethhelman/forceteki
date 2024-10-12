@@ -1,9 +1,11 @@
 const fs = require('fs');
 const path = require('path');
+const TestSetupError = require('./TestSetupError.js');
 
 // defaults to fill in with if not explicitly provided by the test case
 const defaultLeader = { 1: 'darth-vader#dark-lord-of-the-sith', 2: 'luke-skywalker#faithful-friend' };
 const defaultBase = { 1: 'kestro-city', 2: 'administrators-tower' };
+const playerCardProperties = ['groundArena', 'spaceArena', 'hand', 'resources', 'deck', 'discard', 'leader', 'base'];
 const deckFillerCard = 'underworld-thug';
 const defaultResourceCount = 20;
 const defaultDeckSize = 8; // buffer decks to prevent re-shuffling
@@ -17,7 +19,7 @@ class DeckBuilder {
         var cards = {};
 
         if (!fs.existsSync(directory)) {
-            throw new Error(`Json card definitions folder ${directory} not found, please run 'npm run get-cards'`);
+            throw new TestSetupError(`Json card definitions folder ${directory} not found, please run 'npm run get-cards'`);
         }
 
         var jsonCards = fs.readdirSync(directory).filter((file) => file.endsWith('.json'));
@@ -27,7 +29,7 @@ class DeckBuilder {
         });
 
         if (cards.length === 0) {
-            throw new Error(`No json card definitions found in ${directory}, please run 'npm run get-cards'`);
+            throw new TestSetupError(`No json card definitions found in ${directory}, please run 'npm run get-cards'`);
         }
 
         return cards;
@@ -35,10 +37,10 @@ class DeckBuilder {
 
     customDeck(playerNumber, playerCards = {}) {
         if (Array.isArray(playerCards.leader)) {
-            throw new Error('Test leader must not be specified as an array');
+            throw new TestSetupError('Test leader must not be specified as an array');
         }
         if (Array.isArray(playerCards.base)) {
-            throw new Error('Test base must not be specified as an array');
+            throw new TestSetupError('Test base must not be specified as an array');
         }
 
         let allCards = [];
@@ -48,7 +50,6 @@ class DeckBuilder {
 
         allCards.push(this.getLeaderCard(playerCards, playerNumber));
         allCards.push(this.getBaseCard(playerCards, playerNumber));
-        // allCards.push(playerCards.base ? playerCards.base : defaultBase[playerNumber]);
 
         // if user didn't provide explicit resource cards, create default ones to be added to deck
         playerCards.resources = this.padCardListIfNeeded(playerCards.resources, defaultResourceCount);
@@ -70,8 +71,9 @@ class DeckBuilder {
 
         inPlayCards = inPlayCards.concat(this.getInPlayCardsForArena(playerCards.groundArena));
         inPlayCards = inPlayCards.concat(this.getInPlayCardsForArena(playerCards.spaceArena));
+        inPlayCards = inPlayCards.concat(this.getUpgradesFromCard(playerCards.leader));
 
-        //Collect all the cards together
+        // Collect all the cards together
         allCards = allCards.concat(inPlayCards);
 
         return [this.buildDeck(allCards), namedCards];
@@ -79,31 +81,46 @@ class DeckBuilder {
 
     getAllNamedCards(playerObject) {
         let namedCards = [];
-        for (const key in playerObject) {
-            namedCards = namedCards.concat(this.getNamedCardsInPlayerEntry(playerObject[key]));
+        for (const key of playerCardProperties) {
+            var value = playerObject[key];
+            if (value === undefined) {
+                continue;
+            }
+
+            namedCards = namedCards.concat(this.getNamedCardsInPlayerEntry(value));
         }
         return namedCards;
     }
 
     getNamedCardsInPlayerEntry(playerEntry) {
         let namedCards = [];
-        if (typeof playerEntry === 'number' || typeof playerEntry == null) {
+        // If number, this might be used by padCardListIfNeeded, and should simply return an array.
+        if (typeof playerEntry === 'number') {
             return [];
+        }
+        if (playerEntry === null) {
+            throw new TestSetupError(`Null test card specifier format: '${playerEntry}'`);
         }
 
         if (typeof playerEntry === 'string') {
             namedCards = namedCards.concat(playerEntry);
-        } else if ('card' in playerEntry) {
-            namedCards.push(playerEntry.card);
-            if ('upgrades' in playerEntry) {
-                namedCards = namedCards.concat(this.getNamedCardsInPlayerEntry(playerEntry.upgrades));
-            }
         } else if (Array.isArray(playerEntry)) {
             playerEntry.forEach((card) => namedCards = namedCards.concat(this.getNamedCardsInPlayerEntry(card)));
+        } else if ('card' in playerEntry) {
+            namedCards.push(playerEntry.card);
+            namedCards = namedCards.concat(this.getUpgradesFromCard(playerEntry));
         } else {
-            throw new Error(`Unknown test card specifier format: '${playerObject}'`);
+            throw new TestSetupError(`Unknown test card specifier format: '${playerEntry}'`);
         }
         return namedCards;
+    }
+
+    getUpgradesFromCard(playerEntry) {
+        if (playerEntry && typeof playerEntry !== 'string' && 'upgrades' in playerEntry) {
+            return this.getNamedCardsInPlayerEntry(playerEntry.upgrades);
+        }
+
+        return [];
     }
 
     padCardListIfNeeded(cardList, defaultCount) {
@@ -129,7 +146,7 @@ class DeckBuilder {
             return playerCards.leader.card;
         }
 
-        throw new Error(`Unknown test leader specifier format: '${playerObject}'`);
+        throw new TestSetupError(`Unknown test leader specifier format: '${playerObject}'`);
     }
 
     getBaseCard(playerCards, playerNumber) {
@@ -145,7 +162,7 @@ class DeckBuilder {
             return playerCards.base.card;
         }
 
-        throw new Error(`Unknown test leader specifier format: '${playerObject}'`);
+        throw new TestSetupError(`Unknown test leader specifier format: '${playerObject}'`);
     }
 
     getInPlayCardsForArena(arenaList) {
@@ -158,9 +175,9 @@ class DeckBuilder {
             if (typeof card === 'string') {
                 inPlayCards.push(card);
             } else {
-                //Add the card itself
+                // Add the card itself
                 inPlayCards.push(card.card);
-                //Add any upgrades
+                // Add any upgrades
                 if (card.upgrades) {
                     let nonTokenUpgrades = card.upgrades.filter((upgrade) =>
                         !['shield', 'experience'].includes(upgrade)
@@ -174,7 +191,7 @@ class DeckBuilder {
         return inPlayCards;
     }
 
-    buildDeck(cardInternalNames) {
+    buildDeck(cardInternalNames, cards) {
         var cardCounts = {};
         cardInternalNames.forEach((internalName) => {
             var cardData = this.getCard(internalName);
@@ -210,12 +227,12 @@ class DeckBuilder {
         var cardsByName = this.filterPropertiesToArray(this.cards, (card) => card.internalName === internalName);
 
         if (cardsByName.length === 0) {
-            throw new Error(`Unable to find any card matching ${internalName}`);
+            throw new TestSetupError(`Unable to find any card matching ${internalName}`);
         }
 
         if (cardsByName.length > 1) {
             var matchingLabels = cardsByName.map((card) => card.name).join('\n');
-            throw new Error(`Multiple cards match the name ${internalName}. Use one of these instead:\n${matchingLabels}`);
+            throw new TestSetupError(`Multiple cards match the name ${internalName}. Use one of these instead:\n${matchingLabels}`);
         }
 
         return cardsByName[0];

@@ -1,12 +1,13 @@
 import Player from '../Player';
 import { Card } from './Card';
-import { CardType } from '../Constants';
+import { CardType, EffectName } from '../Constants';
 import * as Contract from '../utils/Contract';
 import { WithDamage } from './propertyMixins/Damage';
 import { ActionAbility } from '../ability/ActionAbility';
 import AbilityHelper from '../../AbilityHelper';
 import { IActionAbilityProps, IEpicActionProps } from '../../Interfaces';
 import { WithStandardAbilitySetup } from './propertyMixins/StandardAbilitySetup';
+import { IOngoingCardEffect } from '../ongoingEffect/IOngoingCardEffect';
 
 const BaseCardParent = WithDamage(WithStandardAbilitySetup(Card));
 
@@ -22,7 +23,8 @@ export class BaseCard extends BaseCardParent {
         super(owner, cardData);
         Contract.assertEqual(this.printedType, CardType.Base);
 
-        this.enableDamage(true);
+        this.setDamageEnabled(true);
+        this.setActiveAttackEnabled(true);
     }
 
     public override isBase(): this is BaseCard {
@@ -38,7 +40,7 @@ export class BaseCard extends BaseCardParent {
     }
 
     public setEpicActionAbility(properties: IEpicActionProps<this>): void {
-        Contract.assertTrue(this._epicActionAbility == null, 'Epic action ability already set');
+        Contract.assertIsNullLike(this._epicActionAbility, 'Epic action ability already set');
 
         const propertiesWithLimit: IActionAbilityProps<this> = Object.assign(properties, {
             limit: AbilityHelper.limit.epicAction()

@@ -4,20 +4,32 @@ import { WithCost } from './propertyMixins/Cost';
 import { InPlayCard } from './baseClasses/InPlayCard';
 import { WithPrintedPower } from './propertyMixins/PrintedPower';
 import * as Contract from '../utils/Contract';
-import { AbilityType, CardType, KeywordName, Location, RelativePlayer } from '../Constants';
+import { AbilityType, CardType, KeywordName, Location, PlayType, RelativePlayer } from '../Constants';
 import { UnitCard } from './CardTypes';
 import { PlayUpgradeAction } from '../../actions/PlayUpgradeAction';
-import { IConstantAbilityProps, IKeywordProperties, ITriggeredAbilityProps } from '../../Interfaces';
+import { IActionAbilityProps, ITriggeredAbilityBaseProps, IConstantAbilityProps, IKeywordProperties, ITriggeredAbilityProps } from '../../Interfaces';
 import { Card } from './Card';
-import * as EnumHelpers from '../utils/EnumHelpers';
 import AbilityHelper from '../../AbilityHelper';
 import { WithStandardAbilitySetup } from './propertyMixins/StandardAbilitySetup';
 import { AbilityContext } from '../ability/AbilityContext';
+import PlayerOrCardAbility from '../ability/PlayerOrCardAbility';
+
+interface IGainCondition<TSource extends UpgradeCard> {
+    gainCondition?: (context: AbilityContext<TSource>) => boolean
+}
+
+type ITriggeredAbilityPropsWithGainCondition<TSource extends UpgradeCard, TTarget extends Card> = ITriggeredAbilityProps<TTarget> & IGainCondition<TSource>;
+
+type ITriggeredAbilityBasePropsWithGainCondition<TSource extends UpgradeCard, TTarget extends Card> = ITriggeredAbilityBaseProps<TTarget> & IGainCondition<TSource>;
+
+type IKeywordPropertiesWithGainCondition<TSource extends UpgradeCard> = IKeywordProperties & IGainCondition<TSource>;
 
 const UpgradeCardParent = WithPrintedPower(WithPrintedHp(WithCost(WithStandardAbilitySetup(InPlayCard))));
 
 export class UpgradeCard extends UpgradeCardParent {
     protected _parentCard?: UnitCard = null;
+
+    private attachCondition: (card: Card) => boolean;
 
     public constructor(owner: Player, cardData: any) {
         super(owner, cardData);
@@ -30,11 +42,20 @@ export class UpgradeCard extends UpgradeCardParent {
         return true;
     }
 
+    public override getActions(): PlayerOrCardAbility[] {
+        const actions = super.getActions();
+
+        if (this.location === Location.Resource && this.hasSomeKeyword(KeywordName.Smuggle)) {
+            actions.push(new PlayUpgradeAction(this, PlayType.Smuggle));
+        }
+        return actions;
+    }
+
     // TODO CAPTURE: we may need to use the "parent" concept for captured cards as well
     /** The card that this card is underneath */
     public get parentCard(): UnitCard {
         Contract.assertNotNullLike(this._parentCard);
-        Contract.assertTrue(EnumHelpers.isArena(this.location));
+        Contract.assertTrue(this.isInPlay());
 
         return this._parentCard;
     }
@@ -48,7 +69,7 @@ export class UpgradeCard extends UpgradeCardParent {
 
     public attachTo(newParentCard: UnitCard) {
         Contract.assertTrue(newParentCard.isUnit());
-        Contract.assertTrue(EnumHelpers.isArena(newParentCard.location));
+        Contract.assertTrue(newParentCard.isInPlay());
 
         if (this._parentCard) {
             this.unattach();
@@ -63,7 +84,7 @@ export class UpgradeCard extends UpgradeCardParent {
     }
 
     public unattach() {
-        Contract.assertTrue(this._parentCard !== null, 'Attempting to unattach upgrade when already unattached');
+        Contract.assertNotNullLike(this._parentCard, 'Attempting to unattach upgrade when already unattached');
 
         this.parentCard.unattachUpgrade(this);
         this.parentCard.controller.removeCardFromPile(this);
@@ -75,7 +96,7 @@ export class UpgradeCard extends UpgradeCardParent {
      * implementations must override this if they have specific attachment conditions.
      */
     public canAttach(targetCard: Card, controller: Player = this.controller): boolean {
-        if (!targetCard.isUnit()) {
+        if (!targetCard.isUnit() || (this.attachCondition && !this.attachCondition(targetCard))) {
             return false;
         }
 
@@ -108,11 +129,41 @@ export class UpgradeCard extends UpgradeCardParent {
      * Adds an "attached card gains [X]" ability, where X is a triggered ability. You can provide a match function
      * to narrow down whether the effect is applied (for cases where the effect has conditions).
      */
-    protected addGainTriggeredAbilityTargetingAttached(properties: ITriggeredAbilityProps<UnitCard>, gainCondition: (context: AbilityContext<this>) => boolean = null) {
+    protected addGainTriggeredAbilityTargetingAttached(properties: ITriggeredAbilityPropsWithGainCondition<this, UnitCard>) {
+        const { gainCondition, ...gainedAbilityProperties } = properties;
+
         this.addConstantAbilityTargetingAttached({
             title: 'Give ability to the attached card',
             condition: gainCondition,
-            ongoingEffect: AbilityHelper.ongoingEffects.gainAbility(AbilityType.Triggered, properties)
+            ongoingEffect: AbilityHelper.ongoingEffects.gainAbility({ type: AbilityType.Triggered, ...properties })
+        });
+    }
+
+    /**
+     * Adds an "attached card gains [X]" ability, where X is an action ability. You can provide a match function
+     * to narrow down whether the effect is applied (for cases where the effect has conditions).
+     */
+    protected addGainActionAbilityTargetingAttached(properties: IActionAbilityProps<UnitCard>, gainCondition: (context: AbilityContext<this>) => boolean = null) {
+        this.addConstantAbilityTargetingAttached({
+            title: 'Give ability to the attached card',
+            condition: gainCondition,
+            ongoingEffect: AbilityHelper.ongoingEffects.gainAbility({ type: AbilityType.Action, ...properties })
+        });
+    }
+
+    // TODO: add "gainWhenDefeated" helper
+    /**
+     * Adds an "attached card gains [X]" ability, where X is an "on attack" triggered ability. You can provide a match function
+     * to narrow down whether the effect is applied (for cases where the effect has conditions).
+     */
+    protected addGainOnAttackAbilityTargetingAttached(properties: ITriggeredAbilityBasePropsWithGainCondition<this, UnitCard>) {
+        const { gainCondition, ...gainedAbilityProperties } = properties;
+        const propsWithWhen = Object.assign(gainedAbilityProperties, { when: { onAttackDeclared: (event, context) => event.attack.attacker === context.source } });
+
+        this.addConstantAbilityTargetingAttached({
+            title: 'Give ability to the attached card',
+            condition: gainCondition,
+            ongoingEffect: AbilityHelper.ongoingEffects.gainAbility({ type: AbilityType.Triggered, ...propsWithWhen })
         });
     }
 
@@ -120,12 +171,21 @@ export class UpgradeCard extends UpgradeCardParent {
      * Adds an "attached card gains [X]" ability, where X is a keyword ability. You can provide a match function
      * to narrow down whether the effect is applied (for cases where the effect has conditions).
      */
-    protected addGainKeywordTargetingAttached(properties: IKeywordProperties, gainCondition: (context: AbilityContext<this>) => boolean = null) {
+    protected addGainKeywordTargetingAttached(properties: IKeywordPropertiesWithGainCondition<this>) {
+        const { gainCondition, ...keywordProperties } = properties;
+
         this.addConstantAbilityTargetingAttached({
             title: 'Give keyword to the attached card',
             condition: gainCondition,
-            ongoingEffect: AbilityHelper.ongoingEffects.gainKeyword(properties)
+            ongoingEffect: AbilityHelper.ongoingEffects.gainKeyword(keywordProperties)
         });
+    }
+
+    /** Adds a condition that must return true for the upgrade to be allowed to attach to the passed card. */
+    protected setAttachCondition(attachCondition: (card: Card) => boolean) {
+        Contract.assertIsNullLike(this.attachCondition, 'Attach condition is already set');
+
+        this.attachCondition = attachCondition;
     }
 
     protected override initializeForCurrentLocation(prevLocation: Location): void {
@@ -133,11 +193,11 @@ export class UpgradeCard extends UpgradeCardParent {
 
         switch (this.location) {
             case Location.Resource:
-                this.enableExhaust(true);
+                this.setExhaustEnabled(true);
                 break;
 
             default:
-                this.enableExhaust(false);
+                this.setExhaustEnabled(false);
                 break;
         }
     }

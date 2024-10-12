@@ -1,3 +1,6 @@
+# IMPORTANT NOTE: DEPRECATED
+All content is being migrated to the [wiki](https://github.com/SWU-Karabast/forceteki/wiki), please use that in the future.
+
 # Writing Card Tests
 
 Unit tests for cards are located in [test/server/cards](../test/server/cards/).
@@ -45,14 +48,11 @@ These cards can then be referred to by name in the test cases as properties of t
 ```javascript
 it('should give an experience token to a unit', function () {
     this.player1.clickCard(this.clanWrenRescuer);
-    expect(this.player1).not.toHaveEnabledPromptButton('Pass ability');
-
-    // this.clanWrenRescuer, this.wampa, this.cartelSpacer are all automaically created by the test harness
+    expect(this.player1).not.toHavePassAbilityButton();
     expect(this.player1).toBeAbleToSelectExactly([this.clanWrenRescuer, this.wampa, this.cartelSpacer]);
 
     this.player1.clickCard(this.clanWrenRescuer);
-    expect(this.clanWrenRescuer.upgrades.length).toBe(1);
-    expect(this.clanWrenRescuer.upgrades[0].internalName).toBe('experience');
+    expect(this.clanWrenRescuer).toHaveExactUpgradeNames(['experience']);
 });
 ```
 
@@ -77,20 +77,46 @@ it('should cause the attached card to heal 2 damage from base on attack', functi
 Here is a summary of the naming rules and some examples in the table below:
 
 - **Internal name / test string name:** snake-case, with special characters removed and spaces replaced with dashes. The title and subtitle are separated by a '#' character.
-- **Test property name (i.e., this.<card>):** camelCase, with all special characters and spaces removed. If there is a subtitle, it is completely omitted. If the name starts with a number, it will have an underscore '_' as a prefix.
+- **Test property name(s) (i.e., this.<card>):** camelCase, with all special characters and spaces removed. If the name starts with a number, it will have an underscore '_' as a prefix. If there is a subtitle, two names will be generated - one with just the title and one with title + subtitle.
 
 Examples:
 
 | Printed name | Internal name | Property name |
 | ---  | --- | --- |
 | Alliance X-Wing | 'alliance-xwing' | this.allianceXwing |
-| C-3PO, Protocol Droid  | 'c3po#protocol-droid' | this.c3po |
+| C-3PO, Protocol Droid  | 'c3po#protocol-droid' | this.c3po, this.c3poProtocolDroid |
 | 2-1B Surgical Droid  | '21b-surgical-droid' | this._21bSurgicalDroid |
-| Count Dooku, Darth Tyranus | 'count-dooku#darth-tyranus' | this.countDooku |
+| Count Dooku, Darth Tyranus | 'count-dooku#darth-tyranus' | this.countDooku, this.countDookuDarthTyranus |
 
 #### Duplicate card names
-For ease of test writing and understanding, we strongly recommend that test scenarios have only one copy of any card whenever possible. If two copies of a card are provided, then **no** property name will be generated and you must add it manually yourself in the test setup:
+For ease of test writing and understanding, we strongly recommend that test scenarios have only one copy of any card whenever possible. If two cards share a title but have a different subtitle, then you must refer to them using the full title + subtitle property name. See the test of Luke's Lightsaber:
 
+```javascript
+beforeEach(function () {
+    this.setupTest({
+        phase: 'action',
+        player1: {
+            hand: ['lukes-lightsaber'],
+            groundArena: [{ card: 'luke-skywalker#jedi-knight', damage: 5, upgrades: ['shield'] }, { card: 'battlefield-marine', damage: 2 }, 'reinforcement-walker'],
+            leader: { card: 'luke-skywalker#faithful-friend', deployed: true }
+        }
+    });
+});
+
+it('should heal all damage from and give a shield to its holder when played, only if that unit is Luke Skywalker', function () {
+    this.player1.clickCard(this.lukesLightsaber);
+    expect(this.player1).toBeAbleToSelectExactly([this.lukeSkywalkerJediKnight, this.lukeSkywalkerFaithfulFriend, this.battlefieldMarine]);
+
+    this.player1.clickCard(this.lukeSkywalkerJediKnight);
+
+    expect(this.lukeSkywalkerJediKnight.damage).toBe(0);
+    expect(this.lukeSkywalkerJediKnight).toHaveExactUpgradeNames(['lukes-lightsaber', 'shield', 'shield']);
+});
+```
+
+If two copies of a card with identical names are provided, then **no** property name will be generated and you must add it manually yourself in the test setup using either `findCardByName()` or `findCardsByName()`. See examples below.
+
+Duplicate cards owned by different players (Avenger):
 ```javascript
 beforeEach(function () {
     this.setupTest({
@@ -108,5 +134,22 @@ beforeEach(function () {
 
     this.p1Avenger = this.player1.findCardByName('avenger#hunting-star-destroyer');
     this.p2Avenger = this.player2.findCardByName('avenger#hunting-star-destroyer');
+});
+```
+
+Duplicate cards owned by same player (Heroic Resolve):
+```javascript
+beforeEach(function () {
+    this.setupTest({
+        phase: 'action',
+        player1: {
+            groundArena: [{ card: 'frontier-atrt', upgrades: ['heroic-resolve', 'heroic-resolve'] }],
+        },
+        player2: {
+            groundArena: ['wampa', 'specforce-soldier']
+        }
+    });
+
+    [this.heroicResolve1, this.heroicResolve2] = this.player1.findCardsByName('heroic-resolve');
 });
 ```

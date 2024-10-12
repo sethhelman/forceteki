@@ -1,10 +1,12 @@
 name: Pull Request Checks
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
 jobs:
   lint:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
         - uses: actions/checkout@v4
@@ -16,6 +18,7 @@ jobs:
 
         - run: npx eslint --quiet
   test:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
         - uses: actions/checkout@v4
@@ -34,5 +37,4 @@ jobs:
         - if: ${{ steps.cache-card-data.outputs.cache-hit != 'true' }}
           run: npm run get-cards
 
-        # TODO: figure out why test-parallel gives weird error on test failure
-        - run: npm test
+        - run: npm run test-parallel

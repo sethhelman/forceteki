@@ -16,12 +16,11 @@ describe('Clan Wren Rescuer', function() {
 
             it('should give an experience token to a unit', function () {
                 this.player1.clickCard(this.clanWrenRescuer);
-                expect(this.player1).not.toHaveEnabledPromptButton('Pass ability');
+                expect(this.player1).not.toHavePassAbilityButton();
                 expect(this.player1).toBeAbleToSelectExactly([this.clanWrenRescuer, this.wampa, this.cartelSpacer]);
 
                 this.player1.clickCard(this.clanWrenRescuer);
-                expect(this.clanWrenRescuer.upgrades.length).toBe(1);
-                expect(this.clanWrenRescuer.upgrades[0].internalName).toBe('experience');
+                expect(this.clanWrenRescuer).toHaveExactUpgradeNames(['experience']);
             });
         });
     });

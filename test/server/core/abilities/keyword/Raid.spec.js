@@ -17,7 +17,7 @@ describe('Raid keyword', function() {
                 this.player1.clickCard(this.cantinaBraggart);
                 this.player1.clickCard(this.p2Base);
                 expect(this.cantinaBraggart.exhausted).toBe(true);
-                expect(this.cantinaBraggart.power).toBe(0);
+                expect(this.cantinaBraggart.getPower()).toBe(0);
                 expect(this.p2Base.damage).toBe(2);
 
                 this.cantinaBraggart.exhausted = false;
@@ -25,7 +25,7 @@ describe('Raid keyword', function() {
 
                 this.player1.clickCard(this.cantinaBraggart);
                 this.player1.clickCard(this.p2Base);
-                expect(this.cantinaBraggart.power).toBe(0);
+                expect(this.cantinaBraggart.getPower()).toBe(0);
                 expect(this.p2Base.damage).toBe(4);
             });
 
@@ -39,7 +39,7 @@ describe('Raid keyword', function() {
             });
         });
 
-        //TODO Test that Red Three raid buff stacks and is then removed when Red Three is out of play
+        // TODO Test that Red Three raid buff stacks and is then removed when Red Three is out of play
         // describe('When a unit with the Raid keyword and a gained Raid ability', function() {
         //     beforeEach(function () {
         //         this.setupTest({
@@ -62,6 +62,6 @@ describe('Raid keyword', function() {
         //     });
         // });
 
-        //TODO test that a card that attacked and then is bounced back to hand (i.e. Waylay) doesn't receive a second Raid buff
+        // TODO test that a card that attacked and then is bounced back to hand (i.e. Waylay) doesn't receive a second Raid buff
     });
 });

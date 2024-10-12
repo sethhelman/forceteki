@@ -15,9 +15,9 @@ import TriggeredAbility from '../../ability/TriggeredAbility';
 import { IConstantAbility } from '../../ongoingEffect/IConstantAbility';
 import { RestoreAbility } from '../../../abilities/keyword/RestoreAbility';
 import { ShieldedAbility } from '../../../abilities/keyword/ShieldedAbility';
-import { Attack } from '../../attack/Attack';
 import type { UnitCard } from '../CardTypes';
 import { SaboteurDefeatShieldsAbility } from '../../../abilities/keyword/SaboteurDefeatShieldsAbility';
+import { AmbushAbility } from '../../../abilities/keyword/AmbushAbility';
 
 export const UnitPropertiesCard = WithUnitProperties(InPlayCard);
 
@@ -37,19 +37,21 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
         // ************************************* FIELDS AND PROPERTIES *************************************
         public readonly defaultArena: Arena;
 
-        protected _upgrades: UpgradeCard[] = [];
-        private _attackKeywordAbilities: (TriggeredAbility | IConstantAbility)[] | null = null;
-        private _whenPlayedKeywordAbilities: (TriggeredAbility | IConstantAbility)[] | null = null;
+        protected _upgrades?: UpgradeCard[] = null;
 
-        public override get hp(): number {
-            return this.getModifiedStatValue(StatType.Hp);
-        }
+        private _attackKeywordAbilities?: (TriggeredAbility | IConstantAbility)[] = null;
+        private _whenPlayedKeywordAbilities?: (TriggeredAbility | IConstantAbility)[] = null;
 
-        public override get power(): number {
-            return this.getModifiedStatValue(StatType.Power);
+        /** If true, then this unit has taken sufficient damage to be defeated but not yet been removed from the field */
+        private _pendingDefeat? = null;
+
+        public get pendingDefeat() {
+            this.assertPropertyEnabled(this._pendingDefeat, 'pendingDefeat');
+            return this._pendingDefeat;
         }
 
         public get upgrades(): UpgradeCard[] {
+            this.assertPropertyEnabled(this._upgrades, 'upgrades');
             return this._upgrades;
         }
 
@@ -57,8 +59,12 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
             return (this as Card) === (this.activeAttack?.attacker as Card);
         }
 
+        public isUpgraded(): boolean {
+            return this.upgrades.length > 0;
+        }
+
         public hasShield(): boolean {
-            return this._upgrades.some((card) => card.isShield());
+            return this.upgrades.some((card) => card.isShield());
         }
 
         // ****************************************** CONSTRUCTOR ******************************************
@@ -84,8 +90,26 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
             this.defaultActions.push(new InitiateAttackAction(this));
         }
 
+        // ****************************************** PROPERTY HELPERS ******************************************
+        public override getHp(): number {
+            return this.getModifiedStatValue(StatType.Hp);
+        }
+
+        public override getPower(): number {
+            return this.getModifiedStatValue(StatType.Power);
+        }
+
         public override isUnit(): this is UnitCard {
             return true;
+        }
+
+        protected setUpgradesEnabled(enabledStatus: boolean) {
+            this._upgrades = enabledStatus ? [] : null;
+        }
+
+        protected override setDamageEnabled(enabledStatus: boolean): void {
+            super.setDamageEnabled(enabledStatus);
+            this._pendingDefeat = enabledStatus ? false : null;
         }
 
         // ***************************************** ATTACK HELPERS *****************************************
@@ -94,7 +118,7 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
          * Returns true if so.
          */
         public effectsPreventAttack(target: Card) {
-            if (this.hasEffect(EffectName.CannotAttackBase) && target.isBase()) {
+            if (this.hasOngoingEffect(EffectName.CannotAttackBase) && target.isBase()) {
                 return true;
             }
 
@@ -110,7 +134,7 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
             let triggeredAbilities = super.getTriggeredAbilities();
 
             // add any temporarily registered attack abilities from keywords
-            if (this._attackKeywordAbilities !== null || this.isBlank()) { //TODO: Why is this isBlank check even here?
+            if (this._attackKeywordAbilities !== null || this.isBlank()) { // TODO: Why is this isBlank check even here?
                 triggeredAbilities = triggeredAbilities.concat(this._attackKeywordAbilities.filter((ability) => ability instanceof TriggeredAbility));
             }
             if (this._whenPlayedKeywordAbilities !== null || this.isBlank()) {
@@ -136,6 +160,12 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
         }
 
         // *************************************** KEYWORD HELPERS ***************************************
+        protected override cleanupBeforeMove(nextLocation: Location) {
+            if (this.isInPlay() && this.isAttacking()) {
+                this.unregisterAttackKeywords();
+            }
+        }
+
         /**
          * For the "numeric" keywords (e.g. Raid), finds all instances of that keyword that are active
          * for this card and adds up the total of their effect values.
@@ -170,13 +200,12 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
                 this._whenPlayedKeywordAbilities.push(shieldedAbility);
             }
 
-            // TODO: uncomment once Veld does engine work
             // ambush
-            // if (this.hasSomeKeyword(KeywordName.Ambush)) {
-            //     const ambushAbility = this.createTriggeredAbility(AmbushAbility.buildAmbushAbilityProperties());
-            //     ambushAbility.registerEvents();
-            //     this._whenPlayedKeywordAbilities.push(ambushAbility);
-            // }
+            if (this.hasSomeKeyword(KeywordName.Ambush)) {
+                const ambushAbility = this.createTriggeredAbility(AmbushAbility.buildAmbushAbilityProperties());
+                ambushAbility.registerEvents();
+                this._whenPlayedKeywordAbilities.push(ambushAbility);
+            }
         }
 
         /**
@@ -251,14 +280,25 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
         }
 
         // ***************************************** STAT HELPERS *****************************************
+        public override addDamage(amount: number): void {
+            super.addDamage(amount);
+
+            this.checkDefeated();
+        }
+
+        public checkDefeated() {
+            if (this.damage >= this.getHp() && !this._pendingDefeat) {
+                this.owner.defeatCard(this);
+                this._pendingDefeat = true;
+            }
+        }
+
         private getModifiedStatValue(statType: StatType, floor = true, excludeModifiers = []) {
             const wrappedModifiers = this.getStatModifiers(excludeModifiers);
 
             const baseStatValue = StatsModifierWrapper.fromPrintedValues(this);
 
             const stat = wrappedModifiers.reduce((total, wrappedModifier) => total + wrappedModifier.modifier[statType], baseStatValue.modifier[statType]);
-
-            // TODO EFFECTS: need a check around here somewhere to defeat the unit if effects have brought hp to 0
 
             return floor ? Math.max(0, stat) : stat;
         }
@@ -271,9 +311,9 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
 
             let rawEffects;
             if (typeof exclusions === 'function') {
-                rawEffects = this.getEffects().filter((effect) => !exclusions(effect));
+                rawEffects = this.getOngoingEffects().filter((effect) => !exclusions(effect));
             } else {
-                rawEffects = this.getEffects().filter((effect) => !exclusions.includes(effect.type));
+                rawEffects = this.getOngoingEffects().filter((effect) => !exclusions.includes(effect.type));
             }
 
             const modifierEffects: IOngoingCardEffect[] = rawEffects.filter((effect) => effect.type === EffectName.ModifyStats);
@@ -310,13 +350,15 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
          * @param {UpgradeCard} upgrade
          */
         public unattachUpgrade(upgrade) {
-            this._upgrades = this.upgrades.filter((card) => card.uuid !== upgrade.uuid);
+            this.assertPropertyEnabled(this._upgrades, 'upgrades');
+            this._upgrades = this._upgrades.filter((card) => card.uuid !== upgrade.uuid);
         }
 
         /**
          * Add the passed card to this card's upgrade list. Upgrade must already be moved to the correct arena.
          */
         public attachUpgrade(upgrade) {
+            this.assertPropertyEnabled(this._upgrades, 'upgrades');
             Contract.assertEqual(upgrade.location, this.location);
             Contract.assertTrue(this.controller.getCardPile(this.location).includes(upgrade));
 

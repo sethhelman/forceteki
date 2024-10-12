@@ -6,14 +6,14 @@ export enum AssertMode {
 }
 
 interface IContractCheckImpl {
-    fail(message: string): void;
+    fail(message: string): never;
 }
 
 class AssertContractCheckImpl implements IContractCheckImpl {
     public constructor(private readonly breakpoint: boolean) {
     }
 
-    public fail(message: string): void {
+    public fail(message: string): never {
         if (this.breakpoint) {
             debugger;
         }
@@ -52,6 +52,12 @@ export function assertNotEqual<T>(val1: T, val2: T, message?: string) {
 export function assertNotNullLike<T>(val: T, message?: string): asserts val is NonNullable<T> {
     if (val == null) {
         contractCheckImpl.fail(message ?? `Null-like object value: ${val}`);
+    }
+}
+
+export function assertIsNullLike<T>(val: T, message?: string): asserts val is null | undefined {
+    if (val != null) {
+        contractCheckImpl.fail(message ?? `Expected null-like object value but found: ${val}`);
     }
 }
 
@@ -97,6 +103,13 @@ export function assertHasKey<TKey>(map: Map<TKey, any>, key: TKey, message?: str
     }
 }
 
+export function assertDoesNotHaveKey<TKey>(map: Map<TKey, any>, key: TKey, message?: string): asserts map is NonNullable<Map<TKey, any>> {
+    assertNotNullLike(map);
+    if (map.has(key)) {
+        contractCheckImpl.fail(message ?? `Map should not contain key ${key} but it does`);
+    }
+}
+
 export function assertPositiveNonZero(val: number, message?: string): asserts val is NonNullable<number> {
     assertNotNullLikeOrNan(val);
     if (val <= 0) {
@@ -111,6 +124,6 @@ export function assertNonNegative(val: number, message?: string): asserts val is
     }
 }
 
-export function fail(message: string): void {
+export function fail(message: string): never {
     contractCheckImpl.fail(message);
 }

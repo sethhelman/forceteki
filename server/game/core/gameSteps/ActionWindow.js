@@ -92,13 +92,14 @@ class ActionWindow extends UiPrompt {
         return completed;
     }
 
-    // TODO: add claim initiative option here
     /** @override */
     activePrompt() {
         let buttons = [
-            { text: 'Pass', arg: 'pass' },
-            { text: 'Claim Initiative', arg: 'claimInitiative' },
+            { text: 'Pass', arg: 'pass' }
         ];
+        if (!this.game.isInitiativeClaimed) {
+            buttons.push({ text: 'Claim Initiative', arg: 'claimInitiative' });
+        }
         if (this.game.manualMode) {
             buttons.unshift({ text: 'Manual Action', arg: 'manual' });
         }
@@ -141,13 +142,14 @@ class ActionWindow extends UiPrompt {
                 return true;
 
             default:
-                Contract.fail(`Unknown menu choice: ${choice}`);
-                return false;
+                Contract.fail(`Unknown menu command: ${choice}`);
         }
     }
 
-    pass() {
-        this.game.addMessage('{0} passes', this.activePlayer);
+    pass(showMessage = true) {
+        if (showMessage) {
+            this.game.addMessage('{0} passes', this.activePlayer);
+        }
 
         if (this.prevPlayerPassed) {
             // in the (unusual) case that both players pass without claiming initiative, phase ends and initiative stays where it is
@@ -174,9 +176,11 @@ class ActionWindow extends UiPrompt {
     }
 
     claimInitiative() {
+        this.game.addMessage('{0} claims initiative and passes', this.activePlayer);
         this.game.claimInitiative(this.activePlayer);
 
-        this.complete();
+        // Calls this.complete()
+        this.pass(false);
     }
 
     /** @override */

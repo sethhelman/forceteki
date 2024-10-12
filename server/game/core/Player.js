@@ -7,7 +7,6 @@ const GameSystems = require('../gameSystems/GameSystemLibrary');
 const { PlayableLocation } = require('./PlayableLocation');
 const { PlayerPromptState } = require('./PlayerPromptState.js');
 const Contract = require('./utils/Contract');
-
 const {
     AbilityType,
     CardType,
@@ -17,16 +16,18 @@ const {
     RelativePlayer,
     Aspect,
     WildcardLocation,
-    PlayType
+    PlayType,
+    KeywordName
 } = require('./Constants');
 
 const EnumHelpers = require('./utils/EnumHelpers');
-const Card = require('./card/Card');
 const Helpers = require('./utils/Helpers');
 const AbilityHelper = require('../AbilityHelper');
 const { BaseCard } = require('./card/BaseCard');
 const { LeaderCard } = require('./card/LeaderCard');
 const { LeaderUnitCard } = require('./card/LeaderUnitCard');
+const { Card } = require('./card/Card');
+const { PlayableOrDeployableCard } = require('./card/baseClasses/PlayableOrDeployableCard');
 
 class Player extends GameObject {
     constructor(id, user, owner, game, clockDetails) {
@@ -69,6 +70,7 @@ class Player extends GameObject {
 
         this.playableLocations = [
             new PlayableLocation(PlayType.PlayFromHand, this, Location.Hand),
+            new PlayableLocation(PlayType.Smuggle, this, Location.Resource)
         ];
 
         this.limitedPlayed = 0;
@@ -135,20 +137,40 @@ class Player extends GameObject {
     }
 
     /**
-     * Get all units in designated play arena(s) owned by this player
+     * Get all units in designated play arena(s) controlled by this player
      * @param { WildcardLocation.AnyArena | Location.GroundArena | Location.SpaceArena } arena Arena to select units from
      */
     getUnitsInPlay(arena = WildcardLocation.AnyArena, cardCondition = (card) => true) {
         return this.getArenaCards(arena).filter((card) => card.isUnit() && cardCondition(card));
     }
 
+
     /**
-     * Get all cards in designated play arena(s) other than the passed card owned by this player.
+     * Get all units in designated play arena(s) controlled by this player
+     * @param { Aspect } aspect Aspect needed for units
+     * @param { WildcardLocation.AnyArena | Location.GroundArena | Location.SpaceArena } arena Arena to select units from
+     */
+    getUnitsInPlayWithAspect(aspect, arena = WildcardLocation.AnyArena, cardCondition = (card) => true) {
+        return this.getArenaCards(arena).filter((card) => card.isUnit() && card.hasSomeAspect(aspect) && cardCondition(card));
+    }
+
+    /**
+     * Get all cards in designated play arena(s) other than the passed card controlled by this player.
      * @param { any } ignoreUnit Unit to filter from the returned results
      * @param { WildcardLocation.AnyArena | Location.GroundArena | Location.SpaceArena } arena Arena to select units from
      */
     getOtherUnitsInPlay(ignoreUnit, arena = WildcardLocation.AnyArena, cardCondition = (card) => true) {
         return this.getArenaCards(arena).filter((card) => card.isUnit() && card !== ignoreUnit && cardCondition(card));
+    }
+
+    /**
+     * Get all cards in designated play arena(s) other than the passed card controlled by this player.
+     * @param { any } ignoreUnit Unit to filter from the returned results
+     * @param { Aspect } aspect Aspect needed for units
+     * @param { WildcardLocation.AnyArena | Location.GroundArena | Location.SpaceArena } arena Arena to select units from
+     */
+    getOtherUnitsInPlayWithAspect(ignoreUnit, aspect, arena = WildcardLocation.AnyArena, cardCondition = (card) => true) {
+        return this.getArenaCards(arena).filter((card) => card.isUnit() && card !== ignoreUnit && card.hasSomeAspect(aspect) && cardCondition(card));
     }
 
     getResourceCards() {
@@ -323,7 +345,7 @@ class Player extends GameObject {
      */
     isCardInPlayableLocation(card, playingType = null) {
         // use an effect check to see if this card is in an out of play location but can still be played from
-        if (card.getEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card)).length > 0) {
+        if (card.getOngoingEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card)).length > 0) {
             return true;
         }
 
@@ -333,8 +355,8 @@ class Player extends GameObject {
     }
 
     findPlayType(card) {
-        if (card.getEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card)).length > 0) {
-            let effects = card.getEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card));
+        if (card.getOngoingEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card)).length > 0) {
+            let effects = card.getOngoingEffectValues(EffectName.CanPlayFromOutOfPlay).filter((a) => a.player(this, card));
             return effects[effects.length - 1].playType || PlayType.PlayFromHand;
         }
 
@@ -359,6 +381,17 @@ class Player extends GameObject {
     //         return playCard !== card && (playCard.id === card.id || playCard.name === card.name);
     //     });
     // }
+
+    /**
+     * Returns ths top card of the player's deck
+     * @returns {Card | null} the Card,© or null if the deck is empty
+     */
+    getTopCardOfDeck() {
+        if (this.drawDeck.length > 0) {
+            return this.drawDeck[0];
+        }
+        return null;
+    }
 
     /**
      * Draws the passed number of cards from the top of the conflict deck into this players hand, shuffling and deducting honor if necessary
@@ -431,7 +464,7 @@ class Player extends GameObject {
     //     } else {
     //         let refillAmount = 1;
     //         if (province) {
-    //             let amount = province.mostRecentEffect(EffectName.RefillProvinceTo);
+    //             let amount = province.mostRecentOngoingEffect(EffectName.RefillProvinceTo);
     //             if (amount) {
     //                 refillAmount = amount;
     //             }
@@ -604,12 +637,29 @@ class Player extends GameObject {
     getAdjustedCost(playingType, card, target, ignoreType = false) {
         // if any aspect penalties, check modifiers for them separately
         let aspectPenaltiesTotal = 0;
-        let penaltyAspects = this.getPenaltyAspects(card.aspects);
+        let aspects;
+        let cost;
+
+        switch (playingType) {
+            case PlayType.PlayFromHand:
+                aspects = card.aspects;
+                cost = card.cost;
+                break;
+            case PlayType.Smuggle:
+                const smuggleInstance = card.getKeywordWithCostValues(KeywordName.Smuggle);
+                aspects = smuggleInstance.aspects;
+                cost = smuggleInstance.cost;
+                break;
+            default:
+                Contract.fail(`Invalid Play Type ${playingType}`);
+        }
+
+        let penaltyAspects = this.getPenaltyAspects(aspects);
         for (const aspect of penaltyAspects) {
             aspectPenaltiesTotal += this.runAdjustersForCostType(playingType, 2, card, target, ignoreType, aspect);
         }
 
-        let penalizedCost = card.cost + aspectPenaltiesTotal;
+        let penalizedCost = cost + aspectPenaltiesTotal;
         return this.runAdjustersForCostType(playingType, penalizedCost, card, target, ignoreType);
     }
 
@@ -654,12 +704,12 @@ class Player extends GameObject {
     //     }
 
     //     const playerCostToTargetEffects = abilitySource.controller
-    //         ? abilitySource.controller.getEffectValues(EffectName.PlayerFateCostToTargetCard)
+    //         ? abilitySource.controller.getOngoingEffectValues(EffectName.PlayerFateCostToTargetCard)
     //         : [];
 
     //     let targetCost = 0;
     //     for (const target of targets) {
-    //         for (const cardCostToTarget of target.getEffectValues(EffectName.FateCostToTarget)) {
+    //         for (const cardCostToTarget of target.getOngoingEffectValues(EffectName.FateCostToTarget)) {
     //             if (
     //                 // no card type restriction
     //                 (!cardCostToTarget.cardType ||
@@ -816,7 +866,7 @@ class Player extends GameObject {
      * @param {Location} location
      */
     isLegalLocationForCardType(cardType, location) {
-        //if we're trying to go into an additional pile, we're probably supposed to be there
+        // if we're trying to go into an additional pile, we're probably supposed to be there
         if (this.additionalPiles[location]) {
             return true;
         }
@@ -836,7 +886,7 @@ class Player extends GameObject {
     }
 
     // get skillModifier() {
-    //     return this.getEffectValues(EffectName.ChangePlayerSkillModifier).reduce((total, value) => total + value, 0);
+    //     return this.getOngoingEffectValues(EffectName.ChangePlayerSkillModifier).reduce((total, value) => total + value, 0);
     // }
 
     /**
@@ -856,7 +906,7 @@ class Player extends GameObject {
     }
 
     /**
-     * Returns the number of resources available to spend
+     * Returns the number of exhausted resources
      */
     countExhaustedResources() {
         return this.resources.reduce((count, card) => count += card.exhausted, 0);
@@ -875,10 +925,37 @@ class Player extends GameObject {
     /**
      * Exhaust the specified number of resources
      */
-    exhaustResources(count) {
-        let readyResources = this.resources.filter((card) => !card.exhausted);
-        for (let i = 0; i < Math.min(count, readyResources.length); i++) {
-            readyResources[i].exhausted = true;
+    // TODO: Create an ExhaustOrReadyResourcesSystem
+    exhaustResources(count, priorityResources = []) {
+        const readyPriorityResources = priorityResources.filter((resource) => !resource.exhausted);
+        const regularResourcesToReady = count - this.readyResourcesInList(readyPriorityResources, count);
+
+        if (regularResourcesToReady > 0) {
+            const readyRegularResources = this.resources.filter((card) => !card.exhausted);
+            this.readyResourcesInList(readyRegularResources, regularResourcesToReady);
+        }
+    }
+
+    /**
+     * Returns how many resources were readied
+     */
+    readyResourcesInList(resources, count) {
+        if (count < resources.length) {
+            resources.slice(0, count).forEach((resource) => resource.exhaust());
+            return count;
+        }
+
+        resources.forEach((resource) => resource.exhaust());
+        return resources.length;
+    }
+
+    /**
+     * Ready the specified number of resources
+     */
+    readyResources(count) {
+        let exhaustedResources = this.resources.filter((card) => card.exhausted);
+        for (let i = 0; i < Math.min(count, exhaustedResources.length); i++) {
+            exhaustedResources[i].exhausted = false;
         }
     }
 
@@ -890,8 +967,7 @@ class Player extends GameObject {
             return;
         }
 
-        // TODO: does this get resolved in the right place in the attack process?
-        this.game.openEventWindow(GameSystems.defeat().generateEvent(card, this.game.getFrameworkContext()));
+        this.game.addSubwindowEvents(GameSystems.defeat({ target: card }).generateEvent(card, this.game.getFrameworkContext()));
     }
 
     /**
@@ -1112,19 +1188,19 @@ class Player extends GameObject {
 
         if (activePlayer === this) {
             return (
-                this.getEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Any) ||
-                this.getEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Self)
+                this.getOngoingEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Any) ||
+                this.getOngoingEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Self)
             );
         }
 
         return (
-            this.getEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Any) ||
-            this.getEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Opponent)
+            this.getOngoingEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Any) ||
+            this.getOngoingEffectValues(EffectName.ShowTopCard).includes(RelativePlayer.Opponent)
         );
     }
 
     // eventsCannotBeCancelled() {
-    //     return this.hasEffect(EffectName.EventsCannotBeCancelled);
+    //     return this.hasOngoingEffect(EffectName.EventsCannotBeCancelled);
     // }
 
     // // TODO STATE SAVE: what stats are we interested in?

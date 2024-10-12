@@ -2,8 +2,9 @@
 /* eslint camelcase: 0, no-invalid-this: 0 */
 
 const { select } = require('underscore');
-const { GameMode } = require('../../build/GameMode.js');
-const Contract = require('../../build/game/core/utils/Contract.js');
+const { GameMode } = require('../../server/GameMode.js');
+const Contract = require('../../server/game/core/utils/Contract.js');
+const TestSetupError = require('./TestSetupError.js');
 const { checkNullCard, formatPrompt, getPlayerPromptState, promptStatesEqual, stringArraysEqual } = require('./Util.js');
 
 require('./ObjectFormatters.js');
@@ -16,10 +17,9 @@ const deckBuilder = new DeckBuilder();
 
 // TODO: why not just call these directly
 const ProxiedGameFlowWrapperMethods = [
-    'eachPlayerInFirstPlayerOrder',
+    'allPlayersInInitiativeOrder',
     'startGame',
     'keepStartingHand',
-    'keepConflict',
     'skipSetupPhase',
     'selectInitiativePlayer',
     'moveToNextActionPhase',
@@ -175,6 +175,131 @@ var customMatchers = {
                         } else {
                             result.message += 'but it had no buttons';
                         }
+                    }
+                }
+
+                result.message += `\n\n${generatePromptHelpMessage(actual)}`;
+
+                return result;
+            }
+        };
+    },
+    toHavePassAbilityButton: function (util, customEqualityMatchers) {
+        return {
+            compare: function (actual) {
+                var buttons = actual.currentPrompt().buttons;
+                var result = {};
+
+                result.pass = buttons.some(
+                    (button) => !button.disabled && util.equals(button.text, 'Pass ability', customEqualityMatchers)
+                );
+
+                if (result.pass) {
+                    result.message = `Expected ${actual.name} not to have enabled prompt button 'Pass ability' but it did.`;
+                } else {
+                    result.message = `Expected ${actual.name} to have enabled prompt button 'Pass ability' `;
+
+                    if (buttons.length > 0) {
+                        var buttonText = buttons.map(
+                            (button) => '[' + button.text + (button.disabled ? ' (disabled) ' : '') + ']'
+                        ).join('\n');
+                        result.message += `but it had buttons:\n${buttonText}`;
+                    } else {
+                        result.message += 'but it had no buttons';
+                    }
+                }
+
+                result.message += `\n\n${generatePromptHelpMessage(actual)}`;
+
+                return result;
+            }
+        };
+    },
+    toHaveChooseNoTargetButton: function (util, customEqualityMatchers) {
+        return {
+            compare: function (actual) {
+                var buttons = actual.currentPrompt().buttons;
+                var result = {};
+
+                result.pass = buttons.some(
+                    (button) => !button.disabled &&
+                        (util.equals(button.text, 'Choose no target', customEqualityMatchers) || util.equals(button.text, 'Choose no targets', customEqualityMatchers))
+                );
+
+                if (result.pass) {
+                    result.message = `Expected ${actual.name} not to have enabled prompt button 'Choose no target(s)' but it did.`;
+                } else {
+                    result.message = `Expected ${actual.name} to have enabled prompt button 'Choose no target(s)' `;
+
+                    if (buttons.length > 0) {
+                        var buttonText = buttons.map(
+                            (button) => '[' + button.text + (button.disabled ? ' (disabled) ' : '') + ']'
+                        ).join('\n');
+                        result.message += `but it had buttons:\n${buttonText}`;
+                    } else {
+                        result.message += 'but it had no buttons';
+                    }
+                }
+
+                result.message += `\n\n${generatePromptHelpMessage(actual)}`;
+
+                return result;
+            }
+        };
+    },
+    toHavePassAttackButton: function (util, customEqualityMatchers) {
+        return {
+            compare: function (actual) {
+                var buttons = actual.currentPrompt().buttons;
+                var result = {};
+
+                result.pass = buttons.some(
+                    (button) => !button.disabled && util.equals(button.text, 'Pass attack', customEqualityMatchers)
+                );
+
+                if (result.pass) {
+                    result.message = `Expected ${actual.name} not to have enabled prompt button 'Pass attack' but it did.`;
+                } else {
+                    result.message = `Expected ${actual.name} to have enabled prompt button 'Pass attack' `;
+
+                    if (buttons.length > 0) {
+                        var buttonText = buttons.map(
+                            (button) => '[' + button.text + (button.disabled ? ' (disabled) ' : '') + ']'
+                        ).join('\n');
+                        result.message += `but it had buttons:\n${buttonText}`;
+                    } else {
+                        result.message += 'but it had no buttons';
+                    }
+                }
+
+                result.message += `\n\n${generatePromptHelpMessage(actual)}`;
+
+                return result;
+            }
+        };
+    },
+    toHaveClaimInitiativeAbilityButton: function (util, customEqualityMatchers) {
+        return {
+            compare: function (actual) {
+                var buttons = actual.currentPrompt().buttons;
+                var result = {};
+
+                result.pass = buttons.some(
+                    (button) => !button.disabled && util.equals(button.text, 'Claim Initiative', customEqualityMatchers)
+                );
+
+                if (result.pass) {
+                    result.message = `Expected ${actual.name} not to have enabled prompt button 'Claim Initiative' but it did.`;
+                } else {
+                    result.message = `Expected ${actual.name} to have enabled prompt button 'Claim Initiative' `;
+
+                    if (buttons.length > 0) {
+                        var buttonText = buttons.map(
+                            (button) => '[' + button.text + (button.disabled ? ' (disabled) ' : '') + ']'
+                        ).join('\n');
+                        result.message += `but it had buttons:\n${buttonText}`;
+                    } else {
+                        result.message += 'but it had no buttons';
                     }
                 }
 
@@ -344,7 +469,7 @@ var customMatchers = {
             }
         };
     },
-    toHaveAvailableActionWhenClickedInActionPhaseBy: function () {
+    toHaveAvailableActionWhenClickedBy: function () {
         return {
             compare: function (card, player) {
                 checkNullCard(card);
@@ -390,13 +515,30 @@ var customMatchers = {
             }
         };
     },
+    toHaveInitiative: function () {
+        return {
+            compare: function (player) {
+                let result = {};
+
+                result.pass = player.hasInitiative;
+
+                if (result.pass) {
+                    result.message = `Expected ${player.name} not to have initiative but it did.`;
+                } else {
+                    result.message = `Expected ${player.name} to have initiative but it did not.`;
+                }
+
+                return result;
+            }
+        };
+    },
     toHavePassAbilityPrompt: function () {
         return {
             compare: function (player, abilityText) {
                 var result = {};
 
                 if (abilityText == null) {
-                    throw new Error('toHavePassAbilityPrompt requires an abilityText parameter');
+                    throw new TestSetupError('toHavePassAbilityPrompt requires an abilityText parameter');
                 }
 
                 const passPromptText = `Trigger the ability '${abilityText}' or pass`;
@@ -496,7 +638,7 @@ var customMatchers = {
         return {
             compare: function (card, location, player = null) {
                 if (typeof card === 'string') {
-                    throw new Error('This expectation requires a card object, not a name');
+                    throw new TestSetupError('This expectation requires a card object, not a name');
                 }
                 let result = {};
 
@@ -529,11 +671,10 @@ var customMatchers = {
                 let result = {};
 
                 if (!card.upgrades) {
-                    throw new Error(`Card ${card.internalName} does not have an upgrades property`);
+                    throw new TestSetupError(`Card ${card.internalName} does not have an upgrades property`);
                 }
                 if (!Array.isArray(upgradeNames)) {
-                    // TODO: create a "TestError" class to make it easier to tell when an error is coming from the test infra
-                    throw new Error(`Parameter upgradeNames is not an array: ${upgradeNames}`);
+                    throw new TestSetupError(`Parameter upgradeNames is not an array: ${upgradeNames}`);
                 }
 
                 const actualUpgradeNames = card.upgrades.map((upgrade) => upgrade.internalName);
@@ -551,6 +692,34 @@ var customMatchers = {
                 return result;
             }
         };
+    },
+    // TODO: could add a field to expect enabled or disabled per button
+    toHaveExactPromptButtons: function () {
+        return {
+            compare: function (player, buttons) {
+                let result = {};
+
+                if (!Array.isArray(buttons)) {
+                    throw new TestSetupError(`Parameter 'buttons' is not an array: ${buttons}`);
+                }
+
+                const actualButtons = player.currentPrompt().buttons.map((button) => button.text);
+
+                const expectedButtons = [...buttons];
+
+                result.pass = stringArraysEqual(actualButtons, expectedButtons);
+
+                if (result.pass) {
+                    result.message = `Expected ${player.name} not to have this exact set of buttons but it does: ${expectedButtons.join(', ')}`;
+                } else {
+                    result.message = `Expected ${player.name} to have this exact set of buttons: '${expectedButtons.join(', ')}'`;
+                }
+
+                result.message += `\n\n${generatePromptHelpMessage(player)}`;
+
+                return result;
+            }
+        };
     }
 };
 
@@ -564,20 +733,30 @@ beforeEach(function () {
 
 global.integration = function (definitions) {
     describe('- integration -', function () {
+        /**
+         * @type {SwuTestContextRef}
+         */
+        const contextRef = {
+            context: null, setupTest: function (options) {
+                this.context.setupTest(options);
+            }
+        };
         beforeEach(function () {
-            this.flow = new GameFlowWrapper();
+            const newContext = {};
+            contextRef.context = newContext;
+            this.flow = newContext.flow = new GameFlowWrapper();
 
-            this.game = this.flow.game;
-            this.player1Object = this.game.getPlayerByName('player1');
-            this.player2Object = this.game.getPlayerByName('player2');
-            this.player1 = this.flow.player1;
-            this.player2 = this.flow.player2;
+            this.game = newContext.game = this.flow.game;
+            this.player1Object = newContext.player1Object = this.game.getPlayerByName('player1');
+            this.player2Object = newContext.player2Object = this.game.getPlayerByName('player2');
+            this.player1 = newContext.player1 = this.flow.player1;
+            this.player2 = newContext.player2 = this.flow.player2;
 
             ProxiedGameFlowWrapperMethods.forEach((method) => {
-                this[method] = (...args) => this.flow[method].apply(this.flow, args);
+                this[method] = newContext[method] = (...args) => this.flow[method].apply(this.flow, args);
             });
 
-            this.buildDeck = function (faction, cards) {
+            this.buildDeck = newContext.buildDeck = function (faction, cards) {
                 return deckBuilder.buildDeck(faction, cards);
             };
 
@@ -585,8 +764,8 @@ global.integration = function (definitions) {
              * Factory method. Creates a new simulation of a game.
              * @param {Object} [options = {}] - specifies the state of the game
              */
-            this.setupTest = function (options = {}) {
-                //Set defaults
+            this.setupTest = newContext.setupTest = function (options = {}) {
+                // Set defaults
                 if (!options.player1) {
                     options.player1 = {};
                 }
@@ -594,6 +773,12 @@ global.integration = function (definitions) {
                     options.player2 = {};
                 }
                 this.game.gameMode = GameMode.Premier;
+
+                if (options.player1.hasInitiative) {
+                    this.game.initiativePlayer = this.player1Object;
+                } else if (options.player2.hasInitiative) {
+                    this.game.initiativePlayer = this.player2Object;
+                }
 
                 // pass decklists to players. they are initialized into real card objects in the startGame() call
                 const [deck1, namedCards1] = deckBuilder.customDeck(1, options.player1);
@@ -612,11 +797,11 @@ global.integration = function (definitions) {
                     this.player1.player.promptedActionWindows[options.phase] = true;
                     this.player2.player.promptedActionWindows[options.phase] = true;
 
-                    //Advance the phases to the specified
+                    // Advance the phases to the specified
                     this.advancePhases(options.phase);
                 }
 
-                //Player stats
+                // Player stats
                 this.player1.damageToBase = options.player1.damageToBase ?? 0;
                 this.player2.damageToBase = options.player2.damageToBase ?? 0;
 
@@ -658,24 +843,21 @@ global.integration = function (definitions) {
                     [this.player1, this.player2],
                     [namedCards1, namedCards2]
                 );
-                this.cardPropertyNames = [];
+                this.cardPropertyNames = newContext.cardPropertyNames = [];
                 cardNamesAsProperties.forEach((card) => {
-                    this[card.propertyName] = card.cardObj;
+                    this[card.propertyName] = newContext[card.propertyName] = card.cardObj;
                     this.cardPropertyNames.push(card.propertyName);
                 });
 
-                this.p1Base = this.player1.base;
-                this.p1Leader = this.player1.leader;
-                this.p2Base = this.player2.base;
-                this.p2Leader = this.player2.leader;
+                this.p1Base = newContext.p1Base = this.player1.base;
+                this.p1Leader = newContext.p1Leader = this.player1.leader;
+                this.p2Base = newContext.p2Base = this.player2.base;
+                this.p2Leader = newContext.p2Leader = this.player2.leader;
 
-                // TODO: re-enable when we have tests to do during setup phase
-                // if (options.phase !== 'setup') {
-                //     this.game.resolveGameState(true);
-                // }
+                this.game.resolveGameState(true);
             };
         });
 
-        definitions();
+        definitions(contextRef);
     });
 };

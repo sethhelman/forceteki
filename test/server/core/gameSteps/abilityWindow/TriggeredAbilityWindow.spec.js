@@ -15,7 +15,7 @@ describe('Simultaneous triggers', function() {
 
             it('should prompt the active player(controller of Sabine) which player\'s triggers to resolve first', function () {
                 this.player1.clickCard(this.sabineWren);
-                //Don't need to click Chewbacca due to sentinel
+                // Don't need to click Chewbacca due to sentinel
                 expect(this.player1).toHavePrompt('Both players have triggered abilities in response. Choose a player to resolve all of their abilities first:');
                 expect(this.player2).toHavePrompt('Waiting for opponent to choose a player to resolve their triggers first');
 
@@ -32,7 +32,7 @@ describe('Simultaneous triggers', function() {
 
             it('should have the triggers work in either order', function () {
                 this.player1.clickCard(this.sabineWren);
-                //Don't need to click Chewbacca due to sentinel
+                // Don't need to click Chewbacca due to sentinel
                 expect(this.player1).toHavePrompt('Both players have triggered abilities in response. Choose a player to resolve all of their abilities first:');
                 expect(this.player2).toHavePrompt('Waiting for opponent to choose a player to resolve their triggers first');
 
@@ -48,7 +48,6 @@ describe('Simultaneous triggers', function() {
             });
         });
 
-        // TODO: test a unit that triggers on other units being defeated, being defeated at the same time as other units
         describe('Two units with a when defeated ability killing each other', function () {
             beforeEach(function () {
                 this.setupTest({
