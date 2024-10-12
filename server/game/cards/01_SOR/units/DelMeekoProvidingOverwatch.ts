@@ -1,6 +1,6 @@
-import AbilityHelper from '../../AbilityHelper';
-import { NonLeaderUnitCard } from '../../core/card/NonLeaderUnitCard';
-import { CardType, RelativePlayer, Trait } from '../../core/Constants';
+import AbilityHelper from '../../../AbilityHelper';
+import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
+import { CardType, RelativePlayer } from '../../../core/Constants';
 
 export default class DelMeekoProvidingOverwatch extends NonLeaderUnitCard {
     protected override getImplementationId() {
