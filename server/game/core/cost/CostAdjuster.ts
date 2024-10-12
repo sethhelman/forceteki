@@ -14,7 +14,6 @@ export enum CostAdjustDirection {
 // TODO THIS PR: cards to test
 // - Guardian of the Whills
 // - Force Choke
-// - Lando leader
 
 export interface ICostAdjusterProperties {
     cardTypeFilter: CardTypeFilter;
