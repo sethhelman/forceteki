@@ -673,6 +673,10 @@ class PlayerInteractionWrapper {
         return card;
     }
 
+    readyResources(number) {
+        this.player.readyResources(number);
+    }
+
     playCharacterFromHand(card, fate = 0) {
         if (typeof card === 'string') {
             card = this.findCardByName(card, 'hand');
