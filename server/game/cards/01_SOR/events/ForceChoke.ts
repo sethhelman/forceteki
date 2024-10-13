@@ -18,11 +18,14 @@ export default class ForceChoke extends EventCard {
         });
 
         this.setEventAbility({
-            title: 'Deal 5 damage to a non-vehicle unit',
+            title: 'Deal 5 damage to a non-vehicle unit. That unit\'s controller draws a card.',
             targetResolver: {
                 cardTypeFilter: WildcardCardType.Unit,
                 cardCondition: (card) => !card.hasSomeTrait(Trait.Vehicle),
-                immediateEffect: AbilityHelper.immediateEffects.damage({ amount: 5 })
+                immediateEffect: AbilityHelper.immediateEffects.simultaneous([
+                    AbilityHelper.immediateEffects.damage({ amount: 5 }),
+                    AbilityHelper.immediateEffects.draw((context) => ({ target: context.target.controller }))
+                ])
             }
         });
     }
