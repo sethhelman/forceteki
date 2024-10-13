@@ -105,7 +105,6 @@ export enum TargetMode {
     MaxStat = 'maxStat',
     Select = 'select',
     Single = 'single',
-    Token = 'token',
     Unlimited = 'unlimited',
     UpTo = 'upTo',
     UpToVariable = 'upToVariable'
@@ -188,7 +187,7 @@ export enum EventName {
     OnStatusTokenDiscarded = 'onStatusTokenDiscarded',
     OnStatusTokenGained = 'onStatusTokenGained',
     OnStatusTokenMoved = 'onStatusTokenMoved',
-    OnTakeInitiative = 'onTakeInitiative',
+    OnClaimInitiative = 'onClaimInitiative',
     OnUnitEntersPlay = 'onUnitEntersPlay',
     OnUpgradeAttached = 'onUpgradeAttached',
     Unnamed = 'unnamedEvent',
@@ -222,7 +221,6 @@ export enum KeywordName {
     Saboteur = 'saboteur',
     Sentinel = 'sentinel',
     Shielded = 'shielded',
-    /** @deprecated Not implemented yet */
     Smuggle = 'smuggle',
 }
 
@@ -322,6 +320,7 @@ export enum StateWatcherName {
     CardsLeftPlayThisPhase = 'cardsLeftPlayThisPhase',
     CardsPlayedThisPhase = 'cardsPlayedThisPhase',
     UnitsDefeatedThisPhase = 'unitsDefeatedThisPhase',
+    CardsEnteredPlayThisPhase = 'cardsEnteredPlayThisPhase',
 
     // TODO STATE WATCHERS: watcher types needed
     // - unit defeated: Iden, Emperor's Legion, Brutal Traditions, Spark of Hope, Bravado
