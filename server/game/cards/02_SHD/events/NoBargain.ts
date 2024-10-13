@@ -17,10 +17,15 @@ export default class NoBargain extends EventCard {
                 controller: RelativePlayer.Opponent,
                 choosingPlayer: RelativePlayer.Opponent,
                 locationFilter: Location.Hand,
-                immediateEffect: AbilityHelper.immediateEffects.simultaneous([
-                    AbilityHelper.immediateEffects.discardCard(),
-                    AbilityHelper.immediateEffects.draw((context) => ({ target: context.source.controller, amount: 1 }))
-                ])
+            immediateEffect: /*AbilityHelper.immediateEffects.simultaneous([*/
+                /*AbilityHelper.immediateEffects.selectCard({
+                    controller: RelativePlayer.Opponent,
+                    locationFilter: Location.Hand,
+                    hidePromptIfSingleCard: true,
+                    innerSystem: */AbilityHelper.immediateEffects.discardCard()
+                // }),
+               /* AbilityHelper.immediateEffects.draw((context) => ({ target: context.source.controller, amount: 1 })),*/
+            // ])
             },
         });
     }
