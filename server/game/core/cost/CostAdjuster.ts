@@ -11,10 +11,6 @@ export enum CostAdjustDirection {
     Decrease = 'decrease'
 }
 
-// TODO THIS PR: cards to test
-// - Guardian of the Whills
-// - Force Choke
-
 // TODO THIS PR: add TContext for attachTargetCondition
 export interface ICostAdjusterProperties {
     cardTypeFilter: CardTypeFilter;
