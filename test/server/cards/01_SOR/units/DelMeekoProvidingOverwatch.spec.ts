@@ -1,8 +1,8 @@
 describe('Del Meeko, Providing Overwatch', function() {
-    integration(function() {
+    integration(function(contextRef) {
         describe('Del Meeko\'s ability', function() {
             beforeEach(function () {
-                this.setupTest({
+                contextRef.setupTest({
                     phase: 'action',
                     player1: {
                         hand: ['moment-of-peace'],
@@ -20,11 +20,13 @@ describe('Del Meeko, Providing Overwatch', function() {
             });
 
             it('should increase the cost of events played by the opponent by 1', function () {
-                this.player1.passAction();
+                const { context } = contextRef;
 
-                this.player2.clickCard(this.daringRaid);
-                this.player2.clickCard(this.p1Base);
-                expect(this.player2.countExhaustedResources()).toBe(2);
+                context.player1.passAction();
+
+                context.player2.clickCard(context.daringRaid);
+                context.player2.clickCard(context.p1Base);
+                expect(context.player2.countExhaustedResources()).toBe(2);
             });
         });
     });
