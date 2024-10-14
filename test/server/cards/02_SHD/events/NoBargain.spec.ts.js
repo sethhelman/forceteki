@@ -15,8 +15,8 @@ describe('No Bargain', function () {
 
             it('can buff a unit', function () {
                 this.player1.clickCard(this.noBargain);
-                expect(this.player2).toBeAbleToSelectExactly([this.battlefieldMarine, this.greenSquadronAwing])
-                this.player2.clickCard(this.battlefieldMarine)
+                expect(this.player2).toBeAbleToSelectExactly([this.battlefieldMarine, this.greenSquadronAwing]);
+                this.player2.clickCard(this.battlefieldMarine);
                 expect(this.player1.hand.length).toBe(1);
                 expect(this.player2.hand.length).toBe(1);
                 expect(this.battlefieldMarine.location).toBe('discard');
