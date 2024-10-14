@@ -148,7 +148,7 @@ export interface GainAbilitySource {
 interface IReplacementEffectAbilityBaseProps<TSource extends Card = Card> extends Omit<ITriggeredAbilityBaseProps<TSource>,
         'immediateEffect' | 'targetResolver' | 'targetResolvers' | 'handler'
 > {
-    replaceWith: IReplacementEffectSystemProperties
+    replaceWith: IReplacementEffectSystemProperties;
 }
 
 type ITriggeredAbilityWhenProps<TSource extends Card> = ITriggeredAbilityBaseProps<TSource> & {

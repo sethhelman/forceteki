@@ -607,23 +607,6 @@ class Player extends GameObject {
         const card = context.source;
         const adjustedCost = this.getAdjustedCost(playingType, card, target, ignoreType);
 
-        // TODO: not sure yet if we need this code, I think it's checking to see if any potential interrupts would create additional cost
-        // let triggeredCostAdjusters = 0;
-        // let fakeWindow = { addToWindow: () => triggeredCostAdjusters++ };
-        // let fakeEvent = new GameEvent(EventName.OnCardPlayed, { card: card, player: this, context: context });
-        // this.game.emit(EventName.OnCardPlayed + ':' + AbilityType.Interrupt, fakeEvent, fakeWindow);
-        // let fakeResolverEvent = new GameEvent(EventName.OnAbilityResolverInitiated, {
-        //     card: card,
-        //     player: this,
-        //     context: context
-        // });
-        // this.game.emit(
-        //     EventName.OnAbilityResolverInitiated + ':' + AbilityType.Interrupt,
-        //     fakeResolverEvent,
-        //     fakeWindow
-        // );
-        // return Math.max(adjustedCost - triggeredCostAdjusters, 0);
-
         return Math.max(adjustedCost, 0);
     }
 
@@ -687,56 +670,6 @@ class Player extends GameObject {
         var costFloor = Math.min(baseCost, Math.max(...matchingAdjusters.map((adjuster) => adjuster.costFloor)));
         return Math.max(reducedCost, costFloor);
     }
-
-    // getTotalCostModifiers(playingType, card, target, ignoreType = false) {
-    //     var baseCost = 0;
-    //     var matchingAdjusters = this.costAdjusters.filter((adjuster) =>
-    //         adjuster.canAdjust(playingType, card, target, ignoreType)
-    //     );
-    //     var reducedCost = matchingAdjusters.reduce((cost, adjuster) => cost - adjuster.getAmount(card, this), baseCost);
-    //     return reducedCost;
-    // }
-
-    // getTargetingCost(abilitySource, targets) {
-    //     targets = Array.isArray(targets) ? targets : [targets];
-    //     targets = targets.filter(Boolean);
-    //     if (targets.length === 0) {
-    //         return 0;
-    //     }
-
-    //     const playerCostToTargetEffects = abilitySource.controller
-    //         ? abilitySource.controller.getOngoingEffectValues(EffectName.PlayerFateCostToTargetCard)
-    //         : [];
-
-    //     let targetCost = 0;
-    //     for (const target of targets) {
-    //         for (const cardCostToTarget of target.getOngoingEffectValues(EffectName.FateCostToTarget)) {
-    //             if (
-    //                 // no card type restriction
-    //                 (!cardCostToTarget.cardType ||
-    //                     // or match type restriction
-    //                     abilitySource.hasSomeType(cardCostToTarget.cardType)) &&
-    //                 // no player restriction
-    //                 (!cardCostToTarget.targetPlayer ||
-    //                     // or match player restriction
-    //                     abilitySource.controller ===
-    //                         (cardCostToTarget.targetPlayer === RelativePlayer.Self
-    //                             ? target.controller
-    //                             : target.controller.opponent))
-    //             ) {
-    //                 targetCost += cardCostToTarget.amount;
-    //             }
-    //         }
-
-    //         for (const playerCostToTarget of playerCostToTargetEffects) {
-    //             if (playerCostToTarget.matchTarget(target)) {
-    //                 targetCost += playerCostToTarget.amount;
-    //             }
-    //         }
-    //     }
-
-    //     return targetCost;
-    // }
 
     /**
      * Mark all cost adjusters which are valid for this card/target/playingType as used, and remove them if they have no uses remaining
