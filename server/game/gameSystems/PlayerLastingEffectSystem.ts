@@ -2,11 +2,11 @@ import { AbilityContext } from '../core/ability/AbilityContext';
 import { EventName, RelativePlayer } from '../core/Constants';
 import { GameEvent } from '../core/event/GameEvent';
 import { GameSystem } from '../core/gameSystem/GameSystem';
-import { ILastingEffectGeneralProperties } from '../core/gameSystem/LastingEffectSystem';
+import { ILastingEffectPropertiesBase } from '../core/gameSystem/LastingEffectPropertiesBase';
 import OngoingEffect from '../core/ongoingEffect/OngoingEffect';
 import Player from '../core/Player';
 
-export interface IPlayerLastingEffectProperties extends ILastingEffectGeneralProperties {
+export interface IPlayerLastingEffectProperties extends ILastingEffectPropertiesBase {
 
     /** Default is `RelativePlayer.Self` */
     targetPlayer?: RelativePlayer | Player;

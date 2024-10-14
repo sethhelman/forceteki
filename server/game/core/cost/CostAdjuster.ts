@@ -11,7 +11,7 @@ export enum CostAdjustDirection {
     Decrease = 'decrease'
 }
 
-// TODO THIS PR: add TContext for attachTargetCondition
+// TODO: refactor so we can add TContext for attachTargetCondition
 export interface ICostAdjusterProperties {
     cardTypeFilter: CardTypeFilter;
     amount: number | ((card: Card, player: Player) => number);
