@@ -12,7 +12,7 @@ export default class QiraIAloneSurvived extends LeaderUnitCard {
 
     protected override setupLeaderSideAbilities () {
         this.addActionAbility({
-            title: 'Give an Experience token to a unit with 2 or less power',
+            title: 'Deal 2 damage to a friendly unit and give it a shield',
             cost: [AbilityHelper.costs.abilityResourceCost(1), AbilityHelper.costs.exhaustSelf()],
             targetResolver: {
                 controller: RelativePlayer.Self,
@@ -27,7 +27,7 @@ export default class QiraIAloneSurvived extends LeaderUnitCard {
 
     protected override setupLeaderUnitSideAbilities () {
         this.addTriggeredAbility({
-            title: 'Give an Experience token to a unit with 2 or less power',
+            title: ' Heal all damage from each unit. Then, deal damage to each unit equal to half its remaining HP, rounded down.',
             when: {
                 [EventName.OnLeaderDeployed]: (event, context) => event.card === context.source
             },
