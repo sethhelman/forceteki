@@ -26,6 +26,7 @@ describe('Bounty Guild Initiate', function() {
                 expect(context.player2).toBeActivePlayer();
             });
         });
+
         describe('Bounty Guild Initiate\'s ability', function() {
             beforeEach(function () {
                 contextRef.setupTest({
@@ -36,7 +37,6 @@ describe('Bounty Guild Initiate', function() {
                     },
                     player2: {
                         groundArena: ['wampa', 'greedo#slow-on-the-draw']
-
                     }
                 });
             });
