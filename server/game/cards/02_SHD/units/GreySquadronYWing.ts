@@ -12,7 +12,7 @@ export default class GreySquadronYWing extends NonLeaderUnitCard {
 
     public override setupCardAbilities () {
         this.addOnAttackAbility({
-            title: 'Deal 2 damage to a ground unit if Koska Reeves is upgraded',
+            title: 'An opponent chooses a unit or base they control. You may deal 2 damage to it',
             targetResolver: {
                 choosingPlayer: RelativePlayer.Opponent,
                 controller: RelativePlayer.Opponent,
