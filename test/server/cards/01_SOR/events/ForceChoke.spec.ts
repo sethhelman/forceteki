@@ -15,17 +15,17 @@ describe('Force Choke', function() {
                 });
             });
 
-            // it('deal 5 damage to a unit and cause the controller to draw a card', function () {
-            //     const { context } = contextRef;
+            it('deal 5 damage to a unit and cause the controller to draw a card', function () {
+                const { context } = contextRef;
 
-            //     context.player1.clickCard(context.forceChoke);
-            //     expect(context.player1).toBeAbleToSelectExactly([context.pykeSentinel, context.kraytDragon, context.consularSecurityForce]);
+                context.player1.clickCard(context.forceChoke);
+                expect(context.player1).toBeAbleToSelectExactly([context.pykeSentinel, context.kraytDragon, context.consularSecurityForce]);
 
-            //     context.player1.clickCard(context.kraytDragon);
-            //     expect(context.kraytDragon.damage).toBe(5);
-            //     expect(context.player1.countExhaustedResources()).toBe(2);
-            //     expect(context.player1.handSize).toBe(1);
-            // });
+                context.player1.clickCard(context.kraytDragon);
+                expect(context.kraytDragon.damage).toBe(5);
+                expect(context.player1.countExhaustedResources()).toBe(2);
+                expect(context.player1.handSize).toBe(1);
+            });
 
             it('should cost 1 less if the player controls a Force unit', function () {
                 const { context } = contextRef;

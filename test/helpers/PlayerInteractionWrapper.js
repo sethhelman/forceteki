@@ -139,7 +139,7 @@ class PlayerInteractionWrapper {
             leaderCard.exhausted = leaderOptions.exhausted || false;
         }
 
-        this.game.resolveGameState();
+        this.game.resolveGameState(true);
     }
 
     setBaseStatus(baseOptions) {
@@ -162,7 +162,7 @@ class PlayerInteractionWrapper {
         var baseCard = this.player.base;
         baseCard.damage = baseOptions.damage || 0;
 
-        this.game.resolveGameState();
+        this.game.resolveGameState(true);
     }
 
     /**
