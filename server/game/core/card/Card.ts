@@ -223,7 +223,7 @@ export class Card extends OngoingEffectSource {
      * Subclass implementations for specific cards must override this method and provide the id
      * information for the specific card
      */
-    protected getImplementationId(): null | { internalName: string, id: string } {
+    protected getImplementationId(): null | { internalName: string; id: string } {
         return null;
     }
 
@@ -424,7 +424,7 @@ export class Card extends OngoingEffectSource {
         return (
             !this.facedown &&
             (ignoredRequirements.includes('triggeringRestrictions') ||
-                !this.hasRestriction(AbilityRestriction.TriggerAbilities, context))
+              !this.hasRestriction(AbilityRestriction.TriggerAbilities, context))
         );
     }
 
