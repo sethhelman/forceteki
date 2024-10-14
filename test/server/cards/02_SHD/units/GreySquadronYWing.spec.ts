@@ -1,6 +1,6 @@
-describe('Ruthless Assassin', function() {
+describe('Grey Squadron Y Wing', function() {
     integration(function(contextRef) {
-        describe('Ruthless Assassin\'s ability', function() {
+        describe('Grey Squadron Y Wing\'s ability', function() {
             beforeEach(function () {
                 contextRef.setupTest({
                     phase: 'action',
