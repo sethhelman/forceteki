@@ -1,6 +1,6 @@
 import AbilityHelper from '../../../AbilityHelper';
 import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
-import { RelativePlayer } from '../../../core/Constants';
+import { RelativePlayer, WildcardCardType } from '../../../core/Constants';
 
 export default class RuthlessAssassin extends NonLeaderUnitCard {
     protected override getImplementationId () {
@@ -12,9 +12,10 @@ export default class RuthlessAssassin extends NonLeaderUnitCard {
 
     public override setupCardAbilities () {
         this.addWhenPlayedAbility({
-            title: 'Deal 2 damage to each other ground unit',
+            title: 'Deal 2 damage to a friendly unit',
             targetResolver: {
                 controller: RelativePlayer.Self,
+                cardTypeFilter: WildcardCardType.Unit,
                 immediateEffect: AbilityHelper.immediateEffects.damage({ amount: 2 })
             }
         });
