@@ -12,12 +12,12 @@ export default class BountyGuildInitiate extends NonLeaderUnitCard {
 
     public override setupCardAbilities () {
         this.addWhenPlayedAbility({
-            title: 'Deal 2 damage to a ground unit if Koska Reeves is upgraded',
+            title: 'Deal 2 damage to a ground unit if you control another Bounty Hunter unit',
             targetResolver: {
                 locationFilter: Location.GroundArena,
+                optional: true,
                 immediateEffect: AbilityHelper.immediateEffects.conditional({
                     condition: (context) => context.source.controller.getOtherUnitsInPlay(context.source, WildcardLocation.AnyArena, (card) => card.hasSomeTrait(Trait.BountyHunter)).length > 0,
-                    optional: true,
                     onTrue: AbilityHelper.immediateEffects.damage({ amount: 2 }),
                     onFalse: AbilityHelper.immediateEffects.noAction()
                 })
