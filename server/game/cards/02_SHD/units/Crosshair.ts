@@ -12,7 +12,7 @@ export default class Crosshair extends NonLeaderUnitCard {
 
     public override setupCardAbilities () {
         this.addActionAbility({
-            title: 'This units gets +1/+0 this phase',
+            title: 'Get +1/+0 for this phase',
             cost: AbilityHelper.costs.abilityResourceCost(2),
             immediateEffect: AbilityHelper.immediateEffects.forThisPhaseCardEffect({
                 effect: AbilityHelper.ongoingEffects.modifyStats({ power: 1, hp: 0 })
