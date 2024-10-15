@@ -22,10 +22,15 @@ export class DamageSystem<TContext extends AbilityContext = AbilityContext> exte
     protected override readonly targetTypeFilter = [WildcardCardType.Unit, CardType.Base];
 
     public eventHandler(event): void {
-        if (typeof event.damage === 'number') {
-            event.card.addDamage(event.damage);
-        } else {
-            event.card.addDamage(event.damage(event.card));
+        switch (typeof event.damage) {
+            case 'number':
+                event.card.addDamage(event.damage);
+                break;
+            case 'function':
+                event.card.addDamage(event.damage(event.card));
+                break;
+            default:
+                Contract.fail(`Unexpected type ${typeof event.damage}`);
         }
     }
 

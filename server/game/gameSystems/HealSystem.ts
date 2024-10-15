@@ -4,6 +4,7 @@ import { AbilityRestriction, CardType, EventName, WildcardCardType } from '../co
 import * as EnumHelpers from '../core/utils/EnumHelpers';
 import { CardTargetSystem, type ICardTargetSystemProperties } from '../core/gameSystem/CardTargetSystem';
 import { UnitCard } from '../core/card/CardTypes';
+import * as Contract from '../core/utils/Contract';
 
 export interface IHealProperties extends ICardTargetSystemProperties {
     amount: number | ((card: UnitCard) => number);
@@ -15,10 +16,15 @@ export class HealSystem<TContext extends AbilityContext = AbilityContext> extend
     protected override readonly targetTypeFilter = [WildcardCardType.Unit, CardType.Base];
 
     public eventHandler(event): void {
-        if (typeof event.healAmount === 'number') {
-            event.card.removeDamage(event.healAmount);
-        } else {
-            event.card.removeDamage(event.healAmount(event.card));
+        switch (typeof event.healAmount) {
+            case 'number':
+                event.card.removeDamage(event.healAmount);
+                break;
+            case 'function':
+                event.card.removeDamage(event.healAmount(event.card));
+                break;
+            default:
+                Contract.fail(`Unexpected type ${typeof event.healAmount}`);
         }
     }
 

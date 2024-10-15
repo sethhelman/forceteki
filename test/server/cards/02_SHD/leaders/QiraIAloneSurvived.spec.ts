@@ -76,5 +76,31 @@ describe('Qi\'ra, I Alone Survived', function () {
                 expect(context.p2Base.damage).toBe(5);
             });
         });
+
+        describe('Qi\'ra\'s deployed ability', function () {
+            beforeEach(function () {
+                contextRef.setupTest({
+                    phase: 'action',
+                    player1: {
+                        leader: 'qira#i-alone-survived',
+                        groundArena: ['general-dodonna#massassi-group-commander'],
+                        spaceArena: ['green-squadron-awing'],
+                        resources: 5,
+                    },
+                    player2: {}
+                });
+            });
+
+            it('should deal heal and damage all units in play (with hp modifier)', function () {
+                const { context } = contextRef;
+                context.player1.clickCard(context.qira);
+                context.player1.clickPrompt('Deploy Qi’ra');
+
+                expect(context.player2).toBeActivePlayer();
+                expect(context.qira.damage).toBe(4); // 8/2 = 4
+                expect(context.generalDodonna.damage).toBe(2); // 4/2 = 2
+                expect(context.greenSquadronAwing.damage).toBe(2); // 3+1 = 2
+            });
+        });
     });
 });

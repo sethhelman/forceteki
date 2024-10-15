@@ -21,7 +21,7 @@ describe('Hunting Nexu', function() {
             });
         });
 
-        describe('Bounty Guild Initiate\'s ability', function() {
+        describe('Hunting Nexu\'s ability', function() {
             beforeEach(function () {
                 contextRef.setupTest({
                     phase: 'action',

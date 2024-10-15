@@ -27,13 +27,19 @@ export default class QiraIAloneSurvived extends LeaderUnitCard {
 
     protected override setupLeaderUnitSideAbilities () {
         this.addTriggeredAbility({
-            title: ' Heal all damage from each unit. Then, deal damage to each unit equal to half its remaining HP, rounded down.',
+            title: 'Heal all damage from each unit. Then, deal damage to each unit equal to half its remaining HP, rounded down.',
             when: {
                 [EventName.OnLeaderDeployed]: (event, context) => event.card === context.source
             },
             immediateEffect: AbilityHelper.immediateEffects.sequential([
-                AbilityHelper.immediateEffects.heal((context) => ({ target: context.source.controller.getUnitsInPlay().concat(context.source.controller.opponent.getUnitsInPlay()), amount: (c) => c.damage })),
-                AbilityHelper.immediateEffects.damage((context) => ({ target: context.source.controller.getUnitsInPlay().concat(context.source.controller.opponent.getUnitsInPlay()), amount: (c) => Math.floor(c.getHp() / 2) })),
+                AbilityHelper.immediateEffects.heal((context) => ({
+                    target: context.source.controller.getUnitsInPlay().concat(context.source.controller.opponent.getUnitsInPlay()),
+                    amount: (card) => card.damage
+                })),
+                AbilityHelper.immediateEffects.damage((context) => ({
+                    target: context.source.controller.getUnitsInPlay().concat(context.source.controller.opponent.getUnitsInPlay()),
+                    amount: (card) => Math.floor(card.getHp() / 2)
+                })),
             ]),
         });
     }

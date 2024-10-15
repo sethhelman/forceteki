@@ -14,7 +14,7 @@ describe('Outland TIE Vanguard', function() {
                 });
             });
 
-            it('should deal 2 damage to unit because we control another Bounty Hunter unit.', function () {
+            it('should give an experience when played.', function () {
                 const { context } = contextRef;
                 context.player1.clickCard(context.outlandTieVanguard);
                 // should select ground unit of both players

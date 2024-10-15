@@ -7,6 +7,7 @@ describe('Wild Rancor', function() {
                     player1: {
                         hand: ['wild-rancor'],
                         groundArena: ['battlefield-marine'],
+                        leader: { card: 'sabine-wren#galvanized-revolutionary', deployed: true }
                     },
                     player2: {
                         groundArena: ['wampa'],
@@ -21,6 +22,7 @@ describe('Wild Rancor', function() {
                 expect(context.player2).toBeActivePlayer();
                 expect(context.wampa.damage).toBe(2);
                 expect(context.battlefieldMarine.damage).toBe(2);
+                expect(context.sabineWren.damage).toBe(2);
                 expect(context.wildRancor.damage).toBe(0);
                 expect(context.greenSquadronAwing.damage).toBe(0);
             });

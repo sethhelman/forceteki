@@ -55,8 +55,7 @@ describe('Crosshair', function() {
                 expect(context.p2Base.damage).toBe(4);
 
                 // after the end of phase, boost are reverted back
-                context.player2.passAction();
-                context.player1.passAction();
+                context.moveToNextActionPhase();
                 expect(context.crosshair.getPower()).toBe(2);
                 expect(context.crosshair.getHp()).toBe(6);
             });

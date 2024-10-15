@@ -17,7 +17,7 @@ export default class BountyGuildInitiate extends NonLeaderUnitCard {
                 locationFilter: Location.GroundArena,
                 optional: true,
                 immediateEffect: AbilityHelper.immediateEffects.conditional({
-                    condition: (context) => context.source.controller.getOtherUnitsInPlay(context.source, WildcardLocation.AnyArena, (card) => card.hasSomeTrait(Trait.BountyHunter)).length > 0,
+                    condition: (context) => context.source.controller.isTraitInPlay(Trait.BountyHunter, context.source),
                     onTrue: AbilityHelper.immediateEffects.damage({ amount: 2 }),
                     onFalse: AbilityHelper.immediateEffects.noAction()
                 })

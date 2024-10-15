@@ -21,6 +21,8 @@ describe('Ruthless Assassin', function() {
                 // must select a friendly unit
                 expect(context.player1).toBeAbleToSelectExactly([context.ruthlessAssassin, context.greedo, context.greenSquadronAwing]);
                 expect(context.player1).not.toHaveChooseNoTargetButton();
+
+                // choose to deal to yourself
                 context.player1.clickCard(context.ruthlessAssassin);
                 expect(context.ruthlessAssassin.damage).toBe(2);
                 expect(context.greedo.damage).toBe(0);
