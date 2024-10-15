@@ -1,6 +1,6 @@
 import AbilityHelper from '../../../AbilityHelper';
 import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
-import { Aspect, KeywordName, Location } from '../../../core/Constants';
+import { Aspect, KeywordName } from '../../../core/Constants';
 
 export default class HuntingNexu extends NonLeaderUnitCard {
     protected override getImplementationId () {
