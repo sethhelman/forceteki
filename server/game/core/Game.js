@@ -33,6 +33,7 @@ const { EffectName, EventName, Location, TokenName } = require('./Constants.js')
 const { BaseStepWithPipeline } = require('./gameSteps/BaseStepWithPipeline.js');
 const { default: Shield } = require('../cards/01_SOR/tokens/Shield.js');
 const { StateWatcherRegistrar } = require('./stateWatcher/StateWatcherRegistrar.js');
+const { DistributeAmongTargetsPrompt } = require('./gameSteps/prompts/DistributeAmongTargetsPrompt.js');
 
 class Game extends EventEmitter {
     constructor(details, options = {}) {
@@ -64,6 +65,7 @@ class Game extends EventEmitter {
         this.roundNumber = 0;
         this.initialFirstPlayer = null;
         this.initiativePlayer = null;
+        this.isInitiativeClaimed = false;
         this.actionPhaseActivePlayer = null;
         this.tokenFactories = null;
         this.stateWatcherRegistrar = new StateWatcherRegistrar(this);
@@ -363,23 +365,6 @@ class Game extends EventEmitter {
         this.pipeline.handleCardClicked(player, card);
     }
 
-    // TODO SMUGGLE: implementation of this
-    // facedownCardClicked(playerName, location, controllerName, isProvince = false) {
-    //     let player = this.getPlayerByName(playerName);
-    //     let controller = this.getPlayerByName(controllerName);
-    //     if (!player || !controller) {
-    //         return;
-    //     }
-    //     let list = controller.getCardPile(location);
-    //     if (!list) {
-    //         return;
-    //     }
-    //     let card = list.find((card) => !isProvince === !card.isProvince);
-    //     if (card) {
-    //         return this.pipeline.handleCardClicked(player, card);
-    //     }
-    // }
-
     // /**
     //  * This function is called by the client when a card menu item is clicked
     //  * @param {String} sourcePlayer - name of clicking player
@@ -615,6 +600,16 @@ class Game extends EventEmitter {
     }
 
     /**
+     * Prompt for distributing healing or damage among target cards.
+     * Response data must be returned via {@link Game.statefulPromptResults}.
+     */
+    promptDistributeAmongTargets(player, properties) {
+        Contract.assertNotNullLike(player);
+
+        this.queueStep(new DistributeAmongTargetsPrompt(this, player, properties));
+    }
+
+    /**
      * This function is called by the client whenever a player clicks a button
      * in a prompt
      * @param {String} playerName
@@ -625,12 +620,22 @@ class Game extends EventEmitter {
      */
     menuButton(playerName, arg, uuid, method) {
         var player = this.getPlayerByName(playerName);
-        if (!player) {
-            return false;
-        }
 
         // check to see if the current step in the pipeline is waiting for input
         return this.pipeline.handleMenuCommand(player, arg, uuid, method);
+    }
+
+    /**
+     * Gets the results of a "stateful" prompt from the frontend. This is for more
+     * involved prompts such as distributing damage / healing that require the frontend
+     * to gather some state and send back, instead of just individual clicks.
+     * @param {import('./gameSteps/StatefulPromptInterfaces.js').IDistributeAmongTargetsPromptResults} result
+     */
+    statefulPromptResults(playerName, result) {
+        var player = this.getPlayerByName(playerName);
+
+        // check to see if the current step in the pipeline is waiting for input
+        return this.pipeline.handleStatefulPromptResults(player, result);
     }
 
     /**
@@ -773,12 +778,9 @@ class Game extends EventEmitter {
     }
 
     claimInitiative(player) {
-        this.addMessage('{0} claims initiative', player);
-
         this.initiativePlayer = player;
-        player.passedActionPhase = true;
-
-        // TODO: eventually we'll probably need an event window here
+        this.isInitiativeClaimed = true;
+        this.createEventAndOpenWindow(EventName.OnClaimInitiative, { player }, true);
 
         // update game state for the sake of constant abilities that check initiative
         this.resolveGameState();
@@ -842,7 +844,7 @@ class Game extends EventEmitter {
      * returns {GameEvent} - this allows the caller to track GameEvent.resolved and
      * tell whether or not the handler resolved successfully
      */
-    createEventAndOpenWindow(eventName, params = {}, ownsTriggerWindow = false, handler = () => true) {
+    createEventAndOpenWindow(eventName, params = {}, ownsTriggerWindow = false, handler = () => undefined) {
         let event = new GameEvent(eventName, params, handler);
         this.openEventWindow([event], ownsTriggerWindow);
         return event;
