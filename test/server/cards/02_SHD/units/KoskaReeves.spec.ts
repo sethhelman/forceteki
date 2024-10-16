@@ -15,7 +15,7 @@ describe('Koska Reeves', function() {
                 });
             });
 
-            it('should deal 2 damage to a friendly unit.', function () {
+            it('should deal 2 damage to a friendly unit when upgraded', function () {
                 const { context } = contextRef;
 
                 // attack base, koska is not upgraded, she cannot deal extra damage to ground unit

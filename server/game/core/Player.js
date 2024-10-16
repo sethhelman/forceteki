@@ -288,16 +288,15 @@ class Player extends GameObject {
     }
 
     /**
-     * Returns if a card is in play (units, upgrades, provinces, holdings) that has the passed trait
+     * Returns if a unit is in play that has the passed trait
      * @param {string} trait
      * @param {any} ignoreUnit
      * @returns {boolean} true/false if the trait is in play
      */
-    isTraitInPlay(trait, ignoreUnit = undefined) {
-        if (ignoreUnit !== undefined) {
-            return this.getOtherUnitsInPlay(ignoreUnit).some((card) => card.hasSomeTrait(trait));
-        }
-        return this.getUnitsInPlay().some((card) => card.hasSomeTrait(trait));
+    isTraitInPlay(trait, ignoreUnit = null) {
+        return ignoreUnit != null
+            ? this.getOtherUnitsInPlay(ignoreUnit).some((card) => card.hasSomeTrait(trait))
+            : this.getUnitsInPlay().some((card) => card.hasSomeTrait(trait));
     }
 
     /**
@@ -306,11 +305,10 @@ class Player extends GameObject {
      * @param {any} ignoreUnit
      * @returns {boolean} true/false if the trait is in play
      */
-    isAspectInPlay(aspect, ignoreUnit = undefined) {
-        if (ignoreUnit !== undefined) {
-            return this.getOtherUnitsInPlay(ignoreUnit).some((card) => card.hasSomeAspect(aspect));
-        }
-        return this.getUnitsInPlay().some((card) => card.hasSomeTrait(aspect));
+    isAspectInPlay(aspect, ignoreUnit = null) {
+        return ignoreUnit != null
+            ? this.getOtherUnitsInPlay(ignoreUnit).some((card) => card.hasSomeAspect(aspect))
+            : this.getUnitsInPlay().some((card) => card.hasSomeTrait(aspect));
     }
 
     /**

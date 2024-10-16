@@ -5,15 +5,16 @@ describe('Crosshair', function() {
                 contextRef.setupTest({
                     phase: 'action',
                     player1: {
-                        groundArena: ['crosshair#following-orders']
+                        groundArena: ['crosshair#following-orders', 'battlefield-marine']
                     },
                     player2: {
                         groundArena: ['wampa'],
+                        spaceArena: ['green-squadron-awing']
                     }
                 });
             });
 
-            it('should make your opponent choose a unit to deal 2 damage', function () {
+            it('should boost him or deal damage to a enemy ground unit', function () {
                 const { context } = contextRef;
                 // boost crosshair
                 context.player1.clickCard(context.crosshair);
