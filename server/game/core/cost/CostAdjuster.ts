@@ -16,7 +16,6 @@ export interface ICostAdjusterProperties {
     cardTypeFilter: CardTypeFilter;
     amount: number | ((card: Card, player: Player) => number);
     direction: CostAdjustDirection;
-    costFloor?: number;
     limit?: IAbilityLimit;
     playingTypes?: PlayType;
     match?: (card: Card, adjusterSource: Card) => boolean;
@@ -29,7 +28,6 @@ export interface ICostAdjusterProperties {
 }
 
 export class CostAdjuster {
-    public readonly costFloor: number;
     public readonly direction: CostAdjustDirection;
     private amount: number | ((card: Card, player: Player) => number);
     private match?: (card: Card, adjusterSource: Card) => boolean;
@@ -47,7 +45,6 @@ export class CostAdjuster {
         private penaltyAspect?: Aspect
     ) {
         this.amount = properties.amount || 1;
-        this.costFloor = properties.costFloor || 0;
         this.direction = properties.direction;
         this.match = properties.match;
         this.cardTypeFilter = properties.cardTypeFilter;

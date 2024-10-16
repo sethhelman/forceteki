@@ -37,8 +37,6 @@ class OngoingEffect {
         this.until = properties.until || {};
         this.condition = properties.condition || (() => true);
         this.sourceLocationFilter = properties.sourceLocationFilter || WildcardLocation.AnyArena;
-        this.canChangeZoneOnce = !!properties.canChangeZoneOnce;
-        this.canChangeZoneNTimes = properties.canChangeZoneNTimes || 0;
         this.impl = effectImpl;
         this.ability = properties;
         this.targets = [];

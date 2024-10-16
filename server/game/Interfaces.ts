@@ -36,8 +36,6 @@ export type IActionAbilityProps<TSource extends Card = Card> = Exclude<IAbilityP
 
 export interface IOngoingEffectProps {
     targetLocationFilter?: Location | Location[];
-    canChangeZoneOnce?: boolean;
-    canChangeZoneNTimes?: number;
     duration?: Duration;
     condition?: (context: AbilityContext) => boolean;
     until?: WhenType;

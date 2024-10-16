@@ -653,22 +653,20 @@ class Player extends GameObject {
      * @param target BaseCard
      */
     runAdjustersForCostType(playingType, baseCost, card, target, ignoreType = false, penaltyAspect = null) {
-        var matchingAdjusters = this.costAdjusters.filter((adjuster) =>
+        const matchingAdjusters = this.costAdjusters.filter((adjuster) =>
             adjuster.canAdjust(playingType, card, target, ignoreType, penaltyAspect)
         );
-        var costIncreases = matchingAdjusters
+        const costIncreases = matchingAdjusters
             .filter((adjuster) => adjuster.direction === CostAdjustDirection.Increase)
             .reduce((cost, adjuster) => cost + adjuster.getAmount(card, this), 0);
-        var costDecreases = matchingAdjusters
+        const costDecreases = matchingAdjusters
             .filter((adjuster) => adjuster.direction === CostAdjustDirection.Decrease)
             .reduce((cost, adjuster) => cost + adjuster.getAmount(card, this), 0);
 
         baseCost += costIncreases;
-        var reducedCost = baseCost - costDecreases;
+        const adjustedCost = baseCost - costDecreases;
 
-        // TODO: not 100% sure what the use case for this line is
-        var costFloor = Math.min(baseCost, Math.max(...matchingAdjusters.map((adjuster) => adjuster.costFloor)));
-        return Math.max(reducedCost, costFloor);
+        return Math.max(adjustedCost, 0);
     }
 
     /**
