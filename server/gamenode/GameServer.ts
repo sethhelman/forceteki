@@ -12,6 +12,7 @@ import type Player from '../game/core/Player';
 import Socket from '../socket';
 import * as env from '../env';
 import { spec } from 'node:test/reporters';
+import {defaultGameSettings} from './defaultGame';
 
 export class GameServer {
     private games = new Map<string, Game>();
@@ -100,9 +101,9 @@ export class GameServer {
         // }
 
         if (game) {
-            game.addMessage(
-                'A Server error has occured processing your game state, apologies.  Your game may now be in an inconsistent state, or you may be able to continue.  The error has been logged.'
-            );
+            // game.addMessage(
+            //     'A Server error has occured processing your game state, apologies.  Your game may now be in an inconsistent state, or you may be able to continue.  The error has been logged.'
+            // );
         }
     }
 
@@ -161,29 +162,12 @@ export class GameServer {
         //     .catch(() => {});
     }
 
-    onStartGame(): void {
-        let details = {
-            id: '0001',
-            name: 'Test Game',
-            allowSpectators: false,
-            spectatorSquelch: true,
-            owner: 'Order66',
-            clocks: 'timer',
-            players: [
-                { user: {
-                    username: 'Order66'
-                  },
-                  id: `66`
-                },
-                { user: {
-                    username: 'ThisIsTheWay'
-                  },
-                  id: `th3w4y`
-                }
-            ]
-        }
-        const game = new Game(details, { router: this, shortCardData: this.shortCardData });
-        this.games.set(details.id, game);
+    onStartGame(): void { 
+        const game = new Game(defaultGameSettings, { router: this, shortCardData: this.shortCardData });
+        this.games.set(defaultGameSettings.id, game);
+
+        game.selectDeck('Order66', defaultGameSettings.players[0].deck);
+        game.selectDeck('ThisIsTheWay', defaultGameSettings.players[1].deck);
 
         game.started = true;
         // for (const player of Object.values<Player>(pendingGame.players)) {
