@@ -1,8 +1,17 @@
+import AbilityHelper from '../../../AbilityHelper';
+import { IConstantAbilityProps } from '../../../Interfaces';
+import { AbilityContext } from '../../ability/AbilityContext';
 import PlayerOrCardAbility from '../../ability/PlayerOrCardAbility';
-import { CardType } from '../../Constants';
+import { CardType, RelativePlayer, WildcardLocation } from '../../Constants';
+import { CostAdjustDirection, ICostAdjusterProperties } from '../../cost/CostAdjuster';
 import Player from '../../Player';
 import * as Contract from '../../utils/Contract';
 import { Card } from '../Card';
+
+export interface IDecreaseEventCostAbilityProps<TSource extends Card = Card> extends Omit<ICostAdjusterProperties, 'cardTypeFilter' | 'match' | 'direction'> {
+    title: string;
+    condition?: (context: AbilityContext<TSource>) => boolean;
+}
 
 // required for mixins to be based on this class
 export type PlayableOrDeployableCardConstructor = new (...args: any[]) => PlayableOrDeployableCard;
@@ -59,5 +68,26 @@ export class PlayableOrDeployableCard extends Card {
 
     protected setExhaustEnabled(enabledStatus: boolean) {
         this._exhausted = enabledStatus ? true : null;
+    }
+
+    /** Helper method to add a constant ability on the card that decreases its play cost under the given condition */
+    protected addDecreaseCostAbility(properties: IDecreaseEventCostAbilityProps<this>): void {
+        // const { title, condition, ...otherProps } = properties;
+
+        // const costAdjusterProps: ICostAdjusterProperties = Object.assign(otherProps, {
+        //     cardTypeFilter: CardType.Event,
+        //     match: (card, adjusterSource) => card === adjusterSource,
+        //     direction: CostAdjustDirection.Decrease
+        // });
+
+        // const costAdjustAbilityProps: IConstantAbilityProps = {
+        //     title,
+        //     sourceLocationFilter: WildcardLocation.Any,
+        //     targetController: RelativePlayer.Any,
+        //     condition: condition,
+        //     ongoingEffect: AbilityHelper.ongoingEffects.decreaseCost(costAdjusterProps)
+        // };
+
+        // this.constantAbilities.push(this.createConstantAbility(costAdjustAbilityProps));
     }
 }
