@@ -80,9 +80,9 @@ class Player extends GameObject {
             action: true,
             regroup: true
         };
-        this.timerSettings = user.settings.timerSettings || {};
-        this.timerSettings.windowTimer = user.settings.windowTimer;
-        this.optionSettings = user.settings.optionSettings;
+        // this.timerSettings = user.settings.timerSettings || {};
+        // this.timerSettings.windowTimer = user.settings.windowTimer;
+        // this.optionSettings = user.settings.optionSettings;
         this.resetTimerAtEndOfRound = false;
 
         // mainly used for staging new tokens when they are created
@@ -1077,9 +1077,9 @@ class Player extends GameObject {
     }
 
     getSummaryForHand(list, activePlayer, hideWhenFaceup) {
-        if (this.optionSettings.sortHandByName) {
-            return this.getSortedSummaryForCardList(list, activePlayer, hideWhenFaceup);
-        }
+        // if (this.optionSettings.sortHandByName) {
+        //     return this.getSortedSummaryForCardList(list, activePlayer, hideWhenFaceup);
+        // }
         return this.getSummaryForCardList(list, activePlayer, hideWhenFaceup);
     }
 
@@ -1187,12 +1187,12 @@ class Player extends GameObject {
             id: this.id,
             left: this.left,
             name: this.name,
-            optionSettings: this.optionSettings,
+            // optionSettings: this.optionSettings,
             phase: this.game.currentPhase,
             promptedActionWindows: this.promptedActionWindows,
             showBid: this.showBid,
             // stats: this.getStats(),
-            timerSettings: this.timerSettings,
+            // timerSettings: this.timerSettings,
             user: safeUser
         };
 

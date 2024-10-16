@@ -664,7 +664,7 @@ class Game extends EventEmitter {
             return;
         }
 
-        player.timerSettings[settingName] = toggle;
+        // player.timerSettings[settingName] = toggle;
     }
 
     /*
@@ -681,7 +681,7 @@ class Game extends EventEmitter {
             return;
         }
 
-        player.optionSettings[settingName] = toggle;
+        // player.optionSettings[settingName] = toggle;
     }
 
     toggleManualMode(playerName) {
@@ -1242,30 +1242,30 @@ class Game extends EventEmitter {
         let conflictState = {};
         let {blocklist, email, emailHash, promptedActionWindows, settings, ...simplifiedOwner} = this.owner;
         // if (this.started) {
-            for (const player of this.getPlayers()) {
-                playerState[player.name] = player.getState(activePlayer);
-            }
+            // for (const player of this.getPlayers()) {
+            //     playerState[player.name] = player.getState(activePlayer);
+            // }
 
-            return {
-                id: this.id,
-                manualMode: this.manualMode,
-                name: this.name,
-                owner: simplifiedOwner,
-                players: playerState,
-                rings: ringState,
-                conflict: conflictState,
-                phase: this.currentPhase,
-                // messages: this.gameChat.messages,
-                spectators: this.getSpectators().map((spectator) => {
-                    return {
-                        id: spectator.id,
-                        name: spectator.name
-                    };
-                }),
-                started: this.started,
-                gameMode: this.gameMode,
-                winner: this.winner ? this.winner.name : undefined
-            };
+            // return {
+            //     id: this.id,
+            //     manualMode: this.manualMode,
+            //     name: this.name,
+            //     owner: simplifiedOwner,
+            //     players: playerState,
+            //     rings: ringState,
+            //     conflict: conflictState,
+            //     phase: this.currentPhase,
+            //     // messages: this.gameChat.messages,
+            //     spectators: this.getSpectators().map((spectator) => {
+            //         return {
+            //             id: spectator.id,
+            //             name: spectator.name
+            //         };
+            //     }),
+            //     started: this.started,
+            //     gameMode: this.gameMode,
+            //     winner: this.winner ? this.winner.name : undefined
+            // };
         // }
 
         // return this.getSummary(notInactivePlayerName);

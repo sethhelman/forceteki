@@ -3,7 +3,7 @@ import fs from 'fs';
 import http from 'http';
 import https from 'https';
 import jwt from 'jsonwebtoken';
-import { Server } from 'socket.io';
+import socketio from 'socket.io';
 
 import { logger } from '../logger';
 import Game from '../game/core/Game';
@@ -17,7 +17,7 @@ export class GameServer {
     private games = new Map<string, Game>();
     private protocol = 'https';
     private host = env.gameNodeHost;
-    private io: Server;
+    private io: socketio.Server;
     private titleCardData: any;
     private shortCardData: any;
 
@@ -39,11 +39,13 @@ export class GameServer {
         server.listen(env.gameNodeSocketIoPort);
         logger.info(`Game server listening on port ${env.gameNodeSocketIoPort}`);
 
-        this.io = new Server(server, {
+        this.io = new socketio.Server(server, {
             perMessageDeflate: false
         });
 
         this.io.on('connection', socket => this.onConnection(socket));
+
+        this.onStartGame();
     }
 
     public debugDump() {
@@ -134,17 +136,16 @@ export class GameServer {
     }
 
     // handshake(socket: socketio.Socket, next: () => void) {
-    //     if (socket.handshake.query.token && socket.handshake.query.token !== 'undefined') {
-    //         jwt.verify(socket.handshake.query.token, env.secret, function (err, user) {
-    //             if (err) {
-    //                 logger.info(err);
-    //                 return;
-    //             }
+    //     // if (socket.handshake.query.token && socket.handshake.query.token !== 'undefined') {
+    //     //     jwt.verify(socket.handshake.query.token, env.secret, function (err, user) {
+    //     //         if (err) {
+    //     //             logger.info(err);
+    //     //             return;
+    //     //         }
 
-    //             socket.request.user = user;
-    //         });
-    //     }
-
+    //     //         socket.request.user = user;
+    //     //     });
+    //     // }
     //     next();
     // }
 
@@ -166,7 +167,20 @@ export class GameServer {
             name: 'Test Game',
             allowSpectators: false,
             spectatorSquelch: true,
-            owner: 'TestUser',
+            owner: 'Order66',
+            clocks: 'timer',
+            players: [
+                { user: {
+                    username: 'Order66'
+                  },
+                  id: `66`
+                },
+                { user: {
+                    username: 'ThisIsTheWay'
+                  },
+                  id: `th3w4y`
+                }
+            ]
         }
         const game = new Game(details, { router: this, shortCardData: this.shortCardData });
         this.games.set(details.id, game);
@@ -237,6 +251,10 @@ export class GameServer {
     }
 
     onConnection(ioSocket) {
+        let user = ioSocket.handshake.query.user;
+        if (user) {
+            ioSocket.request.user = {username: user};
+        }
         if (!ioSocket.request.user) {
             logger.info('socket connected with no user, disconnecting');
             ioSocket.disconnect();
