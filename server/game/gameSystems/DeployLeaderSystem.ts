@@ -20,7 +20,7 @@ export class DeployLeaderSystem<TContext extends AbilityContext = AbilityContext
         event.card.deploy();
     }
 
-    override getEffectMessage(context: TContext, additionalProperties: {} = {}): [string, any[]] {
+    public override getEffectMessage(context: TContext, additionalProperties: any = {}): [string, any[]] {
         const properties = this.generatePropertiesFromContext(context);
         return ['deploy {0}', [properties.target]];
     }
@@ -30,18 +30,5 @@ export class DeployLeaderSystem<TContext extends AbilityContext = AbilityContext
             return false;
         }
         return super.canAffect(card, context);
-    }
-
-    protected override updateEvent(event, card: Card, context: TContext, additionalProperties: {} = {}) {
-        super.updateEvent(event, card, context, additionalProperties);
-        event.setContingentEventsGenerator(() => {
-            const deployedEvent = new GameEvent(EventName.OnLeaderDeployed, {
-                player: context.player,
-                card,
-                context,
-            });
-
-            return [deployedEvent];
-        });
     }
 }
