@@ -12,7 +12,7 @@ import type Player from '../game/core/Player';
 import Socket from '../socket';
 import * as env from '../env';
 import { spec } from 'node:test/reporters';
-import {defaultGameSettings} from './defaultGame';
+import defaultGameSettings from './defaultGame';
 
 export class GameServer {
     private games = new Map<string, Game>();
@@ -22,7 +22,7 @@ export class GameServer {
     private titleCardData: any;
     private shortCardData: any;
 
-    constructor() {
+    public constructor() {
         let privateKey: undefined | string;
         let certificate: undefined | string;
         try {
@@ -44,7 +44,7 @@ export class GameServer {
             perMessageDeflate: false
         });
 
-        this.io.on('connection', socket => this.onConnection(socket));
+        this.io.on('connection', (socket) => this.onConnection(socket));
 
         this.onStartGame();
     }
@@ -77,11 +77,11 @@ export class GameServer {
         };
     }
 
-    handleError(game: Game, e: Error) {
+    public handleError(game: Game, e: Error) {
         logger.error(e);
 
-        let gameState = game.getState();
-        let debugData: any = {};
+        const gameState = game.getState();
+        const debugData: any = {};
 
         // if (e.message.includes('Maximum call stack')) {
         //     debugData.badSerializaton = detectBinary(gameState);
@@ -107,7 +107,7 @@ export class GameServer {
         }
     }
 
-    runAndCatchErrors(game: Game, func: () => void) {
+    public runAndCatchErrors(game: Game, func: () => void) {
         try {
             func();
         } catch (e) {
@@ -117,7 +117,7 @@ export class GameServer {
         }
     }
 
-    findGameForUser(username: string): undefined | Game {
+    public findGameForUser(username: string): undefined | Game {
         for (const game of this.games.values()) {
             const player = game.playersAndSpectators[username];
             if (player && !player.left) {
@@ -125,10 +125,10 @@ export class GameServer {
             }
         }
 
-        return undefined
+        return undefined;
     }
 
-    sendGameState(game: Game): void {
+    public sendGameState(game: Game): void {
         for (const player of Object.values<Player>(game.getPlayersAndSpectators())) {
             if (player.socket && !player.left && !player.disconnected) {
                 player.socket.send('gamestate', game.getState(player.name));
@@ -150,7 +150,7 @@ export class GameServer {
     //     next();
     // }
 
-    gameWon(game: Game, reason: string, winner: Player): void {
+    public gameWon(game: Game, reason: string, winner: Player): void {
         // const saveState = game.getSaveState();
         // // this.zmqSocket.send('GAMEWIN', { game: saveState, winner: winner.name, reason: reason });
 
@@ -162,7 +162,7 @@ export class GameServer {
         //     .catch(() => {});
     }
 
-    onStartGame(): void { 
+    public onStartGame(): void {
         const game = new Game(defaultGameSettings, { router: this, shortCardData: this.shortCardData });
         this.games.set(defaultGameSettings.id, game);
 
@@ -219,7 +219,7 @@ export class GameServer {
     //     this.sendGameState(game);
     // }
 
-    onCloseGame(gameId) {
+    public onCloseGame(gameId) {
         const game = this.games.get(gameId);
         if (!game) {
             return;
@@ -229,15 +229,15 @@ export class GameServer {
         // this.zmqSocket.send('GAMECLOSED', { game: game.id });
     }
 
-    onCardData(cardData) {
+    public onCardData(cardData) {
         this.titleCardData = cardData.titleCardData;
         this.shortCardData = cardData.shortCardData;
     }
 
-    onConnection(ioSocket) {
-        let user = ioSocket.handshake.query.user;
+    public onConnection(ioSocket) {
+        const user = ioSocket.handshake.query.user;
         if (user) {
-            ioSocket.request.user = {username: user};
+            ioSocket.request.user = { username: user };
         }
         if (!ioSocket.request.user) {
             logger.info('socket connected with no user, disconnecting');
@@ -262,7 +262,7 @@ export class GameServer {
         player.lobbyId = player.id;
         player.id = socket.id;
         if (player.disconnected) {
-            logger.info("user '%s' reconnected to game", socket.user.username);
+            logger.info(`user ${socket.user.username} reconnected to game`);
             game.reconnect(socket, player.name);
         }
 
@@ -280,13 +280,13 @@ export class GameServer {
         socket.on('disconnect', this.onSocketDisconnected.bind(this));
     }
 
-    onSocketDisconnected(socket, reason) {
+    public onSocketDisconnected(socket, reason) {
         const game = this.findGameForUser(socket.user.username);
         if (!game) {
             return;
         }
 
-        logger.info("user '%s' disconnected from a game: %s", socket.user.username, reason);
+        logger.info(`user ${socket.user.username} disconnected from a game: ${reason}`);
 
         const isSpectator = game.isSpectator(game.playersAndSpectators[socket.user.username]);
 
@@ -308,7 +308,7 @@ export class GameServer {
         this.sendGameState(game);
     }
 
-    onLeaveGame(socket) {
+    public onLeaveGame(socket) {
         const game = this.findGameForUser(socket.user.username);
         if (!game) {
             return;
@@ -337,7 +337,7 @@ export class GameServer {
         this.sendGameState(game);
     }
 
-    onGameMessage(socket, command, ...args) {
+    public onGameMessage(socket, command, ...args) {
         const game = this.findGameForUser(socket.user.username);
 
         if (!game) {

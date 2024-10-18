@@ -1205,7 +1205,7 @@ class Player extends GameObject {
             state.clock = this.clock.getState();
         }
 
-        return {...state, ...promptState};
+        return { ...state, ...promptState };
     }
 }
 
