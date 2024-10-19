@@ -1,7 +1,7 @@
 const EventEmitter = require('events');
 
 // const ChatCommands = require('./chat/ChatCommands.js');
-// const { GameChat } = require('./chat/GameChat.js');
+const { GameChat } = require('./chat/GameChat.js');
 const { OngoingEffectEngine } = require('./ongoingEffect/OngoingEffectEngine.js');
 const Player = require('./Player.js');
 const { Spectator } = require('../../Spectator.js');
@@ -42,7 +42,7 @@ class Game extends EventEmitter {
 
         this.ongoingEffectEngine = new OngoingEffectEngine(this);
         this.playersAndSpectators = {};
-        // this.gameChat = new GameChat();
+        this.gameChat = new GameChat();
         // this.chatCommands = new ChatCommands(this);
         this.pipeline = new GamePipeline();
         this.id = details.id;
@@ -1241,12 +1241,12 @@ class Game extends EventEmitter {
     // /*
     //  * This information is sent to the client
     //  */
-    getState(notInactivePlayerName) {
-        let activePlayer = this.playersAndSpectators[notInactivePlayerName] || new AnonymousSpectator();
-        let playerState = {};
-        let ringState = {};
-        let conflictState = {};
-        let { blocklist, email, emailHash, promptedActionWindows, settings, ...simplifiedOwner } = this.owner;
+    // getState(notInactivePlayerName) {
+    //     let activePlayer = this.playersAndSpectators[notInactivePlayerName] || new AnonymousSpectator();
+    //     let playerState = {};
+    //     let ringState = {};
+    //     let conflictState = {};
+    //     let { blocklist, email, emailHash, promptedActionWindows, settings, ...simplifiedOwner } = this.owner;
         // if (this.started) {
         // for (const player of this.getPlayers()) {
         //     playerState[player.name] = player.getState(activePlayer);
@@ -1275,7 +1275,7 @@ class Game extends EventEmitter {
         // }
 
         // return this.getSummary(notInactivePlayerName);
-    }
+    // }
 
     // /*
     //  * This is used for debugging?

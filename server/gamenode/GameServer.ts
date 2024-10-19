@@ -80,7 +80,7 @@ export class GameServer {
     public handleError(game: Game, e: Error) {
         logger.error(e);
 
-        const gameState = game.getState();
+        // const gameState = game.getState();
         const debugData: any = {};
 
         // if (e.message.includes('Maximum call stack')) {
@@ -131,7 +131,7 @@ export class GameServer {
     public sendGameState(game: Game): void {
         for (const player of Object.values<Player>(game.getPlayersAndSpectators())) {
             if (player.socket && !player.left && !player.disconnected) {
-                player.socket.send('gamestate', game.getState(player.name));
+                // player.socket.send('gamestate', game.getState(player.name));
             }
         }
     }
