@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
 
-// const ChatCommands = require('./chat/ChatCommands.js');
+const ChatCommands = require('./chat/ChatCommands.js');
 const { GameChat } = require('./chat/GameChat.js');
 const { OngoingEffectEngine } = require('./ongoingEffect/OngoingEffectEngine.js');
 const Player = require('./Player.js');
@@ -44,7 +44,7 @@ class Game extends EventEmitter {
         this.ongoingEffectEngine = new OngoingEffectEngine(this);
         this.playersAndSpectators = {};
         this.gameChat = new GameChat();
-        // this.chatCommands = new ChatCommands(this);
+        this.chatCommands = new ChatCommands(this);
         this.pipeline = new GamePipeline();
         this.id = details.id;
         this.name = details.name;
@@ -127,8 +127,7 @@ class Game extends EventEmitter {
     }
 
     get messages() {
-        // return this.gameChat.messages;
-        return [];
+        return this.gameChat.messages;
     }
 
     /**
@@ -697,7 +696,7 @@ class Game extends EventEmitter {
             return;
         }
 
-        // player.optionSettings[settingName] = toggle;
+        player.optionSettings[settingName] = toggle;
     }
 
     toggleManualMode(playerName) {
@@ -1254,34 +1253,34 @@ class Game extends EventEmitter {
     //     let ringState = {};
     //     let conflictState = {};
     //     let { blocklist, email, emailHash, promptedActionWindows, settings, ...simplifiedOwner } = this.owner;
-        // if (this.started) {
-        // for (const player of this.getPlayers()) {
-        //     playerState[player.name] = player.getState(activePlayer);
-        // }
+    // if (this.started) {
+    // for (const player of this.getPlayers()) {
+    //     playerState[player.name] = player.getState(activePlayer);
+    // }
 
-        // return {
-        //     id: this.id,
-        //     manualMode: this.manualMode,
-        //     name: this.name,
-        //     owner: simplifiedOwner,
-        //     players: playerState,
-        //     rings: ringState,
-        //     conflict: conflictState,
-        //     phase: this.currentPhase,
-        //     // messages: this.gameChat.messages,
-        //     spectators: this.getSpectators().map((spectator) => {
-        //         return {
-        //             id: spectator.id,
-        //             name: spectator.name
-        //         };
-        //     }),
-        //     started: this.started,
-        //     gameMode: this.gameMode,
-        //     winner: this.winner ? this.winner.name : undefined
-        // };
-        // }
+    // return {
+    //     id: this.id,
+    //     manualMode: this.manualMode,
+    //     name: this.name,
+    //     owner: simplifiedOwner,
+    //     players: playerState,
+    //     rings: ringState,
+    //     conflict: conflictState,
+    //     phase: this.currentPhase,
+    //     // messages: this.gameChat.messages,
+    //     spectators: this.getSpectators().map((spectator) => {
+    //         return {
+    //             id: spectator.id,
+    //             name: spectator.name
+    //         };
+    //     }),
+    //     started: this.started,
+    //     gameMode: this.gameMode,
+    //     winner: this.winner ? this.winner.name : undefined
+    // };
+    // }
 
-        // return this.getSummary(notInactivePlayerName);
+    // return this.getSummary(notInactivePlayerName);
     // }
 
     // /*

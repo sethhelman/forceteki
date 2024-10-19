@@ -8,7 +8,18 @@ const defaultGameSettings = {
     players: [
         {
             user: {
-                username: 'Order66'
+                username: 'Order66',
+                settings: {
+                    optionSettings: {
+                        markCardsUnselectable: true,
+                        cancelOwnAbilities: false,
+                        orderForcedAbilities: false,
+                        confirmOneClick: false,
+                        disableCardStats: false,
+                        showStatusInSidebar: false,
+                        sortHandByName: false
+                    }
+                }
             },
             id: '66',
             deck: {
@@ -87,7 +98,18 @@ const defaultGameSettings = {
         },
         {
             user: {
-                username: 'ThisIsTheWay'
+                username: 'ThisIsTheWay',
+                settings: {
+                    optionSettings: {
+                        markCardsUnselectable: true,
+                        cancelOwnAbilities: false,
+                        orderForcedAbilities: false,
+                        confirmOneClick: false,
+                        disableCardStats: false,
+                        showStatusInSidebar: false,
+                        sortHandByName: false
+                    }
+                }
             },
             id: 'th3w4y',
             deck: {

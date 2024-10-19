@@ -85,7 +85,7 @@ class Player extends GameObject {
         };
         // this.timerSettings = user.settings.timerSettings || {};
         // this.timerSettings.windowTimer = user.settings.windowTimer;
-        // this.optionSettings = user.settings.optionSettings;
+        this.optionSettings = user.settings.optionSettings;
         this.resetTimerAtEndOfRound = false;
 
         // mainly used for staging new tokens when they are created
