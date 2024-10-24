@@ -1,24 +1,26 @@
 import { AbilityContext } from '../../ability/AbilityContext';
+import { Card } from '../../card/Card';
 import { EffectName } from '../../Constants';
-import { OngoingEffectImpl } from './OngoingEffectImpl';
-import { OngoingEffectValueWrapper } from './OngoingEffectValueWrapper';
+import Player from '../../Player';
+import * as Contract from '../../utils/Contract';
 import StaticOngoingEffectImpl from './StaticOngoingEffectImpl';
 
 // TODO: eventually this will subclass OngoingEffectImpl directly
+export type IDynamicEffectValueCalculator<TValue, TTarget extends Player | Card = any> = (target: TTarget, context: AbilityContext) => TValue;
+
 export default class DynamicOngoingEffectImpl<TValue> extends StaticOngoingEffectImpl<TValue> {
     private values: Record<string, TValue> = {};
 
     public constructor(
         type: EffectName,
-        private calculate: ((target: any, context: AbilityContext) => TValue)
+        private calculate: IDynamicEffectValueCalculator<TValue>
     ) {
         super(type, null);
     }
 
     public override apply(target) {
-        // TODO: these two calls were in the reverse order in l5r, not sure if that was required for some reason
-        this.recalculate(target);
         super.apply(target);
+        this.recalculate(target);
     }
 
     public override recalculate(target) {

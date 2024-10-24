@@ -16,6 +16,8 @@ import { GainAbility } from '../core/ongoingEffect/effectImpl/GainAbility';
 import { IConstantAbility } from '../core/ongoingEffect/IConstantAbility';
 import * as KeywordHelpers from '../core/ability/KeywordHelpers';
 import { CostAdjustDirection, ICostAdjusterProperties } from '../core/cost/CostAdjuster';
+import { IDynamicEffectValueCalculator } from '../core/ongoingEffect/effectImpl/DynamicOngoingEffectImpl';
+import { Card } from '../core/card/Card';
 
 /* Types of effect
     1. Static effects - do something for a period
@@ -128,7 +130,7 @@ export = {
     //     OngoingEffectBuilder.card.flexible(EffectName.ModifyBaseMilitarySkillMultiplier, value),
     // modifyBasePoliticalSkillMultiplier: (value) =>
     //     OngoingEffectBuilder.card.flexible(EffectName.ModifyBasePoliticalSkillMultiplier, value),
-    modifyStats: (modifier: StatsModifier) => OngoingEffectBuilder.card.flexible(EffectName.ModifyStats, modifier),
+    modifyStats: (modifier: StatsModifier | IDynamicEffectValueCalculator<StatsModifier, Card>) => OngoingEffectBuilder.card.flexible(EffectName.ModifyStats, modifier),
     // modifyMilitarySkill: (value) => OngoingEffectBuilder.card.flexible(EffectName.ModifyMilitarySkill, value),
     // switchAttachmentSkillModifiers,
     // modifyMilitarySkillMultiplier: (value) =>

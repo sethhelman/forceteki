@@ -1,4 +1,6 @@
 import AbilityHelper from '../../../AbilityHelper';
+import { AbilityContext } from '../../../core/ability/AbilityContext';
+import { Card } from '../../../core/card/Card';
 import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
 
 export default class _97thLegionKeepingThePeaceOnSullust extends NonLeaderUnitCard {
@@ -12,7 +14,9 @@ export default class _97thLegionKeepingThePeaceOnSullust extends NonLeaderUnitCa
     public override setupCardAbilities() {
         this.addConstantAbility({
             title: 'This unit gets +1/+1 for each resource you control',
-            ongoingEffect: AbilityHelper.ongoingEffects.modifyStats({ power: this.controller.resources.length, hp: this.controller.resources.length }),
+            ongoingEffect: AbilityHelper.ongoingEffects.modifyStats(
+                (target: Card) => ({ hp: target.controller.resources.length, power: target.controller.resources.length })
+            )
         });
     }
 }

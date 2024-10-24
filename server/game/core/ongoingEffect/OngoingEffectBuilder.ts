@@ -28,7 +28,7 @@ export const OngoingEffectBuilder = {
             new OngoingCardEffect(game, source, props, new DynamicOngoingEffectImpl(type, value)),
         detached: (type: EffectName, value) => (game: Game, source: Card, props: IOngoingEffectProps) =>
             new OngoingCardEffect(game, source, props, new DetachedOngoingEffectImpl(type, value.apply, value.unapply)),
-        flexible: (type: EffectName, value?: unknown) =>
+        flexible: (type: EffectName, value?: any) =>
             (typeof value === 'function'
                 ? OngoingEffectBuilder.card.dynamic(type, value)
                 : OngoingEffectBuilder.card.static(type, value))
