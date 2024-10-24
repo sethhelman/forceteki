@@ -41,7 +41,11 @@ export class GameServer {
         logger.info(`Game server listening on port ${env.gameNodeSocketIoPort}`);
 
         this.io = new socketio.Server(server, {
-            perMessageDeflate: false
+            perMessageDeflate: false,
+            cors: {
+                origin: 'http://localhost:3000',
+                methods: ['GET', 'POST']
+            }
         });
 
         this.io.on('connection', (socket) => this.onConnection(socket));
@@ -239,6 +243,7 @@ export class GameServer {
         if (user) {
             ioSocket.request.user = { username: user };
         }
+        console.log(`${user.username} connected`);
         if (!ioSocket.request.user) {
             logger.info('socket connected with no user, disconnecting');
             ioSocket.disconnect();
