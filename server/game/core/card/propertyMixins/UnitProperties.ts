@@ -208,13 +208,15 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
             this._whenPlayedKeywordAbilities = [];
 
             if (hasAmbush) {
-                const ambushAbility = this.createTriggeredAbility(AmbushAbility.buildAmbushAbilityProperties());
+                const ambushProps = Object.assign(this.buildGeneralAbilityProps('keyword_ambush'), AmbushAbility.buildAmbushAbilityProperties());
+                const ambushAbility = this.createTriggeredAbility(ambushProps);
                 ambushAbility.registerEvents();
                 this._whenPlayedKeywordAbilities.push(ambushAbility);
             }
 
             if (hasShielded) {
-                const shieldedAbility = this.createTriggeredAbility(ShieldedAbility.buildShieldedAbilityProperties());
+                const shieldedProps = Object.assign(this.buildGeneralAbilityProps('keyword_shielded'), ShieldedAbility.buildShieldedAbilityProperties());
+                const shieldedAbility = this.createTriggeredAbility(shieldedProps);
                 shieldedAbility.registerEvents();
                 this._whenPlayedKeywordAbilities.push(shieldedAbility);
             }
@@ -247,13 +249,15 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
 
             if (hasRestore) {
                 const restoreAmount = this.getNumericKeywordSum(KeywordName.Restore);
-                const restoreAbility = this.createTriggeredAbility(RestoreAbility.buildRestoreAbilityProperties(restoreAmount));
+                const restoreProps = Object.assign(this.buildGeneralAbilityProps('keyword_restore'), RestoreAbility.buildRestoreAbilityProperties(restoreAmount));
+                const restoreAbility = this.createTriggeredAbility(restoreProps);
                 restoreAbility.registerEvents();
                 this._attackKeywordAbilities.push(restoreAbility);
             }
 
             if (hasSaboteur) {
-                const saboteurAbility = this.createTriggeredAbility(SaboteurDefeatShieldsAbility.buildSaboteurAbilityProperties());
+                const saboteurProps = Object.assign(this.buildGeneralAbilityProps('keyword_saboteur'), SaboteurDefeatShieldsAbility.buildSaboteurAbilityProperties());
+                const saboteurAbility = this.createTriggeredAbility(saboteurProps);
                 saboteurAbility.registerEvents();
                 this._attackKeywordAbilities.push(saboteurAbility);
             }

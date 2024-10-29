@@ -24,8 +24,6 @@ import type Game from '../Game.js';
  *                to activate the action. Defaults to 'play area'.
  * limit        - optional AbilityLimit object that represents the max number of
  *                uses for the action as well as when it resets.
- * anyPlayer    - boolean indicating that the action may be executed by a player
- *                other than the card's controller. Defaults to false.
  * clickToActivate - boolean that indicates the action should be activated when
  *                   the card is clicked.
  */
@@ -41,7 +39,7 @@ export class ActionAbility extends CardAbility {
 
         this.phase = properties.phase ?? PhaseName.Action;
         this.condition = properties.condition;
-        this.anyPlayer = properties.anyPlayer ?? false;
+        // this.anyPlayer = properties.anyPlayer ?? false;
         this.doesNotTarget = (properties as any).doesNotTarget;
     }
 
