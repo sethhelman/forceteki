@@ -1,5 +1,5 @@
 import type { AbilityContext } from '../core/ability/AbilityContext';
-import { AbilityRestriction, CardType, CardTypeFilter, Duration, EventName, KeywordName, Location, WildcardCardType, WildcardLocation } from '../core/Constants';
+import { AbilityRestriction, CardType, CardTypeFilter, Duration, EventName, KeywordName, Location, MetaEventName, WildcardCardType, WildcardLocation } from '../core/Constants';
 import * as EnumHelpers from '../core/utils/EnumHelpers';
 import { Attack } from '../core/attack/Attack';
 import { EffectName } from '../core/Constants';
@@ -49,7 +49,7 @@ export interface IAttackProperties<TContext extends AbilityContext = AbilityCont
  */
 export class AttackStepsSystem<TContext extends AbilityContext = AbilityContext> extends CardTargetSystem<TContext, IAttackProperties<TContext>> {
     public override readonly name = 'attack';
-    public override readonly eventName = EventName.MetaAttackSteps;
+    public override readonly eventName = MetaEventName.AttackSteps;
     protected override readonly targetTypeFilter: CardTypeFilter[] = [WildcardCardType.Unit, CardType.Base];
     protected override readonly defaultProperties: IAttackProperties<TContext> = {
         targetCondition: () => true
@@ -107,9 +107,9 @@ export class AttackStepsSystem<TContext extends AbilityContext = AbilityContext>
         if (targetCard === properties.attacker || targetCard.controller === properties.attacker.controller) {
             return false; // cannot attack yourself or your controller's cards
         }
-        if (
-            targetCard.hasRestriction(AbilityRestriction.BeAttacked, context) ||
-            properties.attacker.effectsPreventAttack(targetCard)
+        if ( // sentinel keyword overrides "can't be attacked" abilities (SWU Comp Rules 2.0 7.5.11.D)
+            ((targetCard.hasRestriction(AbilityRestriction.BeAttacked, context) && !targetCard.hasSomeKeyword(KeywordName.Sentinel)) ||
+              properties.attacker.effectsPreventAttack(targetCard))
         ) {
             return false; // cannot attack cards with a BeAttacked restriction
         }
