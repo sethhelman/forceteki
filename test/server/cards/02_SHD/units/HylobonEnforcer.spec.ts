@@ -5,11 +5,10 @@ describe('Hylobon Enforcer', function() {
                 contextRef.setupTest({
                     phase: 'action',
                     player1: {
-                        hand: ['hylobon-enforcer'],
-                        groundArena: ['wampa'],
+                        groundArena: ['hylobon-enforcer']
                     },
                     player2: {
-                        spaceArena: ['cartel-spacer']
+                        groundArena: ['wampa']
                     }
                 });
             });
@@ -17,12 +16,11 @@ describe('Hylobon Enforcer', function() {
             it('should give an experience token to a unit', function () {
                 const { context } = contextRef;
 
-                context.player1.clickCard(context.clanWrenRescuer);
-                expect(context.player1).not.toHavePassAbilityButton();
-                expect(context.player1).toBeAbleToSelectExactly([context.clanWrenRescuer, context.wampa, context.cartelSpacer]);
-
-                context.player1.clickCard(context.clanWrenRescuer);
-                expect(context.clanWrenRescuer).toHaveExactUpgradeNames(['experience']);
+                context.player1.clickCard(context.hylobonEnforcer);
+                context.player1.clickCard(context.wampa);
+                expect(context.player1.handSize).toBe(1);
+                expect(context.player2.handSize).toBe(0);
+                expect(context.player2).toBeActivePlayer();
             });
         });
     });

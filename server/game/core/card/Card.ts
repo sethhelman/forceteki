@@ -11,7 +11,7 @@ import * as Helpers from '../utils/Helpers';
 import { AbilityContext } from '../ability/AbilityContext';
 import { CardAbility } from '../ability/CardAbility';
 import type Shield from '../../cards/01_SOR/tokens/Shield';
-import { KeywordInstance, KeywordWithCostValues } from '../ability/KeywordInstance';
+import { KeywordInstance, KeywordWithAbilityDefinition, KeywordWithCostValues } from '../ability/KeywordInstance';
 import * as KeywordHelpers from '../ability/KeywordHelpers';
 import { StateWatcherRegistrar } from '../stateWatcher/StateWatcherRegistrar';
 import type { EventCard } from './EventCard';
@@ -358,7 +358,7 @@ export class Card extends OngoingEffectSource {
 
     // ******************************************* KEYWORD HELPERS *******************************************
     /** Helper method for {@link Card.keywords} */
-    private getKeywords() {
+    protected getKeywords() {
         const keywords = [...this.printedKeywords];
 
         for (const gainedKeyword of this.getOngoingEffectValues(EffectName.GainKeyword)) {

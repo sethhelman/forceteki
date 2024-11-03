@@ -12,9 +12,7 @@ export default class HylobonEnforcer extends NonLeaderUnitCard {
     public override setupCardAbilities() {
         this.addBountyAbility({
             title: 'Draw a card',
-            targetResolver: {
-                immediateEffect: AbilityHelper.immediateEffects.draw()
-            }
+            immediateEffect: AbilityHelper.immediateEffects.draw()
         });
     }
 }
