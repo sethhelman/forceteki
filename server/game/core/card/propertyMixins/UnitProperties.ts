@@ -1,5 +1,5 @@
 import { InitiateAttackAction } from '../../../actions/InitiateAttackAction';
-import { Arena, CardType, EffectName, EventName, KeywordName, Location, StatType } from '../../Constants';
+import { AbilityType, Arena, CardType, EffectName, EventName, KeywordName, Location, RelativePlayer, StatType } from '../../Constants';
 import StatsModifierWrapper from '../../ongoingEffect/effectImpl/StatsModifierWrapper';
 import { IOngoingCardEffect } from '../../ongoingEffect/IOngoingCardEffect';
 import * as Contract from '../../utils/Contract';
@@ -9,8 +9,8 @@ import { WithPrintedPower } from './PrintedPower';
 import * as EnumHelpers from '../../utils/EnumHelpers';
 import { UpgradeCard } from '../UpgradeCard';
 import { Card } from '../Card';
-import { ITriggeredAbilityProps } from '../../../Interfaces';
-import { KeywordWithNumericValue } from '../../ability/KeywordInstance';
+import { ITriggeredAbilityProps, ITriggeredAbilityPropsWithType } from '../../../Interfaces';
+import { KeywordWithAbilityDefinition, KeywordWithNumericValue } from '../../ability/KeywordInstance';
 import TriggeredAbility from '../../ability/TriggeredAbility';
 import { IConstantAbility } from '../../ongoingEffect/IConstantAbility';
 import { RestoreAbility } from '../../../abilities/keyword/RestoreAbility';
@@ -145,17 +145,37 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
             this.addTriggeredAbility(triggeredProperties);
         }
 
-        protected addBountyAbility(properties: Omit<ITriggeredAbilityProps<this>, 'when' | 'aggregateWhen'>): void {
-            const triggeredProperties = Object.assign(properties,
-                {
-                    when: {
-                        onCardDefeated: (event, context) => event.card === context.source
-                        // TODO CAPTURE: add capture trigger
-                    }
-                });
+        protected addBountyAbility(properties: Omit<ITriggeredAbilityProps<this>, 'when' | 'aggregateWhen' | 'abilityController'>): void {
+            const { title, ...otherProps } = properties;
 
+            const triggeredProperties: ITriggeredAbilityPropsWithType<this> = {
+                ...otherProps,
+                title: 'Bounty: ' + title,
+                type: AbilityType.Triggered,
+                when: {
+                    onCardDefeated: (event, context) => event.card === context.source
+                    // TODO CAPTURE: add capture trigger
+                },
+                abilityController: RelativePlayer.Opponent
+            };
 
-            this.addTriggeredAbility(triggeredProperties);
+            const bountyKeywordsWithoutImpl = this.printedKeywords.filter((keyword) => keyword.name === KeywordName.Bounty && !keyword.isFullyImplemented);
+
+            if (bountyKeywordsWithoutImpl.length === 0) {
+                const bountyKeywordsWithImpl = this.printedKeywords.filter((keyword) => keyword.name === KeywordName.Bounty && keyword.isFullyImplemented);
+
+                if (bountyKeywordsWithImpl.length > 0) {
+                    Contract.fail(`Attempting to add a bounty ability '${properties.title}' to ${this.internalName} but all instances of the Bounty keyword already have a definition`);
+                }
+
+                Contract.fail(`Attempting to add a bounty ability '${properties.title}' to ${this.internalName} but it has no printed instances of the Bounty keyword`);
+            }
+
+            const bountyAbilityToAssign = bountyKeywordsWithoutImpl[0];
+
+            // TODO: see if there's a better way using discriminating unions to avoid needing a cast when getting keyword instances
+            Contract.assertTrue(bountyAbilityToAssign instanceof KeywordWithAbilityDefinition);
+            bountyAbilityToAssign.setAbilityProps(triggeredProperties);
         }
 
         public override getTriggeredAbilities(): TriggeredAbility[] {
@@ -274,7 +294,8 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
             let keywordValueTotal = 0;
 
             for (const keyword of this.keywords.filter((keyword) => keyword.name === keywordName)) {
-                keywordValueTotal += (keyword as KeywordWithNumericValue).value;
+                Contract.assertTrue(keyword instanceof KeywordWithNumericValue);
+                keywordValueTotal += keyword.value;
             }
 
             return keywordValueTotal > 0 ? keywordValueTotal : null;

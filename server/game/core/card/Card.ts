@@ -57,11 +57,12 @@ export class Card extends OngoingEffectSource {
     protected _controller: Player;
     protected defaultController: Player;
     protected _facedown = true;
+    protected hasImplementationFile: boolean;   // this will be set by the ability setup methods
     protected hiddenForController = true;      // TODO: is this correct handling of hidden / visible card state? not sure how this integrates with the client
     protected hiddenForOpponent = true;
 
-    private nextAbilityIdx = 0;
     private _location: Location;
+    private nextAbilityIdx = 0;
 
 
     // ******************************************** PROPERTY GETTERS ********************************************
