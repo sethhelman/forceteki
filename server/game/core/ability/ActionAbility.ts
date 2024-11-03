@@ -52,14 +52,6 @@ export class ActionAbility extends CardAbility {
             return 'phase';
         }
 
-        const canOpponentTrigger =
-            this.card.hasOngoingEffect(EffectName.CanBeTriggeredByOpponent) &&
-            this.type !== AbilityType.Triggered;
-        const canPlayerTrigger = this.anyPlayer || context.player === this.card.controller || canOpponentTrigger;
-        if (!ignoredRequirements.includes('player') && !this.card.isEvent() && !canPlayerTrigger) {
-            return 'player';
-        }
-
         if (!ignoredRequirements.includes('condition') && this.condition && !this.condition(context)) {
             return 'condition';
         }

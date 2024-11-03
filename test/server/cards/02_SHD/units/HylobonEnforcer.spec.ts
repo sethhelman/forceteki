@@ -18,8 +18,8 @@ describe('Hylobon Enforcer', function() {
 
                 context.player1.clickCard(context.hylobonEnforcer);
                 context.player1.clickCard(context.wampa);
-                expect(context.player1.handSize).toBe(1);
-                expect(context.player2.handSize).toBe(0);
+                expect(context.player1.handSize).toBe(0);
+                expect(context.player2.handSize).toBe(1);
                 expect(context.player2).toBeActivePlayer();
             });
         });

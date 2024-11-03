@@ -61,6 +61,22 @@ export class CardAbility extends CardAbilityStep {
     }
 
     public override meetsRequirements(context, ignoredRequirements = []) {
+        let canPlayerTrigger: boolean;
+        switch (this.abilityController) {
+            case RelativePlayer.Self:
+                canPlayerTrigger = context.player === context.source.controller;
+                break;
+            case RelativePlayer.Opponent:
+                canPlayerTrigger = context.player === context.source.controller.opponent;
+                break;
+            default:
+                Contract.fail(`Unexpected value for relative player: ${this.abilityController}`);
+        }
+
+        if (!ignoredRequirements.includes('player') && !canPlayerTrigger) {
+            return 'player';
+        }
+
         if (this.card.isBlank() && this.printedAbility) {
             return 'blank';
         }
