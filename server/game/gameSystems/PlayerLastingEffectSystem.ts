@@ -17,7 +17,7 @@ export class PlayerLastingEffectSystem<TContext extends AbilityContext = Ability
     public override readonly eventName: EventName = EventName.OnEffectApplied;
     public override readonly effectDescription: string = 'apply a lasting effect targeting a player';
 
-    public eventHandler(event: GameEvent, additionalProperties: any): void {
+    public eventHandler(event: any, additionalProperties: any): void {
         const properties = this.generatePropertiesFromContext(event.context, additionalProperties);
         if (!properties.ability) {
             properties.ability = event.context.ability;
@@ -45,7 +45,7 @@ export class PlayerLastingEffectSystem<TContext extends AbilityContext = Ability
 
     public override queueGenerateEventGameSteps(events: GameEvent[], context: TContext, additionalProperties: any): void {
         if (this.hasLegalTarget(context, additionalProperties)) {
-            events.push(this.generateEvent(null, context, additionalProperties));
+            events.push(this.generateEvent(context, additionalProperties));
         }
     }
 

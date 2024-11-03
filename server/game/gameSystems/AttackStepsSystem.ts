@@ -1,5 +1,5 @@
 import type { AbilityContext } from '../core/ability/AbilityContext';
-import { AbilityRestriction, CardType, CardTypeFilter, Duration, EventName, KeywordName, Location, WildcardCardType, WildcardLocation } from '../core/Constants';
+import { AbilityRestriction, CardType, CardTypeFilter, Duration, EventName, KeywordName, Location, MetaEventName, WildcardCardType, WildcardLocation } from '../core/Constants';
 import * as EnumHelpers from '../core/utils/EnumHelpers';
 import { Attack } from '../core/attack/Attack';
 import { EffectName } from '../core/Constants';
@@ -49,7 +49,7 @@ export interface IAttackProperties<TContext extends AbilityContext = AbilityCont
  */
 export class AttackStepsSystem<TContext extends AbilityContext = AbilityContext> extends CardTargetSystem<TContext, IAttackProperties<TContext>> {
     public override readonly name = 'attack';
-    public override readonly eventName = EventName.MetaAttackSteps;
+    public override readonly eventName = MetaEventName.AttackSteps;
     protected override readonly targetTypeFilter: CardTypeFilter[] = [WildcardCardType.Unit, CardType.Base];
     protected override readonly defaultProperties: IAttackProperties<TContext> = {
         targetCondition: () => true
@@ -160,6 +160,7 @@ export class AttackStepsSystem<TContext extends AbilityContext = AbilityContext>
     }
 
     protected override addPropertiesToEvent(event, target, context: TContext, additionalProperties): void {
+        super.addPropertiesToEvent(event, target, context, additionalProperties);
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
 
         Contract.assertTrue(properties.attacker.isUnit(), `Attacking card '${properties.attacker.internalName}' is not a unit`);
@@ -177,7 +178,6 @@ export class AttackStepsSystem<TContext extends AbilityContext = AbilityContext>
 
         Contract.assertTrue(event.target.isUnit() || event.target.isBase(), `Attack target card '${event.target.internalName}' is not a unit or base`);
 
-        event.context = context;
         event.attacker = properties.attacker;
 
         event.attack = new Attack(

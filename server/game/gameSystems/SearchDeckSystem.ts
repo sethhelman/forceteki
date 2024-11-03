@@ -6,11 +6,11 @@ import { Card } from '../core/card/Card.js';
 import { EventName, Location, TargetMode } from '../core/Constants.js';
 import { GameEvent } from '../core/event/GameEvent.js';
 import { GameSystem, IGameSystemProperties } from '../core/gameSystem/GameSystem.js';
-import { shuffleDeck } from './GameSystemLibrary.js';
 import { IPlayerTargetSystemProperties, PlayerTargetSystem } from '../core/gameSystem/PlayerTargetSystem.js';
 import Player from '../core/Player.js';
 import { shuffleArray } from '../core/utils/Helpers.js';
 import * as Contract from '../core/utils/Contract.js';
+import { ShuffleDeckSystem } from './ShuffleDeckSystem.js';
 
 type Derivable<T, TContext extends AbilityContext = AbilityContext> = T | ((context: TContext) => T);
 
@@ -106,7 +106,7 @@ export class SearchDeckSystem<TContext extends AbilityContext = AbilityContext> 
     public override queueGenerateEventGameSteps(events: GameEvent[], context: TContext, additionalProperties = {}): void {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
         const player = properties.player || context.player;
-        const event = this.generateEvent(player, context, additionalProperties) as any;
+        const event = this.generateRetargetedEvent(player, context, additionalProperties) as any;
         const deckLength = this.getDeck(player).length;
         const amount = event.amount === -1 ? deckLength : (event.amount > deckLength ? deckLength : event.amount);
         let cards = this.getDeck(player).slice(0, amount);
@@ -214,7 +214,7 @@ export class SearchDeckSystem<TContext extends AbilityContext = AbilityContext> 
 
         if (this.shouldShuffle(this.properties.shuffleWhenDone, context)) {
             context.game.openEventWindow([
-                shuffleDeck().generateEvent(context.target, context)
+                new ShuffleDeckSystem({}).generateEvent(context)
             ]);
         }
     }

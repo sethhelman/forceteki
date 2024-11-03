@@ -29,6 +29,7 @@ const { LeaderUnitCard } = require('./card/LeaderUnitCard');
 const { Card } = require('./card/Card');
 const { PlayableOrDeployableCard } = require('./card/baseClasses/PlayableOrDeployableCard');
 const { InPlayCard } = require('./card/baseClasses/InPlayCard');
+const { AbilityContext } = require('./ability/AbilityContext');
 
 class Player extends GameObject {
     constructor(id, user, owner, game, clockDetails) {
@@ -415,11 +416,11 @@ class Player extends GameObject {
      */
     drawCardsToHand(numCards) {
         if (numCards > this.drawDeck.length) {
+            // TODO: move log message into the DrawSystem
             // Game log message about empty deck damage(the damage itself is handled in DrawSystem.updateEvent()).
             this.game.addMessage('{0} attempts to draw {1} cards from their empty deck and takes {2} damage instead ',
                 this.name, numCards - this.drawDeck.length, 3 * (numCards - this.drawDeck.length)
             );
-            numCards = this.drawDeck.length;
         }
         for (let card of this.drawDeck.slice(0, numCards)) {
             this.moveCard(card, Location.Hand);
@@ -496,12 +497,13 @@ class Player extends GameObject {
 
     /**
      * Shuffles the deck, emitting an event and displaying a message in chat
+     * @param {AbilityContext} context
      */
-    shuffleDeck() {
+    shuffleDeck(context = null) {
         if (this.name !== 'Dummy Player') {
             this.game.addMessage('{0} is shuffling their dynasty deck', this);
         }
-        this.game.emitEvent(EventName.OnDeckShuffled, { player: this });
+        this.game.emitEvent(EventName.OnDeckShuffled, context, { player: this });
         this.drawDeck = Helpers.shuffle(this.drawDeck);
     }
 

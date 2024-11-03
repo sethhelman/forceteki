@@ -26,6 +26,12 @@ export type IReplacementEffectAbilityProps<TSource extends Card = Card> = IRepla
 /** Interface definition for addActionAbility */
 export type IActionAbilityProps<TSource extends Card = Card> = Exclude<IAbilityPropsWithSystems<AbilityContext<TSource>>, 'optional'> & {
     condition?: (context?: AbilityContext<TSource>) => boolean;
+    cost?: ICost<AbilityContext<TSource>> | ICost<AbilityContext<TSource>>[];
+
+    /**
+     * If true, any player can trigger the ability. If false, only the card's controller can trigger it.
+     */
+    anyPlayer?: boolean;
     phase?: PhaseName | 'any';
 };
 
@@ -40,6 +46,36 @@ export interface IOngoingEffectProps {
     target?: (Player | Card) | (Player | Card)[];
     cannotBeCancelled?: boolean;
     optional?: boolean;
+}
+
+// TODO: since many of the files that use this are JS, it's hard to know if it's fully correct.
+// for example, there's ambiguity between IAbilityProps and ITriggeredAbilityProps at the level of PlayerOrCardAbility
+/** Base interface for triggered and action ability definitions */
+export interface IAbilityProps<TContext extends AbilityContext> {
+    title: string;
+    locationFilter?: LocationFilter | LocationFilter[];
+    limit?: any;
+    cardName?: string;
+
+    /**
+     * Indicates if triggering the ability is optional (in which case the player will be offered the
+     * 'Pass' button on resolution) or if it is mandatory
+     */
+    optional?: boolean;
+
+    /** Indicates which player controls this ability (e.g. for Bounty abilities, it is the opponent) */
+    abilityController?: RelativePlayer;
+
+    /** If this is a gained ability, gives the source card that is giving the ability */
+    gainAbilitySource?: Card;
+
+    printedAbility?: boolean;
+    cannotTargetFirst?: boolean;
+    effect?: string;
+    effectArgs?: EffectArg | ((context: TContext) => EffectArg);
+    then?: ((context?: AbilityContext) => IThenAbilityPropsWithSystems<TContext>) | IThenAbilityPropsWithSystems<TContext>;
+    ifYouDo?: ((context?: AbilityContext) => IAbilityPropsWithSystems<TContext>) | IAbilityPropsWithSystems<TContext>;
+    ifYouDoNot?: ((context?: AbilityContext) => IAbilityPropsWithSystems<TContext>) | IAbilityPropsWithSystems<TContext>;
 }
 
 /** Interface definition for addConstantAbility */
@@ -88,36 +124,6 @@ export type ITriggeredAbilityBaseProps<TSource extends Card = Card> = IAbilityPr
     handler?: (context: TriggeredAbilityContext) => void;
     then?: ((context?: TriggeredAbilityContext) => IThenAbilityPropsWithSystems<TriggeredAbilityContext>) | IThenAbilityPropsWithSystems<TriggeredAbilityContext>;
 };
-
-// TODO: since many of the files that use this are JS, it's hard to know if it's fully correct.
-// for example, there's ambiguity between IAbilityProps and ITriggeredAbilityProps at the level of PlayerOrCardAbility
-/** Base interface for triggered and action ability definitions */
-export interface IAbilityProps<TContext extends AbilityContext> {
-    title: string;
-    locationFilter?: LocationFilter | LocationFilter[];
-    cost?: ICost<TContext> | ICost<TContext>[];
-    limit?: any;
-    cardName?: string;
-
-    /**
-     * Indicates if triggering the ability is optional (in which case the player will be offered the
-     * 'Pass' button on resolution) or if it is mandatory
-     */
-    optional?: boolean;
-
-    /** Indicates which player controls this ability (e.g. for Bounty abilities, it is the opponent) */
-    abilityController?: RelativePlayer;
-
-    /** If this is a gained ability, gives the source card that is giving the ability */
-    gainAbilitySource?: Card;
-
-    printedAbility?: boolean;
-    cannotTargetFirst?: boolean;
-    effect?: string;
-    effectArgs?: EffectArg | ((context: TContext) => EffectArg);
-    abilityIdentifier?: string;
-    then?: ((context?: AbilityContext) => IThenAbilityPropsWithSystems<TContext>) | IThenAbilityPropsWithSystems<TContext>;
-}
 
 /** Interface definition for setEventAbility */
 export type IEventAbilityProps<TSource extends Card = Card> = IAbilityPropsWithSystems<AbilityContext<TSource>>;

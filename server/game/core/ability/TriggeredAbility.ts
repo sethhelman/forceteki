@@ -8,6 +8,7 @@ import Game from '../Game';
 import { TriggeredAbilityWindow } from '../gameSteps/abilityWindow/TriggeredAbilityWindow';
 import * as Contract from '../utils/Contract';
 import { CardWithTriggeredAbilities } from '../card/CardTypes';
+import { ITriggeredAbilityTargetResolver } from '../../TargetInterfaces';
 
 interface IEventRegistration {
     name: string;
@@ -49,6 +50,8 @@ export default class TriggeredAbility extends CardAbility {
     public eventRegistrations?: IEventRegistration[];
     public eventsTriggeredFor: GameEvent[] = [];
 
+    private readonly mustChangeGameState: boolean;
+
     public constructor(
         game: Game,
         card: Card,
@@ -67,17 +70,19 @@ export default class TriggeredAbility extends CardAbility {
             this.aggregateWhen = properties.aggregateWhen;
         }
         this.collectiveTrigger = !!properties.collectiveTrigger;
+        this.mustChangeGameState = !!this.properties.ifYouDo || !!this.properties.ifYouDoNot;
     }
 
     public eventHandler(event, window) {
         Contract.assertNotNullLike(window);
+        Contract.assertTrue(this.card.canRegisterTriggeredAbilities());
 
         // IMPORTANT: the below code is referenced in the debugging guide (docs/debugging-guide.md). If you make changes here, make sure to update that document as well.
         for (const player of this.game.getPlayers()) {
             const context = this.createContext(player, event);
             // console.log(event.name, this.card.name, this.isTriggeredByEvent(event, context), this.meetsRequirements(context));
             if (
-                (this.card as CardWithTriggeredAbilities).getTriggeredAbilities().includes(this) &&
+                this.card.getTriggeredAbilities().includes(this) &&
                 this.isTriggeredByEvent(event, context) &&
                 this.meetsRequirements(context) === '' &&
                 !this.eventsTriggeredFor.includes(event)
@@ -109,6 +114,18 @@ export default class TriggeredAbility extends CardAbility {
             ability: this,
             stage: Stage.Trigger
         });
+    }
+
+    public override checkGameActionsForPotential(context) {
+        const mustChangeGameState = !!this.properties.ifYouDo || !!this.properties.ifYouDoNot;
+
+        return this.immediateEffect.hasLegalTarget(context, {}, mustChangeGameState);
+    }
+
+    public override buildTargetResolver(name: string, properties: ITriggeredAbilityTargetResolver) {
+        const propsMustChangeGameState = { mustChangeGameState: this.mustChangeGameState, ...properties };
+
+        return super.buildTargetResolver(name, propsMustChangeGameState);
     }
 
     public registerEvents() {

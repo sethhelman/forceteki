@@ -1,8 +1,9 @@
 import type { AbilityContext } from '../core/ability/AbilityContext';
 import type { Card } from '../core/card/Card';
-import { CardType, EffectName, Location, WildcardCardType } from '../core/Constants';
+import { CardType, EffectName, EventName, Location, MetaEventName, WildcardCardType } from '../core/Constants';
 import * as EnumHelpers from '../core/utils/EnumHelpers';
 import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
+import { ShuffleDeckSystem } from './ShuffleDeckSystem';
 
 export interface IDrawSpecificCardProperties extends ICardTargetSystemProperties {
     switch?: boolean;
@@ -15,6 +16,7 @@ export interface IDrawSpecificCardProperties extends ICardTargetSystemProperties
 
 export class DrawSpecificCardSystem<TContext extends AbilityContext = AbilityContext> extends CardTargetSystem<TContext, IDrawSpecificCardProperties> {
     public override readonly name = 'drawSpecific';
+    protected override readonly eventName = EventName.OnCardsDrawn;
     public override targetTypeFilter = [WildcardCardType.Unit, WildcardCardType.Upgrade, CardType.Event];
 
     protected override defaultProperties: IDrawSpecificCardProperties = {
@@ -48,7 +50,7 @@ export class DrawSpecificCardSystem<TContext extends AbilityContext = AbilityCon
         // }
 
         if (properties.shuffle && (Array.isArray(target) && (target.length === 0 || card === target[target.length - 1]))) {
-            card.owner.shuffleDeck();
+            new ShuffleDeckSystem({}).generateEvent(context);
         }
     }
 

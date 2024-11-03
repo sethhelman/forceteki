@@ -18,10 +18,9 @@ const GameOverPrompt = require('./gameSteps/prompts/GameOverPrompt.js');
 const GameSystems = require('../gameSystems/GameSystemLibrary.js');
 const { GameEvent } = require('./event/GameEvent.js');
 const InitiateCardAbilityEvent = require('./event/InitiateCardAbilityEvent.js');
-const EventWindow = require('./event/EventWindow.js');
+const { EventWindow, TriggerHandlingMode } = require('./event/EventWindow');
 const InitiateAbilityEventWindow = require('./gameSteps/abilityWindow/InitiateAbilityEventWindow.js');
 const AbilityResolver = require('./gameSteps/AbilityResolver.js');
-const { SimultaneousEffectWindow } = require('./gameSteps/SimultaneousEffectWindow.js');
 const { AbilityContext } = require('./ability/AbilityContext.js');
 const Contract = require('./utils/Contract.js');
 const { cards } = require('../cards/Index.js');
@@ -219,8 +218,9 @@ class Game extends EventEmitter {
         if (!this.actionPhaseActivePlayer.opponent.passedActionPhase) {
             this.createEventAndOpenWindow(
                 EventName.OnPassActionPhasePriority,
+                null,
                 { player: this.actionPhaseActivePlayer, actionWindow: this },
-                false,
+                TriggerHandlingMode.ResolvesTriggers,
                 () => {
                     this.actionPhaseActivePlayer = this.actionPhaseActivePlayer.opponent;
                 }
@@ -565,11 +565,12 @@ class Game extends EventEmitter {
      * Called when a player clicks Shuffle Deck on the conflict deck menu in
      * the client
      * @param {String} playerName
+     * @param {AbilityContext} context
      */
-    shuffleDeck(playerName) {
+    shuffleDeck(playerName, context = null) {
         let player = this.getPlayerByName(playerName);
         if (player) {
-            player.shuffleDeck();
+            player.shuffleDeck(context);
         }
     }
 
@@ -792,7 +793,7 @@ class Game extends EventEmitter {
     beginRound() {
         this.roundNumber++;
         this.actionPhaseActivePlayer = this.initiativePlayer;
-        this.createEventAndOpenWindow(EventName.OnBeginRound, {}, true);
+        this.createEventAndOpenWindow(EventName.OnBeginRound, null, {}, TriggerHandlingMode.ResolvesTriggers);
         this.queueStep(new ActionPhase(this));
         this.queueStep(new RegroupPhase(this));
         this.queueSimpleStep(() => this.roundEnded(), 'roundEnded');
@@ -800,14 +801,14 @@ class Game extends EventEmitter {
     }
 
     roundEnded() {
-        this.createEventAndOpenWindow(EventName.OnRoundEnded, {}, true);
+        this.createEventAndOpenWindow(EventName.OnRoundEnded, null, {}, TriggerHandlingMode.ResolvesTriggers);
     }
 
     claimInitiative(player) {
         this.initiativePlayer = player;
         this.isInitiativeClaimed = true;
         player.passedActionPhase = true;
-        this.createEventAndOpenWindow(EventName.OnClaimInitiative, { player }, true);
+        this.createEventAndOpenWindow(EventName.OnClaimInitiative, null, { player }, TriggerHandlingMode.ResolvesTriggers);
 
         // update game state for the sake of constant abilities that check initiative
         this.resolveGameState();
@@ -864,26 +865,28 @@ class Game extends EventEmitter {
     /**
      * Creates a game GameEvent, and opens a window for it.
      * @param {String} eventName
+     * @param {AbilityContext} context - context for this event. Uses getFrameworkContext() to populate if null
      * @param {Object} params - parameters for this event
-     * @param {boolean} ownsTriggerWindow - whether the EventWindow should make its own TriggeredAbilityWindow to resolve
+     * @param {TriggerHandlingMode} triggerHandlingMode - whether the EventWindow should make its own TriggeredAbilityWindow to resolve
      * after its events and any nested events
      * @param {(GameEvent) => void} handler - (GameEvent + params) => undefined
      * returns {GameEvent} - this allows the caller to track GameEvent.resolved and
      * tell whether or not the handler resolved successfully
      */
-    createEventAndOpenWindow(eventName, params = {}, ownsTriggerWindow = false, handler = () => undefined) {
-        let event = new GameEvent(eventName, params, handler);
-        this.openEventWindow([event], ownsTriggerWindow);
+    createEventAndOpenWindow(eventName, context = null, params = {}, triggerHandlingMode = TriggerHandlingMode.PassesTriggersToParentWindow, handler = () => undefined) {
+        let event = new GameEvent(eventName, context ?? this.getFrameworkContext(), params, handler);
+        this.openEventWindow([event], triggerHandlingMode);
         return event;
     }
 
     /**
      * Directly emits an event to all listeners (does NOT open an event window)
      * @param {String} eventName
+     * @param {AbilityContext} context - Uses getFrameworkContext() to populate if null
      * @param {Object} params - parameters for this event
      */
-    emitEvent(eventName, params = {}) {
-        let event = new GameEvent(eventName, params);
+    emitEvent(eventName, context = null, params = {}) {
+        let event = new GameEvent(eventName, context ?? this.getFrameworkContext(), params);
         this.emit(event.name, event);
     }
 
@@ -891,20 +894,20 @@ class Game extends EventEmitter {
      * Creates an EventWindow which will open windows for each kind of triggered
      * ability which can respond any passed events, and execute their handlers.
      * @param events
-     * @param ownsTriggerWindow
+     * @param {TriggerHandlingMode} triggerHandlingMode
      * @returns {EventWindow}
      */
-    openEventWindow(events, ownsTriggerWindow = false) {
+    openEventWindow(events, triggerHandlingMode = TriggerHandlingMode.PassesTriggersToParentWindow) {
         if (!Array.isArray(events)) {
             events = [events];
         }
-        return this.queueStep(new EventWindow(this, events, ownsTriggerWindow));
+        return this.queueStep(new EventWindow(this, events, triggerHandlingMode));
     }
 
     /**
      * Creates a "sub-window" for events which will have priority resolution and
      * be resolved immediately after the currently resolving set of events, preceding
-     * the next steps of any ability being triggered.
+     * the next steps of any ability being resolved.
      *
      * Typically used for defeat events.
      */
@@ -912,26 +915,26 @@ class Game extends EventEmitter {
         this.currentEventWindow.addSubwindowEvents(events);
     }
 
-    /**
-     * Raises a custom event window for checking for any cancels to a card
-     * ability
-     * @param {Object} params
-     * @param {Function} handler - this is an arrow function which is called if
-     * nothing cancels the event
-     */
-    raiseInitiateAbilityEvent(params, handler) {
-        this.raiseMultipleInitiateAbilityEvents([{ params: params, handler: handler }]);
-    }
+    // /**
+    //  * Raises a custom event window for checking for any cancels to a card
+    //  * ability
+    //  * @param {Object} params
+    //  * @param {Function} handler - this is an arrow function which is called if
+    //  * nothing cancels the event
+    //  */
+    // raiseInitiateAbilityEvent(params, handler) {
+    //     this.raiseMultipleInitiateAbilityEvents([{ params: params, handler: handler }]);
+    // }
 
-    /**
-     * Raises a custom event window for checking for any cancels to several card
-     * abilities which initiate simultaneously
-     * @param {Array} eventProps
-     */
-    raiseMultipleInitiateAbilityEvents(eventProps) {
-        let events = eventProps.map((event) => new InitiateCardAbilityEvent(event.params, event.handler));
-        this.queueStep(new InitiateAbilityEventWindow(this, events));
-    }
+    // /**
+    //  * Raises a custom event window for checking for any cancels to several card
+    //  * abilities which initiate simultaneously
+    //  * @param {Array} eventProps
+    //  */
+    // raiseMultipleInitiateAbilityEvents(eventProps) {
+    //     let events = eventProps.map((event) => new InitiateCardAbilityEvent(event.params, event.handler));
+    //     this.queueStep(new InitiateAbilityEventWindow(this, events));
+    // }
 
     // /**
     //  * Checks whether a game action can be performed on a card or an array of

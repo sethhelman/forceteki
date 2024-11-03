@@ -16,10 +16,9 @@ export class PlayUpgradeAction extends PlayCardAction {
     public override executeHandler(context: PlayCardContext) {
         Contract.assertTrue(context.source.isUpgrade());
 
-        const cardPlayedEvent = new GameEvent(EventName.OnCardPlayed, {
+        const cardPlayedEvent = new GameEvent(EventName.OnCardPlayed, context, {
             player: context.player,
             card: context.source,
-            context: context,
             originalLocation: context.source.location,
             originallyOnTopOfDeck:
                 context.player && context.player.drawDeck && context.player.drawDeck[0] === context.source,
@@ -27,15 +26,19 @@ export class PlayUpgradeAction extends PlayCardAction {
             playType: context.playType
         });
         const events = [context.game.actions
-            .attachUpgrade({ upgrade: context.source, takeControl: context.source.controller !== context.player })
-            .generateEvent(context.target, context),
+            .attachUpgrade({
+                upgrade: context.source,
+                takeControl: context.source.controller !== context.player,
+                target: context.target
+            })
+            .generateEvent(context),
         cardPlayedEvent];
 
         if (context.playType === PlayType.Smuggle) {
             events.push(this.generateSmuggleEvent(context));
         }
 
-        context.game.openEventWindow(events, this.resolveTriggersAfter);
+        context.game.openEventWindow(events, this.triggerHandlingMode);
     }
 
     public override meetsRequirements(context = this.createContext(), ignoredRequirements: string[] = []): string {
