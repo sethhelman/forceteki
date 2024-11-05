@@ -23,6 +23,7 @@ import { GameEvent } from '../../event/GameEvent';
 import { DefeatSourceType, IDamageSource } from '../../../IDamageOrDefeatSource';
 import { DefeatCardSystem } from '../../../gameSystems/DefeatCardSystem';
 import { FrameworkDefeatCardSystem } from '../../../gameSystems/FrameworkDefeatCardSystem';
+import * as KeywordHelpers from '../../ability/KeywordHelpers';
 
 export const UnitPropertiesCard = WithUnitProperties(InPlayCard);
 
@@ -40,8 +41,9 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
 
     return class AsUnit extends StatsAndDamageClass {
         public static registerRulesListeners(game: Game) {
-            // register listeners for when-played keyword abilities
-            game.on(EventName.OnUnitEntersPlay, (event) => {
+            // register listeners for when-played keyword abilities.
+            // uses the post-resolve event so we capture any ongoing effects that are added during resolution (e.g. "gain Ambush")
+            game.on(EventName.OnUnitEntersPlay + ':postResolve', (event) => {
                 const card = event.card as Card;
                 if (card.isUnit()) {
                     card.checkRegisterWhenPlayedKeywordAbilities(event);
@@ -49,15 +51,17 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
             });
 
             // register listeners for on-attack keyword abilities
-            game.on(EventName.OnAttackDeclared, (event) => {
+            // TODO THIS PR: test if preResolve works as well
+            game.on(EventName.OnAttackDeclared + ':postResolve', (event) => {
                 const card = event.attack.attacker as Card;
                 if (card.isUnit()) {
                     card.checkRegisterOnAttackKeywordAbilities(event);
                 }
             });
 
-            // register listeners for on-defeat keyword abilities
-            game.on(EventName.OnCardDefeated, (event) => {
+            // register listeners for on-defeat keyword abilities.
+            // uses the pre-resolve event so we capture any ongoing effects that are active before defeat resolves, such as "gain Bounty" from an attached upgrade
+            game.on(EventName.OnCardDefeated + ':preResolve', (event) => {
                 const card = event.card as Card;
                 if (card.isUnit()) {
                     card.checkRegisterWhenDefeatedKeywordAbilities(event);
@@ -157,18 +161,7 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
         }
 
         protected addBountyAbility(properties: Omit<ITriggeredAbilityProps<this>, 'when' | 'aggregateWhen' | 'abilityController'>): void {
-            const { title, ...otherProps } = properties;
-
-            const triggeredProperties: ITriggeredAbilityPropsWithType<this> = {
-                ...otherProps,
-                title: 'Bounty: ' + title,
-                type: AbilityType.Triggered,
-                when: {
-                    onCardDefeated: (event, context) => event.card === context.source
-                    // TODO CAPTURE: add capture trigger
-                },
-                abilityController: RelativePlayer.Opponent
-            };
+            const triggeredProperties = KeywordHelpers.createBountyAbilityFromProps(properties);
 
             const bountyKeywordsWithoutImpl = this.printedKeywords.filter((keyword) => keyword.name === KeywordName.Bounty && !keyword.isFullyImplemented);
 
@@ -319,7 +312,6 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
 
             for (const bountyKeyword of bountyKeywords) {
                 const abilityProps = bountyKeyword.abilityProps;
-                Contract.assertTrue(abilityProps.type === AbilityType.Triggered);
 
                 const bountyAbility = this.createTriggeredAbility({
                     ...this.buildGeneralAbilityProps('keyword_bounty'),

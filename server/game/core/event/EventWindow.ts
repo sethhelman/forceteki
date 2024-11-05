@@ -181,6 +181,7 @@ export class EventWindow extends BaseStepWithPipeline {
 
     protected resolveEvents() {
         const eventsToResolve = this._events.sort((event) => event.order);
+        const emittedEvents = [];
 
         // we emit triggered abilities here to ensure that they get triggered in case e.g. an ability is blanked during event resolution
         if (this.triggerHandlingMode !== TriggerHandlingMode.CannotHaveTriggers) {
@@ -189,13 +190,24 @@ export class EventWindow extends BaseStepWithPipeline {
         }
 
         for (const event of eventsToResolve) {
-            // need to checkCondition here to ensure the event won't fizzle due to another event's resolution (e.g. double honoring an ordinary character with YR etc.)
+            event.checkCondition();
+            if (event.canResolve) {
+                this.game.emit(event.name + ':preResolve', event);
+                emittedEvents.push(event);
+            }
+        }
+
+        for (const event of eventsToResolve) {
+            // need to checkCondition here to ensure the event won't fizzle due to another event's resolution
             event.checkCondition();
             if (event.canResolve) {
                 event.executeHandler();
-
                 this.resolvedEvents.push(event);
             }
+        }
+
+        if (this.resolvedEvents.length !== emittedEvents.length) {
+            Contract.fail(`Some events failed to resolved after being emitted. Emitted: ${emittedEvents.map((event) => event.name).join(', ')}. Resolved: ${this.resolvedEvents.map((event) => event.name).join(', ')}`);
         }
     }
 
@@ -205,7 +217,10 @@ export class EventWindow extends BaseStepWithPipeline {
         // TODO: understand if resolveGameState really needs the resolvedEvents array or not
         this.game.resolveGameState(this.resolvedEvents.some((event) => event.handler), this.resolvedEvents);
 
+        // emit the post-resolve event to capture any triggers due to effects the card gained during resolution, e.g. "gains Ambush" effects
+        // we also emit the event itself under its standard name here for the sake of listeners that aren't sensitive to pre vs post
         for (const event of this.resolvedEvents) {
+            this.game.emit(event.name + ':postResolve', event);
             this.game.emit(event.name, event);
         }
 

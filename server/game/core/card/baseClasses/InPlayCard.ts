@@ -169,6 +169,7 @@ export class InPlayCard extends PlayableOrDeployableCard {
 
         // TODO: do we need to consider a case where a card is moved from one arena to another,
         // where we maybe wouldn't reset events / effects / limits?
+        // TODO THIS PR: these need to happen in the resolveGameState call instead of here
         this.updateTriggeredAbilityEvents(prevLocation, this.location);
         this.updateConstantAbilityEffects(prevLocation, this.location);
 
