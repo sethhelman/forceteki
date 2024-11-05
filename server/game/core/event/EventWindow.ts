@@ -75,6 +75,7 @@ export class EventWindow extends BaseStepWithPipeline {
             new SimpleStep(this.game, () => this.generateContingentEvents(), 'generateContingentEvents'),
             new SimpleStep(this.game, () => this.preResolutionEffects(), 'preResolutionEffects'),
             new SimpleStep(this.game, () => this.resolveEvents(), 'resolveEvents'),
+            new SimpleStep(this.game, () => this.postResolutionEffects(), 'postResolutionEffects'),
             new SimpleStep(this.game, () => this.resolveGameState(), 'resolveGameState'),
             new SimpleStep(this.game, () => this.resolveSubwindowEvents(), 'checkSubwindowEvents'),
             new SimpleStep(this.game, () => this.resolveSubAbilityStep(), 'checkThenAbilitySteps'),
@@ -176,12 +177,11 @@ export class EventWindow extends BaseStepWithPipeline {
     }
 
     private preResolutionEffects() {
-        this._events.forEach((event) => event.preResolutionEffect());
+        this._events.forEach((event) => event.preResolutionEffect(event));
     }
 
     protected resolveEvents() {
         const eventsToResolve = this._events.sort((event) => event.order);
-        const emittedEvents = [];
 
         // we emit triggered abilities here to ensure that they get triggered in case e.g. an ability is blanked during event resolution
         if (this.triggerHandlingMode !== TriggerHandlingMode.CannotHaveTriggers) {
@@ -190,25 +190,18 @@ export class EventWindow extends BaseStepWithPipeline {
         }
 
         for (const event of eventsToResolve) {
+            // need to checkCondition here to ensure the event won't fizzle due to another event's resolution (or lack thereof)
             event.checkCondition();
             if (event.canResolve) {
-                this.game.emit(event.name + ':preResolve', event);
-                emittedEvents.push(event);
-            }
-        }
-
-        for (const event of eventsToResolve) {
-            // need to checkCondition here to ensure the event won't fizzle due to another event's resolution
-            event.checkCondition();
-            if (event.canResolve) {
+                this.game.emit(event.name, event);
                 event.executeHandler();
                 this.resolvedEvents.push(event);
             }
         }
+    }
 
-        if (this.resolvedEvents.length !== emittedEvents.length) {
-            Contract.fail(`Some events failed to resolved after being emitted. Emitted: ${emittedEvents.map((event) => event.name).join(', ')}. Resolved: ${this.resolvedEvents.map((event) => event.name).join(', ')}`);
-        }
+    private postResolutionEffects() {
+        this._events.forEach((event) => event.postResolutionEffect(event));
     }
 
     // resolve game state and emit triggers again
@@ -216,13 +209,6 @@ export class EventWindow extends BaseStepWithPipeline {
     private resolveGameState() {
         // TODO: understand if resolveGameState really needs the resolvedEvents array or not
         this.game.resolveGameState(this.resolvedEvents.some((event) => event.handler), this.resolvedEvents);
-
-        // emit the post-resolve event to capture any triggers due to effects the card gained during resolution, e.g. "gains Ambush" effects
-        // we also emit the event itself under its standard name here for the sake of listeners that aren't sensitive to pre vs post
-        for (const event of this.resolvedEvents) {
-            this.game.emit(event.name + ':postResolve', event);
-            this.game.emit(event.name, event);
-        }
 
         // trigger again here to catch any events for cards that entered play during event resolution
         if (this.triggerHandlingMode !== TriggerHandlingMode.CannotHaveTriggers) {

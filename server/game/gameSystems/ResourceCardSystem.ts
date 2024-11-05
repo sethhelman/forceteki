@@ -26,7 +26,11 @@ export class ResourceCardSystem<TContext extends AbilityContext = AbilityContext
         readyResource: false
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     public eventHandler(event: any, additionalProperties = {}): void {
+    }
+
+    public override postResolutionEffect(event: any, additionalProperties: any): void {
         // TODO: remove this completely if determinmed we don't need card snapshots
         // event.cardStateWhenMoved = card.createSnapshot();
 

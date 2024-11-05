@@ -1,6 +1,7 @@
 import type { AbilityContext } from '../core/ability/AbilityContext';
 import type { Card } from '../core/card/Card';
 import { EventName, Location, WildcardCardType } from '../core/Constants';
+import { GameEvent } from '../core/event/GameEvent';
 import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
 import * as Contract from '../core/utils/Contract';
 import { DamageSourceType, DefeatSourceType, IDamageSource, IDefeatSource } from '../IDamageOrDefeatSource';
@@ -28,7 +29,7 @@ export class DefeatCardSystem<TContext extends AbilityContext = AbilityContext, 
         defeatSource: DefeatSourceType.Ability
     };
 
-    public eventHandler(event): void {
+    public override postResolutionEffect(event): void {
         if (event.card.isUpgrade()) {
             event.card.unattach();
         }
@@ -42,6 +43,10 @@ export class DefeatCardSystem<TContext extends AbilityContext = AbilityContext, 
         } else {
             event.card.owner.moveCard(event.card, Location.Discard, event.options || {});
         }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    public override eventHandler(event: GameEvent, additionalProperties: any): void {
     }
 
     public override getEffectMessage(context: TContext): [string, any[]] {

@@ -97,6 +97,16 @@ export abstract class GameSystem<TContext extends AbilityContext = AbilityContex
     // IMPORTANT: this method is referred to in the debugging guide. if we change the signature, we should upgrade the guide.
     public abstract eventHandler(event: GameEvent, additionalProperties: any): void;
 
+    // TODO THIS PR: jsdoc
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    public preResolutionEffect(event: GameEvent, additionalProperties: any) {
+    }
+
+    // TODO THIS PR: jsdoc
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    public postResolutionEffect(event: GameEvent, additionalProperties: any) {
+    }
+
     /**
      * Composes a property object for configuring the {@link GameSystem}'s execution using the following sources, in order of decreasing priority:
      * - `this.properties ?? this.propertyFactory(context)`
@@ -299,6 +309,8 @@ export abstract class GameSystem<TContext extends AbilityContext = AbilityContex
      */
     protected updateEvent(event: GameEvent, target: any, context: TContext, additionalProperties: any = {}): void {
         this.addPropertiesToEvent(event, target, context, additionalProperties);
+        event.preResolutionEffect = (event) => this.preResolutionEffect(event, additionalProperties);
+        event.postResolutionEffect = (event) => this.postResolutionEffect(event, additionalProperties);
         event.setHandler((event) => this.eventHandler(event, additionalProperties));
         event.condition = () => this.checkEventCondition(event, additionalProperties);
     }

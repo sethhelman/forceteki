@@ -1,8 +1,8 @@
 import type { AbilityContext } from '../core/ability/AbilityContext';
 import { AbilityRestriction, EventName, KeywordName, Location, RelativePlayer, WildcardCardType } from '../core/Constants';
-import * as EnumHelpers from '../core/utils/EnumHelpers';
 import { type ICardTargetSystemProperties, CardTargetSystem } from '../core/gameSystem/CardTargetSystem';
 import { Card } from '../core/card/Card';
+import { GameEvent } from '../core/event/GameEvent';
 
 export interface IPutIntoPlayProperties extends ICardTargetSystemProperties {
     controller?: RelativePlayer;
@@ -22,8 +22,7 @@ export class PutIntoPlaySystem<TContext extends AbilityContext = AbilityContext>
         entersReady: false
     };
 
-
-    public eventHandler(event, additionalProperties = {}): void {
+    public override preResolutionEffect(event, additionalProperties = {}): void {
         const player = this.getPutIntoPlayPlayer(event.context);
 
         let finalController = event.context.player;
@@ -48,6 +47,10 @@ export class PutIntoPlaySystem<TContext extends AbilityContext = AbilityContext>
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    public override eventHandler(event: GameEvent, additionalProperties: any): void {
+    }
+
     public override getEffectMessage(context: TContext): [string, any[]] {
         const { target } = this.generatePropertiesFromContext(context);
         return ['put {0} into play', [target]];
@@ -56,7 +59,6 @@ export class PutIntoPlaySystem<TContext extends AbilityContext = AbilityContext>
     public override canAffect(card: Card, context: TContext): boolean {
         const contextCopy = context.copy({ source: card });
         const player = this.getPutIntoPlayPlayer(contextCopy);
-        const location = card.location;
 
         if (!super.canAffect(card, context)) {
             return false;

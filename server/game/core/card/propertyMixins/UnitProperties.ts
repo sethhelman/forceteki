@@ -43,7 +43,7 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
         public static registerRulesListeners(game: Game) {
             // register listeners for when-played keyword abilities.
             // uses the post-resolve event so we capture any ongoing effects that are added during resolution (e.g. "gain Ambush")
-            game.on(EventName.OnUnitEntersPlay + ':postResolve', (event) => {
+            game.on(EventName.OnUnitEntersPlay, (event) => {
                 const card = event.card as Card;
                 if (card.isUnit()) {
                     card.checkRegisterWhenPlayedKeywordAbilities(event);
@@ -52,7 +52,7 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
 
             // register listeners for on-attack keyword abilities
             // TODO THIS PR: test if preResolve works as well
-            game.on(EventName.OnAttackDeclared + ':postResolve', (event) => {
+            game.on(EventName.OnAttackDeclared, (event) => {
                 const card = event.attack.attacker as Card;
                 if (card.isUnit()) {
                     card.checkRegisterOnAttackKeywordAbilities(event);
@@ -61,7 +61,7 @@ export function WithUnitProperties<TBaseClass extends InPlayCardConstructor>(Bas
 
             // register listeners for on-defeat keyword abilities.
             // uses the pre-resolve event so we capture any ongoing effects that are active before defeat resolves, such as "gain Bounty" from an attached upgrade
-            game.on(EventName.OnCardDefeated + ':preResolve', (event) => {
+            game.on(EventName.OnCardDefeated, (event) => {
                 const card = event.card as Card;
                 if (card.isUnit()) {
                     card.checkRegisterWhenDefeatedKeywordAbilities(event);

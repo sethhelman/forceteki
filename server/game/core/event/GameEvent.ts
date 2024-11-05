@@ -13,11 +13,12 @@ export enum EventResolutionStatus {
 }
 
 export class GameEvent {
-    public readonly isMetaEvent: boolean;
     public condition = (event) => true;
-    public order = 0;
     public isContingent = false;
-    public preResolutionEffect = () => true;
+    public readonly isMetaEvent: boolean;
+    public order = 0;
+    public postResolutionEffect = (event: GameEvent) => undefined;
+    public preResolutionEffect = (event: GameEvent) => undefined;
 
     private cleanupHandlers: (() => void)[] = [];
     private _context = null;
@@ -101,7 +102,7 @@ export class GameEvent {
         this.resolutionStatus = EventResolutionStatus.RESOLVED;
     }
 
-    public setHandler(newHandler) {
+    public setHandler(newHandler: (event: GameEvent) => void) {
         Contract.assertNotNullLike(newHandler, `Attempting to set null handler for ${this.name}`);
         Contract.assertIsNullLike(this.handler, `Attempting to set handler for ${this.name} but it already has a value`);
 
