@@ -45,6 +45,8 @@ export class PutIntoPlaySystem<TContext extends AbilityContext = AbilityContext>
             event.card.owner.cardsInPlay.splice(event.card.owner.cardsInPlay.indexOf(event.card), 1);
             event.card.controller.cardsInPlay.push(event.card);
         }
+
+        // TODO THIS PR: mark pre-resolution done here so canAffect check passes at resolution time
     }
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
