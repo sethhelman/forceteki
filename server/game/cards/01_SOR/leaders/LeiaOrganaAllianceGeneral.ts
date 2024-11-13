@@ -17,13 +17,13 @@ export default class LeiaOrganaAllianceGeneral extends LeaderUnitCard {
             initiateAttack: {
                 attackerCondition: (card) => card.hasSomeTrait(Trait.Rebel)
             },
-            then: {
+            then: (thenContext) => ({
                 title: 'Attack with a second Rebel unit',
                 optional: true,
                 initiateAttack: {
-                    attackerCondition: (card) => card.hasSomeTrait(Trait.Rebel)
+                    attackerCondition: (card) => card.hasSomeTrait(Trait.Rebel) && thenContext.target !== card
                 }
-            }
+            })
         });
     }
 

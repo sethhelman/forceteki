@@ -36,6 +36,7 @@ const { DistributeAmongTargetsPrompt } = require('./gameSteps/prompts/Distribute
 const HandlerMenuMultipleSelectionPrompt = require('./gameSteps/prompts/HandlerMenuMultipleSelectionPrompt.js');
 const { DropdownListPrompt } = require('./gameSteps/prompts/DropdownListPrompt.js');
 const { UnitPropertiesCard } = require('./card/propertyMixins/UnitProperties.js');
+const { Card } = require('./card/Card.js');
 
 class Game extends EventEmitter {
     constructor(details, options = {}) {
@@ -71,6 +72,7 @@ class Game extends EventEmitter {
         this.actionPhaseActivePlayer = null;
         this.tokenFactories = null;
         this.stateWatcherRegistrar = new StateWatcherRegistrar(this);
+        this.movedCards = [];
 
         this.registerGlobalRulesListeners();
 
@@ -218,6 +220,7 @@ class Game extends EventEmitter {
         if (!this.actionPhaseActivePlayer.opponent.passedActionPhase) {
             this.createEventAndOpenWindow(
                 EventName.OnPassActionPhasePriority,
+                null,
                 { player: this.actionPhaseActivePlayer, actionWindow: this },
                 TriggerHandlingMode.ResolvesTriggers,
                 () => {
@@ -564,11 +567,12 @@ class Game extends EventEmitter {
      * Called when a player clicks Shuffle Deck on the conflict deck menu in
      * the client
      * @param {String} playerName
+     * @param {AbilityContext} context
      */
-    shuffleDeck(playerName) {
+    shuffleDeck(playerName, context = null) {
         let player = this.getPlayerByName(playerName);
         if (player) {
-            player.shuffleDeck();
+            player.shuffleDeck(context);
         }
     }
 
@@ -791,7 +795,7 @@ class Game extends EventEmitter {
     beginRound() {
         this.roundNumber++;
         this.actionPhaseActivePlayer = this.initiativePlayer;
-        this.createEventAndOpenWindow(EventName.OnBeginRound, {}, TriggerHandlingMode.ResolvesTriggers);
+        this.createEventAndOpenWindow(EventName.OnBeginRound, null, {}, TriggerHandlingMode.ResolvesTriggers);
         this.queueStep(new ActionPhase(this));
         this.queueStep(new RegroupPhase(this));
         this.queueSimpleStep(() => this.roundEnded(), 'roundEnded');
@@ -799,14 +803,14 @@ class Game extends EventEmitter {
     }
 
     roundEnded() {
-        this.createEventAndOpenWindow(EventName.OnRoundEnded, {}, TriggerHandlingMode.ResolvesTriggers);
+        this.createEventAndOpenWindow(EventName.OnRoundEnded, null, {}, TriggerHandlingMode.ResolvesTriggers);
     }
 
     claimInitiative(player) {
         this.initiativePlayer = player;
         this.isInitiativeClaimed = true;
         player.passedActionPhase = true;
-        this.createEventAndOpenWindow(EventName.OnClaimInitiative, { player }, TriggerHandlingMode.ResolvesTriggers);
+        this.createEventAndOpenWindow(EventName.OnClaimInitiative, null, { player }, TriggerHandlingMode.ResolvesTriggers);
 
         // update game state for the sake of constant abilities that check initiative
         this.resolveGameState();
@@ -863,6 +867,7 @@ class Game extends EventEmitter {
     /**
      * Creates a game GameEvent, and opens a window for it.
      * @param {String} eventName
+     * @param {AbilityContext} context - context for this event. Uses getFrameworkContext() to populate if null
      * @param {Object} params - parameters for this event
      * @param {TriggerHandlingMode} triggerHandlingMode - whether the EventWindow should make its own TriggeredAbilityWindow to resolve
      * after its events and any nested events
@@ -870,8 +875,8 @@ class Game extends EventEmitter {
      * returns {GameEvent} - this allows the caller to track GameEvent.resolved and
      * tell whether or not the handler resolved successfully
      */
-    createEventAndOpenWindow(eventName, params = {}, triggerHandlingMode = TriggerHandlingMode.PassesTriggersToParentWindow, handler = () => undefined) {
-        let event = new GameEvent(eventName, params, handler);
+    createEventAndOpenWindow(eventName, context = null, params = {}, triggerHandlingMode = TriggerHandlingMode.PassesTriggersToParentWindow, handler = () => undefined) {
+        let event = new GameEvent(eventName, context ?? this.getFrameworkContext(), params, handler);
         this.openEventWindow([event], triggerHandlingMode);
         return event;
     }
@@ -879,10 +884,11 @@ class Game extends EventEmitter {
     /**
      * Directly emits an event to all listeners (does NOT open an event window)
      * @param {String} eventName
+     * @param {AbilityContext} context - Uses getFrameworkContext() to populate if null
      * @param {Object} params - parameters for this event
      */
-    emitEvent(eventName, params = {}) {
-        let event = new GameEvent(eventName, params);
+    emitEvent(eventName, context = null, params = {}) {
+        let event = new GameEvent(eventName, context ?? this.getFrameworkContext(), params);
         this.emit(event.name, event);
     }
 
@@ -903,7 +909,7 @@ class Game extends EventEmitter {
     /**
      * Creates a "sub-window" for events which will have priority resolution and
      * be resolved immediately after the currently resolving set of events, preceding
-     * the next steps of any ability being triggered.
+     * the next steps of any ability being resolved.
      *
      * Typically used for defeat events.
      */
@@ -911,26 +917,26 @@ class Game extends EventEmitter {
         this.currentEventWindow.addSubwindowEvents(events);
     }
 
-    /**
-     * Raises a custom event window for checking for any cancels to a card
-     * ability
-     * @param {Object} params
-     * @param {Function} handler - this is an arrow function which is called if
-     * nothing cancels the event
-     */
-    raiseInitiateAbilityEvent(params, handler) {
-        this.raiseMultipleInitiateAbilityEvents([{ params: params, handler: handler }]);
-    }
+    // /**
+    //  * Raises a custom event window for checking for any cancels to a card
+    //  * ability
+    //  * @param {Object} params
+    //  * @param {Function} handler - this is an arrow function which is called if
+    //  * nothing cancels the event
+    //  */
+    // raiseInitiateAbilityEvent(params, handler) {
+    //     this.raiseMultipleInitiateAbilityEvents([{ params: params, handler: handler }]);
+    // }
 
-    /**
-     * Raises a custom event window for checking for any cancels to several card
-     * abilities which initiate simultaneously
-     * @param {Array} eventProps
-     */
-    raiseMultipleInitiateAbilityEvents(eventProps) {
-        let events = eventProps.map((event) => new InitiateCardAbilityEvent(event.params, event.handler));
-        this.queueStep(new InitiateAbilityEventWindow(this, events));
-    }
+    // /**
+    //  * Raises a custom event window for checking for any cancels to several card
+    //  * abilities which initiate simultaneously
+    //  * @param {Array} eventProps
+    //  */
+    // raiseMultipleInitiateAbilityEvents(eventProps) {
+    //     let events = eventProps.map((event) => new InitiateCardAbilityEvent(event.params, event.handler));
+    //     this.queueStep(new InitiateAbilityEventWindow(this, events));
+    // }
 
     // /**
     //  * Checks whether a game action can be performed on a card or an array of
@@ -1108,6 +1114,12 @@ class Game extends EventEmitter {
     }
 
     resolveGameState(hasChanged = false, events = []) {
+        // first go through and enable / disabled abilities for cards that have been moved in or out of the arena
+        for (const movedCard of this.movedCards) {
+            movedCard.resolveAbilitiesForNewLocation();
+        }
+        this.movedCards = [];
+
         // check for a game state change (recalculating attack stats if necessary)
         if (
             // (!this.currentAttack && this.ongoingEffectEngine.resolveEffects(hasChanged)) ||
@@ -1181,6 +1193,15 @@ class Game extends EventEmitter {
         this.filterCardFromList(token, player.decklist.tokens);
         this.filterCardFromList(token, player.decklist.allCards);
         this.filterCardFromList(token, player.outsideTheGameCards);
+    }
+
+    /**
+     * Registers that a card has been moved to a different zone and therefore requires updating in the
+     * next call to resolveGameState
+     * @param {Card} card
+     */
+    registerMovedCard(card) {
+        this.movedCards.push(card);
     }
 
     filterCardFromList(removeCard, list) {
@@ -1273,6 +1294,7 @@ class Game extends EventEmitter {
             }
 
             return {
+                playerUpdate: activePlayer.name,
                 id: this.id,
                 manualMode: this.manualMode,
                 name: this.name,

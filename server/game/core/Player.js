@@ -2,13 +2,11 @@ const { GameObject } = require('./GameObject');
 const { Deck } = require('../Deck.js');
 const UpgradePrompt = require('./gameSteps/prompts/UpgradePrompt.js');
 const { clockFor } = require('./clocks/ClockSelector.js');
-const { CostAdjuster, CostAdjustDirection } = require('./cost/CostAdjuster');
-const GameSystems = require('../gameSystems/GameSystemLibrary');
+const { CostAdjuster, CostAdjustType } = require('./cost/CostAdjuster');
 const { PlayableLocation } = require('./PlayableLocation');
 const { PlayerPromptState } = require('./PlayerPromptState.js');
 const Contract = require('./utils/Contract');
 const {
-    AbilityType,
     CardType,
     EffectName,
     EventName,
@@ -17,18 +15,16 @@ const {
     Aspect,
     WildcardLocation,
     PlayType,
-    KeywordName
+    KeywordName,
+    Trait
 } = require('./Constants');
 
 const EnumHelpers = require('./utils/EnumHelpers');
 const Helpers = require('./utils/Helpers');
-const AbilityHelper = require('../AbilityHelper');
 const { BaseCard } = require('./card/BaseCard');
-const { LeaderCard } = require('./card/LeaderCard');
 const { LeaderUnitCard } = require('./card/LeaderUnitCard');
-const { Card } = require('./card/Card');
-const { PlayableOrDeployableCard } = require('./card/baseClasses/PlayableOrDeployableCard');
 const { InPlayCard } = require('./card/baseClasses/InPlayCard');
+const { AbilityContext } = require('./ability/AbilityContext');
 
 class Player extends GameObject {
     constructor(id, user, owner, game, clockDetails) {
@@ -145,6 +141,24 @@ class Player extends GameObject {
         return this.getArenaCards(arena).filter((card) => card.isUnit() && cardCondition(card));
     }
 
+    /**
+     * Get all units in designated play arena(s) controlled by this player
+     * @param { String } trait Get units with this trait
+     */
+    getUnitsInPlayWithTrait(trait) {
+        return this.getUnitsInPlay().filter((card) => card.hasSomeTrait(trait));
+    }
+
+    /**
+     * Get all cards in designated play arena(s) other than the passed card controlled by this player.
+     * @param { any } ignoreUnit Unit to filter from the returned results
+     * @param { Trait } trait The Trait to check for
+     * @param { WildcardLocation.AnyArena | Location.GroundArena | Location.SpaceArena } arena Arena to select units from
+     */
+    getOtherUnitsInPlayWithTrait(ignoreUnit, trait, arena = WildcardLocation.AnyArena) {
+        return this.getArenaCards(arena).filter((card) => card.isUnit() && card !== ignoreUnit && card.hasSomeTrait(trait));
+    }
+
 
     /**
      * Get all units in designated play arena(s) controlled by this player
@@ -172,6 +186,14 @@ class Player extends GameObject {
      */
     getOtherUnitsInPlayWithAspect(ignoreUnit, aspect, arena = WildcardLocation.AnyArena, cardCondition = (card) => true) {
         return this.getArenaCards(arena).filter((card) => card.isUnit() && card !== ignoreUnit && card.hasSomeAspect(aspect) && cardCondition(card));
+    }
+
+    /**
+     * @param { String } title the title of the unit or leader to check for control of
+     * @returns { boolean } true if this player controls a unit or leader with the given title
+     */
+    controlsLeaderOrUnitWithTitle(title) {
+        return this.leader.title === title || this.getArenaCards(WildcardLocation.AnyArena).filter((card) => card.title === title).length > 0;
     }
 
     getResourceCards() {
@@ -314,6 +336,18 @@ class Player extends GameObject {
     }
 
     /**
+     * Returns if a unit is in play that has the passed keyword
+     * @param {KeywordName} keyword
+     * @param {any} ignoreUnit
+     * @returns {boolean} true/false if the trait is in play
+     */
+    isKeywordInPlay(keyword, ignoreUnit = null) {
+        return ignoreUnit != null
+            ? this.getOtherUnitsInPlay(ignoreUnit).some((card) => card.hasSomeKeyword(keyword))
+            : this.getUnitsInPlay().some((card) => card.hasSomeKeyword(keyword));
+    }
+
+    /**
      * Returns true if any units or upgrades controlled by this player match the passed predicate
      * @param {Function} predicate - DrawCard => Boolean
      */
@@ -409,6 +443,22 @@ class Player extends GameObject {
         return null;
     }
 
+
+    /**
+     * Returns ths top cards of the player's deck
+     * @returns {import('./card/CardTypes').PlayableCard[]} the Card,© or null if the deck is empty
+     */
+    getTopCardsOfDeck(numCard) {
+        Contract.assertPositiveNonZero(numCard);
+        const deckLength = this.drawDeck.length;
+        const cardsToGet = Math.min(numCard, deckLength);
+
+        if (this.drawDeck.length > 0) {
+            return this.drawDeck.slice(0, cardsToGet);
+        }
+        return [];
+    }
+
     /**
      * Draws the passed number of cards from the top of the conflict deck into this players hand, shuffling and deducting honor if necessary
      * @param {number} numCards
@@ -496,12 +546,13 @@ class Player extends GameObject {
 
     /**
      * Shuffles the deck, emitting an event and displaying a message in chat
+     * @param {AbilityContext} context
      */
-    shuffleDeck() {
+    shuffleDeck(context = null) {
         if (this.name !== 'Dummy Player') {
             this.game.addMessage('{0} is shuffling their dynasty deck', this);
         }
-        this.game.emitEvent(EventName.OnDeckShuffled, { player: this });
+        this.game.emitEvent(EventName.OnDeckShuffled, context, { player: this });
         this.drawDeck = Helpers.shuffle(this.drawDeck);
     }
 
@@ -600,9 +651,9 @@ class Player extends GameObject {
      * @param card DrawCard
      * @param target BaseCard
      */
-    getMinimumPossibleCost(playingType, context, target, ignoreType = false) {
+    getMinimumPossibleCost(playingType, context, target) {
         const card = context.source;
-        const adjustedCost = this.getAdjustedCost(playingType, card, target, ignoreType);
+        const adjustedCost = this.getAdjustedCost(playingType, card, target);
 
         return Math.max(adjustedCost, 0);
     }
@@ -614,7 +665,7 @@ class Player extends GameObject {
      * @param card DrawCard
      * @param target BaseCard
      */
-    getAdjustedCost(playingType, card, target, ignoreType = false) {
+    getAdjustedCost(playingType, card, target) {
         // if any aspect penalties, check modifiers for them separately
         let aspectPenaltiesTotal = 0;
         let aspects;
@@ -636,11 +687,11 @@ class Player extends GameObject {
 
         let penaltyAspects = this.getPenaltyAspects(aspects);
         for (const aspect of penaltyAspects) {
-            aspectPenaltiesTotal += this.runAdjustersForCostType(playingType, 2, card, target, ignoreType, aspect);
+            aspectPenaltiesTotal += this.runAdjustersForAspectPenalties(playingType, 2, card, target, aspect);
         }
 
         let penalizedCost = cost + aspectPenaltiesTotal;
-        return this.runAdjustersForCostType(playingType, penalizedCost, card, target, ignoreType);
+        return this.runAdjustersForCostType(playingType, penalizedCost, card, target);
     }
 
     /**
@@ -649,23 +700,48 @@ class Player extends GameObject {
      * @param card DrawCard
      * @param target BaseCard
      */
-    runAdjustersForCostType(playingType, baseCost, card, target, ignoreType = false, penaltyAspect = null) {
+    runAdjustersForCostType(playingType, baseCost, card, target) {
         var matchingAdjusters = this.costAdjusters.filter((adjuster) =>
-            adjuster.canAdjust(playingType, card, target, ignoreType, penaltyAspect)
+            adjuster.canAdjust(playingType, card, target, null)
         );
         var costIncreases = matchingAdjusters
-            .filter((adjuster) => adjuster.direction === CostAdjustDirection.Increase)
+            .filter((adjuster) => adjuster.costAdjustType === CostAdjustType.Increase)
             .reduce((cost, adjuster) => cost + adjuster.getAmount(card, this), 0);
         var costDecreases = matchingAdjusters
-            .filter((adjuster) => adjuster.direction === CostAdjustDirection.Decrease)
+            .filter((adjuster) => adjuster.costAdjustType === CostAdjustType.Decrease)
             .reduce((cost, adjuster) => cost + adjuster.getAmount(card, this), 0);
 
         baseCost += costIncreases;
         var reducedCost = baseCost - costDecreases;
 
-        // TODO: not 100% sure what the use case for this line is
-        var costFloor = Math.min(baseCost, Math.max(...matchingAdjusters.map((adjuster) => adjuster.costFloor)));
-        return Math.max(reducedCost, costFloor);
+        return Math.max(reducedCost, 0);
+    }
+
+
+    /**
+     * Runs the Adjusters for a specific cost type - either base cost or an aspect penalty - and returns the modified result
+     * @param {PlayType} playingType
+     * @param card DrawCard
+     * @param target BaseCard
+     * @param penaltyAspect Aspect that is not present on the current base or leader
+     */
+    runAdjustersForAspectPenalties(playingType, baseCost, card, target, penaltyAspect) {
+        var matchingAdjusters = this.costAdjusters.filter((adjuster) =>
+            adjuster.canAdjust(playingType, card, target, penaltyAspect)
+        );
+
+        var ignoreAllAspectPenalties = matchingAdjusters
+            .filter((adjuster) => adjuster.costAdjustType === CostAdjustType.IgnoreAllAspects).length > 0;
+
+        var ignoreSpecificAspectPenalty = matchingAdjusters
+            .filter((adjuster) => adjuster.costAdjustType === CostAdjustType.IgnoreSpecificAspects).length > 0;
+
+        var cost = baseCost;
+        if (ignoreAllAspectPenalties || ignoreSpecificAspectPenalty) {
+            cost -= 2;
+        }
+
+        return Math.max(cost, 0);
     }
 
     /**
@@ -1144,13 +1220,20 @@ class Player extends GameObject {
         let { email, password, ...safeUser } = this.user;
         let state = {
             cardPiles: {
-                // cardsInPlay: this.getSummaryForCardList(this.cardsInPlay, activePlayer),
                 hand: this.getSummaryForHand(this.hand, activePlayer, false),
-                removedFromGame: this.getSummaryForCardList(this.removedFromGame, activePlayer)
+                removedFromGame: this.getSummaryForCardList(this.removedFromGame, activePlayer),
+                resources: this.getSummaryForCardList(this.resources, activePlayer),
+                groundArena: this.getSummaryForCardList(this.groundArena, activePlayer),
+                spaceArena: this.getSummaryForCardList(this.spaceArena, activePlayer),
+                deck: this.getSummaryForCardList(this.drawDeck, activePlayer),
+                discard: this.getSummaryForCardList(this.discard, activePlayer)
             },
             disconnected: this.disconnected,
             // faction: this.faction,
             hasInitiative: this.hasInitiative(),
+            availableResources: this.countSpendableResources(),
+            leader: this.leader.getSummary(activePlayer),
+            base: this.base.getSummary(activePlayer),
             id: this.id,
             left: this.left,
             name: this.name,

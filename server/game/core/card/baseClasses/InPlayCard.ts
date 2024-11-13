@@ -3,14 +3,12 @@ import TriggeredAbility from '../../ability/TriggeredAbility';
 import { CardType, Location, RelativePlayer, WildcardLocation } from '../../Constants';
 import Player from '../../Player';
 import * as EnumHelpers from '../../utils/EnumHelpers';
-import { PlayableOrDeployableCard } from './PlayableOrDeployableCard';
+import { IDecreaseEventCostAbilityProps, IIgnoreAllAspectPenaltiesProps, IIgnoreSpecificAspectPenaltyProps, PlayableOrDeployableCard } from './PlayableOrDeployableCard';
 import * as Contract from '../../utils/Contract';
 import ReplacementEffectAbility from '../../ability/ReplacementEffectAbility';
 import { Card } from '../Card';
-import { DefeatCardSystem } from '../../../gameSystems/DefeatCardSystem';
 import { DefeatSourceType } from '../../../IDamageOrDefeatSource';
 import { FrameworkDefeatCardSystem } from '../../../gameSystems/FrameworkDefeatCardSystem';
-import { CardTargetResolver } from '../../ability/abilityTargets/CardTargetResolver';
 
 // required for mixins to be based on this class
 export type InPlayCardConstructor = new (...args: any[]) => InPlayCard;
@@ -24,9 +22,10 @@ export type InPlayCardConstructor = new (...args: any[]) => InPlayCard;
  * 2. The ability to be defeated as an overridable method
  */
 export class InPlayCard extends PlayableOrDeployableCard {
+    protected _pendingDefeat? = null;
     protected triggeredAbilities: TriggeredAbility[] = [];
 
-    protected _pendingDefeat? = null;
+    private movedFromLocation?: Location = null;
 
     /**
      * If true, then this card is queued to be defeated as a consequence of another effect (damage, unique rule)
@@ -84,7 +83,12 @@ export class InPlayCard extends PlayableOrDeployableCard {
     }
 
     protected addConstantAbility(properties: IConstantAbilityProps<this>): void {
-        this.constantAbilities.push(this.createConstantAbility(properties));
+        const ability = this.createConstantAbility(properties);
+        // This check is necessary to make sure on-play cost-reduction effects are registered
+        if (ability.sourceLocationFilter === WildcardLocation.Any) {
+            ability.registeredEffects = this.addEffectToEngine(ability);
+        }
+        this.constantAbilities.push(ability);
     }
 
     protected addReplacementEffectAbility(properties: IReplacementEffectAbilityProps<this>): void {
@@ -112,6 +116,21 @@ export class InPlayCard extends PlayableOrDeployableCard {
 
     public createTriggeredAbility<TSource extends Card = this>(properties: ITriggeredAbilityProps<TSource>): TriggeredAbility {
         return new TriggeredAbility(this.game, this, Object.assign(this.buildGeneralAbilityProps('triggered'), properties));
+    }
+
+    /** Add a constant ability on the card that decreases its cost under the given condition */
+    protected addDecreaseCostAbility(properties: IDecreaseEventCostAbilityProps<this>): void {
+        this.addConstantAbility(this.createConstantAbility(this.generateDecreaseCostAbilityProps(properties)));
+    }
+
+    /** Add a constant ability on the card that ignores all aspect penalties under the given condition */
+    protected addIgnoreAllAspectPenaltiesAbility(properties: IIgnoreAllAspectPenaltiesProps<this>): void {
+        this.addConstantAbility(this.createConstantAbility(this.generateIgnoreAllAspectPenaltiesAbilityProps(properties)));
+    }
+
+    /** Add a constant ability on the card that ignores specific aspect penalties under the given condition */
+    protected addIgnoreSpecificAspectPenaltyAbility(properties: IIgnoreSpecificAspectPenaltyProps<this>): void {
+        this.addConstantAbility(this.createConstantAbility(this.generateIgnoreSpecificAspectPenaltiesAbilityProps(properties)));
     }
 
     // ******************************************** ABILITY STATE MANAGEMENT ********************************************
@@ -164,13 +183,19 @@ export class InPlayCard extends PlayableOrDeployableCard {
         }
     }
 
+    public override resolveAbilitiesForNewLocation() {
+        // TODO: do we need to consider a case where a card is moved from one arena to another,
+        // where we maybe wouldn't reset events / effects / limits?
+        this.updateTriggeredAbilityEvents(this.movedFromLocation, this.location);
+        this.updateConstantAbilityEffects(this.movedFromLocation, this.location);
+
+        this.movedFromLocation = null;
+    }
+
     protected override initializeForCurrentLocation(prevLocation: Location) {
         super.initializeForCurrentLocation(prevLocation);
 
-        // TODO: do we need to consider a case where a card is moved from one arena to another,
-        // where we maybe wouldn't reset events / effects / limits?
-        this.updateTriggeredAbilityEvents(prevLocation, this.location);
-        this.updateConstantAbilityEffects(prevLocation, this.location);
+        this.movedFromLocation = prevLocation;
 
         if (EnumHelpers.isArena(this.location)) {
             this.setPendingDefeatEnabled(true);

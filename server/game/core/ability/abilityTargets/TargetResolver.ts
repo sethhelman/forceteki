@@ -28,7 +28,7 @@ export abstract class TargetResolver<TProps extends ITargetResolverBase<AbilityC
         }
     }
 
-    protected abstract hasLegalTarget(context): boolean;
+    protected abstract hasLegalTarget(context: AbilityContext): boolean;
 
     protected abstract checkTarget(context: AbilityContext): boolean;
 

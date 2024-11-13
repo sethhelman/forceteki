@@ -1,8 +1,8 @@
-import { IKeywordProperties } from '../../Interfaces';
-import { Aspect, KeywordName } from '../Constants';
+import { IKeywordProperties, ITriggeredAbilityProps } from '../../Interfaces';
+import { AbilityType, Aspect, KeywordName, RelativePlayer } from '../Constants';
 import * as Contract from '../utils/Contract';
 import * as EnumHelpers from '../utils/EnumHelpers';
-import { KeywordInstance, KeywordWithCostValues, KeywordWithNumericValue } from './KeywordInstance';
+import { KeywordInstance, KeywordWithAbilityDefinition, KeywordWithCostValues, KeywordWithNumericValue } from './KeywordInstance';
 
 export function parseKeywords(expectedKeywordsRaw: string[], cardText: string, cardName: string): KeywordInstance[] {
     const expectedKeywords = EnumHelpers.checkConvertToEnum(expectedKeywordsRaw, KeywordName);
@@ -20,9 +20,11 @@ export function parseKeywords(expectedKeywordsRaw: string[], cardText: string, c
             if (smuggleValuesOrNull != null) {
                 keywords.push(smuggleValuesOrNull);
             }
-        // bounty is not managed here since it has to be explicitly implemented
-        } else if (keywordName !== KeywordName.Bounty) {
-            // default case is a keyword with no params
+        } else if (keywordName === KeywordName.Bounty) {
+            if (isKeywordEnabled(keywordName, cardText, cardName)) {
+                keywords.push(new KeywordWithAbilityDefinition(keywordName));
+            }
+        } else { // default case is a keyword with no params
             if (isKeywordEnabled(keywordName, cardText, cardName)) {
                 keywords.push(new KeywordInstance(keywordName));
             }
@@ -37,9 +39,29 @@ export function keywordFromProperties(properties: IKeywordProperties) {
         return new KeywordWithNumericValue(properties.keyword, properties.amount);
     }
 
+    if (properties.keyword === KeywordName.Bounty) {
+        return new KeywordWithAbilityDefinition(properties.keyword, createBountyAbilityFromProps(properties.ability));
+    }
+
     // TODO SMUGGLE: add smuggle here for "gain smuggle" abilities
 
     return new KeywordInstance(properties.keyword);
+}
+
+export function createBountyAbilityFromProps(properties: Omit<ITriggeredAbilityProps, 'when' | 'aggregateWhen' | 'abilityController'>): ITriggeredAbilityProps {
+    const { title, ...otherProps } = properties;
+
+    return {
+        title: 'Bounty: ' + title,
+        // 7.5.13.E : Resolving a Bounty ability is optional. If a player chooses not to resolve a Bounty ability, they are not considered to have collected that Bounty.
+        optional: true,
+        when: {
+            onCardDefeated: (event, context) => event.card === context.source
+            // TODO CAPTURE: add capture trigger
+        },
+        abilityController: RelativePlayer.Opponent,
+        ...otherProps
+    };
 }
 
 export const isNumericType: Record<KeywordName, boolean> = {
@@ -133,9 +155,10 @@ function parseSmuggleIfEnabled(cardText: string, cardName: string): KeywordWithC
 }
 
 function getRegexForKeyword(keyword: KeywordName) {
-    // these regexes check that the keyword is starting on its own line, indicating that it's not part of an ability text
-    // for numeric keywords, the regex also grabs the numeric value after the keyword as a capture group. For Smuggle,
-    // this also captures the aspects that are part of the Smuggle cost.
+    // these regexes check that the keyword is starting on its own line, indicating that it's not part of an ability text.
+    // For numeric keywords, the regex also grabs the numeric value after the keyword as a capture group.
+    // For Smuggle, this also captures the aspects that are part of the Smuggle cost.
+    // Does not capture any ability text for Bounty or Coordinate since that must provided explicitly in the card implementation.
 
     switch (keyword) {
         case KeywordName.Ambush:

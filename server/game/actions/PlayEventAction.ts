@@ -20,7 +20,7 @@ export class PlayEventAction extends PlayCardAction {
             context.source,
         );
 
-        // TODO: move the logic for moving the event card to discard pile from AbilityResolver to here
+        this.moveEventToDiscard(context);
         context.game.resolveAbility(context.source.getEventAbility().createContext());
     }
 
@@ -35,24 +35,19 @@ export class PlayEventAction extends PlayCardAction {
     }
 
     public moveEventToDiscard(context: PlayCardContext) {
-        const moveCardEvent = new MoveCardSystem({
-            target: context.source,
-            destination: Location.Discard
-        }).generateEvent(context);
-
-        const cardPlayedEvent = new GameEvent(EventName.OnCardPlayed, {
+        const cardPlayedEvent = new GameEvent(EventName.OnCardPlayed, context, {
             player: context.player,
             card: context.source,
-            context: context,
             originalLocation: context.source.location,
             originallyOnTopOfDeck:
                 context.player && context.player.drawDeck && context.player.drawDeck[0] === context.source,
             playType: context.playType,
             onPlayCardSource: context.onPlayCardSource,
-            resolver: this
+            resolver: this,
+            handler: () => context.source.controller.moveCard(context.source, Location.Discard)
         });
 
-        const events = [moveCardEvent, cardPlayedEvent];
+        const events = [cardPlayedEvent];
 
         if (context.playType === PlayType.Smuggle) {
             events.push(this.generateSmuggleEvent(context));

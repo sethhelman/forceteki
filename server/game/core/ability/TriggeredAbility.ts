@@ -1,6 +1,6 @@
 import { CardAbility } from './CardAbility';
 import { TriggeredAbilityContext } from './TriggeredAbilityContext';
-import { Stage, AbilityType } from '../Constants';
+import { Stage, AbilityType, GameStateChangeRequired } from '../Constants';
 import { ITriggeredAbilityProps, WhenType } from '../../Interfaces';
 import { GameEvent } from '../event/GameEvent';
 import { Card } from '../card/Card';
@@ -8,6 +8,7 @@ import Game from '../Game';
 import { TriggeredAbilityWindow } from '../gameSteps/abilityWindow/TriggeredAbilityWindow';
 import * as Contract from '../utils/Contract';
 import { CardWithTriggeredAbilities } from '../card/CardTypes';
+import { ITriggeredAbilityTargetResolver } from '../../TargetInterfaces';
 
 interface IEventRegistration {
     name: string;
@@ -49,6 +50,8 @@ export default class TriggeredAbility extends CardAbility {
     public eventRegistrations?: IEventRegistration[];
     public eventsTriggeredFor: GameEvent[] = [];
 
+    private readonly mustChangeGameState: GameStateChangeRequired;
+
     public constructor(
         game: Game,
         card: Card,
@@ -67,6 +70,10 @@ export default class TriggeredAbility extends CardAbility {
             this.aggregateWhen = properties.aggregateWhen;
         }
         this.collectiveTrigger = !!properties.collectiveTrigger;
+
+        this.mustChangeGameState = !!this.properties.ifYouDo || !!this.properties.ifYouDoNot
+            ? GameStateChangeRequired.MustFullyResolve
+            : GameStateChangeRequired.MustFullyOrPartiallyResolve;
     }
 
     public eventHandler(event, window) {
@@ -76,7 +83,6 @@ export default class TriggeredAbility extends CardAbility {
         // IMPORTANT: the below code is referenced in the debugging guide (docs/debugging-guide.md). If you make changes here, make sure to update that document as well.
         for (const player of this.game.getPlayers()) {
             const context = this.createContext(player, event);
-            // console.log(event.name, this.card.name, this.isTriggeredByEvent(event, context), this.meetsRequirements(context));
             if (
                 this.card.getTriggeredAbilities().includes(this) &&
                 this.isTriggeredByEvent(event, context) &&
@@ -89,18 +95,6 @@ export default class TriggeredAbility extends CardAbility {
         }
     }
 
-    public override meetsRequirements(context, ignoredRequirements = []) {
-        const canPlayerTrigger = this.anyPlayer || context.player === this.card.controller;
-
-        if (!ignoredRequirements.includes('player') && !canPlayerTrigger) {
-            if (!context.player.isCardInPlayableLocation(this.card, context.playType)) {
-                return 'player';
-            }
-        }
-
-        return super.meetsRequirements(context, ignoredRequirements);
-    }
-
     public override createContext(player = this.card.controller, event: GameEvent) {
         return new TriggeredAbilityContext({
             event: event,
@@ -110,6 +104,16 @@ export default class TriggeredAbility extends CardAbility {
             ability: this,
             stage: Stage.Trigger
         });
+    }
+
+    public override checkGameActionsForPotential(context) {
+        return this.immediateEffect.hasLegalTarget(context, {}, this.mustChangeGameState);
+    }
+
+    public override buildTargetResolver(name: string, properties: ITriggeredAbilityTargetResolver) {
+        const propsMustChangeGameState = { mustChangeGameState: this.mustChangeGameState, ...properties };
+
+        return super.buildTargetResolver(name, propsMustChangeGameState);
     }
 
     public registerEvents() {
@@ -156,7 +160,6 @@ export default class TriggeredAbility extends CardAbility {
     private checkAggregateWhen(events, window) {
         for (const player of this.game.getPlayers()) {
             const context = this.createContext(player, events);
-            // console.log(events.map(event => event.name), this.card.name, this.aggregateWhen(events, context), this.meetsRequirements(context));
             if (
                 (this.card as CardWithTriggeredAbilities).getTriggeredAbilities().includes(this) &&
                 this.aggregateWhen(events, context) &&

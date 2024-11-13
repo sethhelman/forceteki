@@ -1,5 +1,5 @@
 import { AbilityContext } from '../core/ability/AbilityContext';
-import { MetaEventName } from '../core/Constants';
+import { GameStateChangeRequired, MetaEventName } from '../core/Constants';
 import { GameObject } from '../core/GameObject';
 import { GameSystem, IGameSystemProperties } from '../core/gameSystem/GameSystem';
 import { AggregateSystem } from '../core/gameSystem/AggregateSystem';
@@ -48,9 +48,9 @@ export class SimultaneousGameSystem<TContext extends AbilityContext = AbilityCon
         return properties.gameSystems.some((gameSystem) => gameSystem.hasLegalTarget(context, additionalProperties));
     }
 
-    public override canAffect(target: GameObject, context: TContext, additionalProperties = {}): boolean {
+    public override canAffect(target: GameObject, context: TContext, additionalProperties: any = {}, mustChangeGameState = GameStateChangeRequired.None): boolean {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
-        return properties.gameSystems.some((gameSystem) => gameSystem.canAffect(target, context, additionalProperties));
+        return properties.gameSystems.some((gameSystem) => gameSystem.canAffect(target, context, additionalProperties, mustChangeGameState));
     }
 
     public override allTargetsLegal(context: TContext, additionalProperties = {}): boolean {

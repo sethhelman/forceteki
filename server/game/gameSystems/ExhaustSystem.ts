@@ -1,6 +1,6 @@
 import { AbilityContext } from '../core/ability/AbilityContext';
 import type { Card } from '../core/card/Card';
-import { AbilityRestriction, CardType, CardTypeFilter, EventName, WildcardCardType } from '../core/Constants';
+import { AbilityRestriction, CardType, CardTypeFilter, EventName, GameStateChangeRequired, WildcardCardType } from '../core/Constants';
 import { CardWithExhaustProperty } from '../core/card/CardTypes';
 import { ExhaustOrReadySystem, IExhaustOrReadyProperties } from './ExhaustOrReadySystem';
 
@@ -18,16 +18,15 @@ export class ExhaustSystem<TContext extends AbilityContext = AbilityContext> ext
         event.card.exhaust();
     }
 
-    public override canAffect(card: Card, context: TContext): boolean {
-        if (!super.canAffect(card, context)) {
+    public override canAffect(card: Card, context: TContext, additionalProperties: any = {}, mustChangeGameState = GameStateChangeRequired.None): boolean {
+        if (!super.canAffect(card, context, additionalProperties, mustChangeGameState)) {
             return false;
         }
 
         const { isCost } = this.generatePropertiesFromContext(context);
 
-        // if exhausting is a cost, then the card must not be already exhausted
-        // otherwise exhausting is a legal effect, even if the target is already exhausted
-        if (isCost && (card as CardWithExhaustProperty).exhausted) {
+        // can safely cast here b/c the type was checked in super.canAffect
+        if ((isCost || mustChangeGameState !== GameStateChangeRequired.None) && (card as CardWithExhaustProperty).exhausted) {
             return false;
         }
 
