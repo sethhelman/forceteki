@@ -1,7 +1,7 @@
 import AbilityHelper from '../../../AbilityHelper';
 import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
 
-export default class CompassionnateSenator extends NonLeaderUnitCard {
+export default class CompassionateSenator extends NonLeaderUnitCard {
     protected override getImplementationId() {
         return {
             id: '5157630261',
@@ -20,4 +20,4 @@ export default class CompassionnateSenator extends NonLeaderUnitCard {
     }
 }
 
-CompassionnateSenator.implemented = true;
+CompassionateSenator.implemented = true;
