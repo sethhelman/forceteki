@@ -1,4 +1,5 @@
 import AbilityHelper from '../../../AbilityHelper';
+import { AbilityContext } from '../../../core/ability/AbilityContext';
 import { LeaderUnitCard } from '../../../core/card/LeaderUnitCard';
 import { RelativePlayer, WildcardCardType } from '../../../core/Constants';
 
@@ -10,13 +11,12 @@ export default class FinnThisIsARescue extends LeaderUnitCard {
         };
     }
 
-    private buildFinnAbilityTargetEffect() {
-        const upgradedCard = (context) => ({ target: context.target.parentCard });
-        return AbilityHelper.immediateEffects.sequential([
-            AbilityHelper.immediateEffects.giveShield(upgradedCard),
-            AbilityHelper.immediateEffects.defeat(),
-        ]);
-    }
+    // private buildFinnAbilityTargetEffect() {
+    //     return AbilityHelper.immediateEffects.sequential((context: AbilityContext<this>) => [
+    //         AbilityHelper.immediateEffects.defeat(),
+    //         AbilityHelper.immediateEffects.giveShield({ target: context.target.parentCard }),
+    //     ]);
+    // }
 
     protected override setupLeaderSideAbilities () {
         this.addActionAbility({
@@ -26,7 +26,10 @@ export default class FinnThisIsARescue extends LeaderUnitCard {
                 controller: RelativePlayer.Self,
                 cardTypeFilter: WildcardCardType.Upgrade,
                 cardCondition: (card, context) => card.controller === context.source.controller,
-                immediateEffect: this.buildFinnAbilityTargetEffect(),
+                immediateEffect: AbilityHelper.immediateEffects.sequential((context) => [
+                    AbilityHelper.immediateEffects.defeat(),
+                    AbilityHelper.immediateEffects.giveShield({ target: context.target.parentCard }),
+                ]),
             }
         });
     }
@@ -39,7 +42,10 @@ export default class FinnThisIsARescue extends LeaderUnitCard {
                 controller: RelativePlayer.Self,
                 cardTypeFilter: WildcardCardType.Upgrade,
                 cardCondition: (card, context) => card.controller === context.source.controller,
-                immediateEffect: this.buildFinnAbilityTargetEffect(),
+                immediateEffect: AbilityHelper.immediateEffects.sequential((context) => [
+                    AbilityHelper.immediateEffects.defeat(),
+                    AbilityHelper.immediateEffects.giveShield({ target: context.target.parentCard }),
+                ]),
             }
         });
     }
