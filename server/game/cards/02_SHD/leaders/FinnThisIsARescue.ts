@@ -1,5 +1,4 @@
 import AbilityHelper from '../../../AbilityHelper';
-import { AbilityContext } from '../../../core/ability/AbilityContext';
 import { LeaderUnitCard } from '../../../core/card/LeaderUnitCard';
 import { RelativePlayer, WildcardCardType } from '../../../core/Constants';
 
@@ -10,13 +9,6 @@ export default class FinnThisIsARescue extends LeaderUnitCard {
             internalName: 'finn#this-is-a-rescue',
         };
     }
-
-    // private buildFinnAbilityTargetEffect() {
-    //     return AbilityHelper.immediateEffects.sequential((context: AbilityContext<this>) => [
-    //         AbilityHelper.immediateEffects.defeat(),
-    //         AbilityHelper.immediateEffects.giveShield({ target: context.target.parentCard }),
-    //     ]);
-    // }
 
     protected override setupLeaderSideAbilities () {
         this.addActionAbility({
