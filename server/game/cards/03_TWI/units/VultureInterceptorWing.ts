@@ -1,6 +1,6 @@
 import AbilityHelper from '../../../AbilityHelper';
 import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
-import { RelativePlayer } from '../../../core/Constants';
+import { RelativePlayer, WildcardCardType } from '../../../core/Constants';
 
 export default class VultureInterceptorWing extends NonLeaderUnitCard {
     protected override getImplementationId() {
@@ -15,6 +15,7 @@ export default class VultureInterceptorWing extends NonLeaderUnitCard {
             title: 'Give an enemy unit -1/-1 for this phase',
             targetResolver: {
                 controller: RelativePlayer.Opponent,
+                cardTypeFilter: WildcardCardType.Unit,
                 immediateEffect: AbilityHelper.immediateEffects.forThisPhaseCardEffect({
                     effect: AbilityHelper.ongoingEffects.modifyStats({ power: -1, hp: -1 })
                 })
