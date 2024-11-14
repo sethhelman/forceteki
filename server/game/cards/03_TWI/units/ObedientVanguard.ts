@@ -12,7 +12,7 @@ export default class ObedientVanguard extends NonLeaderUnitCard {
 
     public override setupCardAbilities() {
         this.addWhenDefeatedAbility({
-            title: 'Give a Trooper unit +2/+2 for this phase.',
+            title: 'Give a Trooper unit +2/+2 for this phase',
             targetResolver: {
                 optional: true,
                 cardCondition: (card) => card.isUnit() && card.hasSomeTrait(Trait.Trooper),
