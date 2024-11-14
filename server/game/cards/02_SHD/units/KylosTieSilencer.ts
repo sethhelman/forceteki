@@ -25,7 +25,7 @@ export default class KylosTieSilencer extends NonLeaderUnitCard {
                 return wasThisCardDiscarded.length > 0;
             },
             immediateEffect: AbilityHelper.immediateEffects.playCardFromOutOfPlay({ playType: PlayType.PlayFromOutOfPlay }),
-            locationFilter: [Location.Discard]
+            locationFilter: Location.Discard
         });
     }
 }
