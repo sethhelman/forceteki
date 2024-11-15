@@ -54,7 +54,7 @@ export interface IOngoingEffectProps {
 /** Base interface for triggered and action ability definitions */
 export interface IAbilityProps<TContext extends AbilityContext> {
     title: string;
-    locationFilter?: LocationFilter | LocationFilter[];
+    abilityActiveLocationFilter?: LocationFilter | LocationFilter[];
     limit?: any;
     cardName?: string;
 

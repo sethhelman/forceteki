@@ -16,7 +16,7 @@ export class SaboteurDefeatShieldsAbility extends TriggeredAbility {
         return {
             title: 'Saboteur: defeat all shields',
             when: { onAttackDeclared: (event, context) => event.attack.attacker === context.source },
-            locationFilter: WildcardLocation.AnyArena,
+            abilityActiveLocationFilter: WildcardLocation.AnyArena,
             targetResolver: {
                 cardCondition: (card: Card, context: TriggeredAbilityContext) => {
                     const attacker = context.source;

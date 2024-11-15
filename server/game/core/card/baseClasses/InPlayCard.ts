@@ -213,9 +213,9 @@ export class InPlayCard extends PlayableOrDeployableCard {
         this.resetLimits();
 
         for (const triggeredAbility of this.triggeredAbilities) {
-            if (EnumHelpers.cardLocationMatches(to, triggeredAbility.locationFilter) && !EnumHelpers.cardLocationMatches(from, triggeredAbility.locationFilter)) {
+            if (EnumHelpers.cardLocationMatches(to, triggeredAbility.abilityActiveLocationFilter) && !EnumHelpers.cardLocationMatches(from, triggeredAbility.abilityActiveLocationFilter)) {
                 triggeredAbility.registerEvents();
-            } else if (!EnumHelpers.cardLocationMatches(to, triggeredAbility.locationFilter) && EnumHelpers.cardLocationMatches(from, triggeredAbility.locationFilter)) {
+            } else if (!EnumHelpers.cardLocationMatches(to, triggeredAbility.abilityActiveLocationFilter) && EnumHelpers.cardLocationMatches(from, triggeredAbility.abilityActiveLocationFilter)) {
                 triggeredAbility.unregisterEvents();
             }
         }

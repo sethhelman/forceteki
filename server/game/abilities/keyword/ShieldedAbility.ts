@@ -15,7 +15,7 @@ export class ShieldedAbility extends TriggeredAbility {
             title: 'Shielded',
             when: { onUnitEntersPlay: (event, context) => event.card === context.source },
             immediateEffect: AbilityHelper.immediateEffects.giveShield(),
-            locationFilter: WildcardLocation.AnyArena
+            abilityActiveLocationFilter: WildcardLocation.AnyArena
         };
     }
 

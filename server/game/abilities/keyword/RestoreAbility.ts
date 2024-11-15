@@ -13,7 +13,7 @@ export class RestoreAbility extends TriggeredAbility {
         return {
             title: `Restore ${restoreAmount}`,
             when: { onAttackDeclared: (event, context) => event.attack.attacker === context.source },
-            locationFilter: WildcardLocation.AnyArena,
+            abilityActiveLocationFilter: WildcardLocation.AnyArena,
             targetResolver: {
                 cardTypeFilter: CardType.Base,
                 controller: RelativePlayer.Self,

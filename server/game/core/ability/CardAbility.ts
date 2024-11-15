@@ -14,7 +14,7 @@ export class CardAbility extends CardAbilityStep {
     public readonly abilityCost: ICost[];
     public readonly abilityIdentifier: string;
     public readonly gainAbilitySource: Card;
-    public readonly locationFilter: LocationFilter | LocationFilter[];
+    public readonly abilityActiveLocationFilter: LocationFilter | LocationFilter[];
     public readonly printedAbility: boolean;
 
     public constructor(game, card, properties, type = AbilityType.Action) {
@@ -27,7 +27,7 @@ export class CardAbility extends CardAbilityStep {
         this.title = properties.title;
         this.abilityCost = this.cost;
         this.printedAbility = properties.printedAbility === false ? false : true;
-        this.locationFilter = this.locationOrDefault(card, properties.locationFilter);
+        this.abilityActiveLocationFilter = this.locationOrDefault(card, properties.abilityActiveLocationFilter);
         this.cannotTargetFirst = !!properties.cannotTargetFirst;
         this.gainAbilitySource = properties.gainAbilitySource;
         this.abilityController = properties.abilityController ?? RelativePlayer.Self;
@@ -130,7 +130,7 @@ export class CardAbility extends CardAbilityStep {
     protected isInValidLocation(context) {
         return this.card.isEvent()
             ? context.player.isCardInPlayableLocation(context.source, context.playType)
-            : EnumHelpers.cardLocationMatches(this.card.location, this.locationFilter);
+            : EnumHelpers.cardLocationMatches(this.card.location, this.abilityActiveLocationFilter);
     }
 
     private getLocationMessage(location, context) {

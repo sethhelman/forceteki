@@ -32,7 +32,7 @@ export class LeaderUnitCard extends LeaderUnitCardParent {
             title: `Deploy ${this.name}`,
             limit: AbilityHelper.limit.epicAction(),
             condition: (context) => context.source.controller.resources.length >= context.source.cost,
-            locationFilter: Location.Base,
+            abilityActiveLocationFilter: Location.Base,
             immediateEffect: AbilityHelper.immediateEffects.deploy()
         });
     }
@@ -69,7 +69,7 @@ export class LeaderUnitCard extends LeaderUnitCardParent {
     }
 
     protected override addActionAbility(properties: IActionAbilityProps<this>) {
-        properties.locationFilter = this.getAbilityLocationsForSide(properties.locationFilter);
+        properties.abilityActiveLocationFilter = this.getAbilityLocationsForSide(properties.abilityActiveLocationFilter);
         super.addActionAbility(properties);
     }
 
@@ -79,12 +79,12 @@ export class LeaderUnitCard extends LeaderUnitCardParent {
     }
 
     protected override addReplacementEffectAbility(properties: IReplacementEffectAbilityProps<this>): void {
-        properties.locationFilter = this.getAbilityLocationsForSide(properties.locationFilter);
+        properties.abilityActiveLocationFilter = this.getAbilityLocationsForSide(properties.abilityActiveLocationFilter);
         super.addReplacementEffectAbility(properties);
     }
 
     protected override addTriggeredAbility(properties: ITriggeredAbilityProps<this>): void {
-        properties.locationFilter = this.getAbilityLocationsForSide(properties.locationFilter);
+        properties.abilityActiveLocationFilter = this.getAbilityLocationsForSide(properties.abilityActiveLocationFilter);
         super.addTriggeredAbility(properties);
     }
 
