@@ -26,7 +26,7 @@ describe('Compassionate Senator', function () {
                 context.player1.clickCard(context.p1Base);
 
                 expect(context.compassionateSenator.exhausted).toBeTrue();
-                expect(context.player1.countExhaustedResources()).toBe(2);
+                expect(context.player1.exhaustedResourceCount).toBe(2);
                 expect(context.p1Base.damage).toBe(1);
             });
         });

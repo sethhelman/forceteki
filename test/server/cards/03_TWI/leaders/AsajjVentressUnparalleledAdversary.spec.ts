@@ -70,7 +70,7 @@ describe('Asajj Ventress, Unparalleled Adversary', function () {
                 context.player1.clickCard(context.battlefieldMarine);
 
                 expect(context.player2).toBeActivePlayer();
-                expect(context.battlefieldMarine.location).toBe('discard');
+                expect(context.battlefieldMarine).toBeInZone('discard');
                 expect(context.asajjVentress.damage).toBe(3);
             });
         });
@@ -98,7 +98,7 @@ describe('Asajj Ventress, Unparalleled Adversary', function () {
                 context.player1.clickCard(context.battlefieldMarine);
 
                 expect(context.player2).toBeActivePlayer();
-                expect(context.battlefieldMarine.location).toBe('discard');
+                expect(context.battlefieldMarine).toBeInZone('discard');
                 expect(context.asajjVentress.damage).toBe(3);
             });
         });
@@ -128,7 +128,7 @@ describe('Asajj Ventress, Unparalleled Adversary', function () {
                 // cloud city guard is automatically choose
 
                 expect(context.player2).toBeActivePlayer();
-                expect(context.cloudCityWingGuard.location).toBe('discard');
+                expect(context.cloudCityWingGuard).toBeInZone('discard');
                 expect(context.asajjVentress.damage).toBe(0);
                 expect(context.asajjVentress.getPower()).toBe(3);
             });

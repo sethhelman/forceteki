@@ -50,7 +50,7 @@ describe('Wat Tambor, Techno Union Foreman', function () {
                 context.player2.passAction();
                 context.player1.clickCard(context.battlefieldMarine);
                 context.player1.clickCard(context.admiralYularen);
-                expect(context.admiralYularen.location).toBe('discard');
+                expect(context.admiralYularen).toBeInZone('discard');
 
                 // on next phase +2/+2 is gone
                 context.moveToNextActionPhase();
@@ -116,7 +116,7 @@ describe('Wat Tambor, Techno Union Foreman', function () {
                 context.player2.passAction();
                 context.player1.clickCard(context.battlefieldMarine);
                 context.player1.clickCard(context.admiralYularen);
-                expect(context.admiralYularen.location).toBe('discard');
+                expect(context.admiralYularen).toBeInZone('discard');
 
                 // on next phase +2/+2 is gone
                 context.moveToNextActionPhase();

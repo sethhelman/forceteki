@@ -22,7 +22,7 @@ describe('Devastating Gunship', function () {
                 expect(context.player1).not.toHaveChooseNoTargetButton();
                 context.player1.clickCard(context.battlefieldMarine);
                 expect(context.player2).toBeActivePlayer();
-                expect(context.battlefieldMarine.location).toBe('discard');
+                expect(context.battlefieldMarine).toBeInZone('discard');
             });
         });
     });
