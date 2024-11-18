@@ -6,6 +6,7 @@ import { Aspect, CardType, WildcardRelativePlayer, WildcardZoneName, ZoneName, M
 import { CostAdjustType, ICostAdjusterProperties, IIgnoreAllAspectsCostAdjusterProperties, IIgnoreSpecificAspectsCostAdjusterProperties, IIncreaseOrDecreaseCostAdjusterProperties } from '../../cost/CostAdjuster';
 import Player from '../../Player';
 import * as Contract from '../../utils/Contract';
+import * as EnumHelpers from '../../utils/EnumHelpers';
 import { Card } from '../Card';
 import { InPlayCard } from './InPlayCard';
 
@@ -94,6 +95,40 @@ export class PlayableOrDeployableCard extends Card {
 
     protected setExhaustEnabled(enabledStatus: boolean) {
         this._exhausted = enabledStatus ? true : null;
+    }
+
+    public takeControl(newController: Player, moveTo: ZoneName.SpaceArena | ZoneName.GroundArena | ZoneName.Resource = null) {
+        if (newController === this.controller) {
+            return;
+        }
+
+        this._controller = newController;
+
+        const moveDestination = moveTo || this.zone.name;
+
+        Contract.assertTrue(
+            moveDestination === ZoneName.SpaceArena || moveDestination === ZoneName.GroundArena || moveDestination === ZoneName.Resource,
+            `Attempting to take control of card ${this.internalName} for player ${newController.name} in invalid zone: ${moveDestination}`
+        );
+
+        // if we're changing controller and staying in the arena, just tell the arena to update our controller. no move needed
+        if (moveDestination === this.zoneName && (this.zone.name === ZoneName.GroundArena || this.zone.name === ZoneName.SpaceArena)) {
+            this.zone.updateController(this);
+
+            // register this transition with the engine so it can do uniqueness check if needed
+            this.game.registerMovedCard(this);
+        } else {
+            this.moveTo(moveDestination);
+        }
+
+        // update the context of all constant abilities so they are aware of the new controller
+        for (const constantAbility of this.constantAbilities) {
+            if (constantAbility.registeredEffects) {
+                for (const effect of constantAbility.registeredEffects) {
+                    effect.refreshContext();
+                }
+            }
+        }
     }
 
     /** Create constant ability props on the card that decreases its cost under the given condition */

@@ -9,6 +9,7 @@ import * as EnumHelpers from '../core/utils/EnumHelpers';
 
 export interface IAttachUpgradeProperties extends ICardTargetSystemProperties {
     upgrade?: UpgradeCard;
+    // TODO TAKE CONTROL: use these as-is?
     takeControl?: boolean;
     giveControl?: boolean;
     controlSwitchOptional?: boolean;
@@ -36,13 +37,13 @@ export class AttachUpgradeSystem<TContext extends AbilityContext = AbilityContex
         // attachTo manages all of the unattach and move zone logic
         upgradeCard.attachTo(parentCard);
 
-        if (properties.takeControl) {
-            upgradeCard.controller = event.context.player;
-            upgradeCard.updateConstantAbilityContexts();
-        } else if (properties.giveControl) {
-            upgradeCard.controller = event.context.player.opponent;
-            upgradeCard.updateConstantAbilityContexts();
-        }
+        // if (properties.takeControl) {
+        //     upgradeCard.controller = event.context.player;
+        //     upgradeCard.updateConstantAbilityContexts();
+        // } else if (properties.giveControl) {
+        //     upgradeCard.controller = event.context.player.opponent;
+        //     upgradeCard.updateConstantAbilityContexts();
+        // }
     }
 
     public override getEffectMessage(context: TContext): [string, any[]] {

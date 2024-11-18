@@ -42,8 +42,6 @@ export class Card extends OngoingEffectSource {
     public readonly title: string;
     public readonly unique: boolean;
 
-    public controller: Player;
-
     protected override readonly id: string;
     protected readonly printedKeywords: KeywordInstance[];
     protected readonly printedTraits: Set<Trait>;
@@ -52,7 +50,6 @@ export class Card extends OngoingEffectSource {
     protected actionAbilities: ActionAbility[] = [];
     protected constantAbilities: IConstantAbility[] = [];
     protected _controller: Player;
-    protected defaultController: Player;
     protected _facedown = true;
     protected hasImplementationFile: boolean;   // this will be set by the ability setup methods
     protected hiddenForController = true;      // TODO: is this correct handling of hidden / visible card state? not sure how this integrates with the client
@@ -63,9 +60,8 @@ export class Card extends OngoingEffectSource {
 
 
     // ******************************************** PROPERTY GETTERS ********************************************
-    /** @deprecated use title instead**/
-    public override get name() {
-        return super.name;
+    public get controller(): Player {
+        return this._controller;
     }
 
     public get facedown(): boolean {
@@ -76,8 +72,9 @@ export class Card extends OngoingEffectSource {
         return this.getKeywords();
     }
 
-    public get zoneName(): ZoneName {
-        return this._zone?.name;
+    /** @deprecated use title instead**/
+    public override get name() {
+        return super.name;
     }
 
     public get traits(): Set<Trait> {
@@ -96,6 +93,10 @@ export class Card extends OngoingEffectSource {
         this._zone = zone;
     }
 
+    public get zoneName(): ZoneName {
+        return this._zone?.name;
+    }
+
     // *********************************************** CONSTRUCTOR ***********************************************
     public constructor(
         public readonly owner: Player,
@@ -112,8 +113,7 @@ export class Card extends OngoingEffectSource {
         this.title = cardData.title;
         this.unique = cardData.unique;
 
-        this.controller = owner;
-        this.defaultController = owner;
+        this._controller = owner;
         this.id = cardData.id;
         this.printedTraits = new Set(EnumHelpers.checkConvertToEnum(cardData.traits, Trait));
         this.printedType = Card.buildTypeFromPrinted(cardData.types);
@@ -571,38 +571,38 @@ export class Card extends OngoingEffectSource {
         switch (this.zoneName) {
             case ZoneName.SpaceArena:
             case ZoneName.GroundArena:
-                this.controller = this.owner;
+                this._controller = this.owner;
                 this._facedown = false;
                 this.hiddenForController = false;
                 break;
 
             case ZoneName.Base:
-                this.controller = this.owner;
+                this._controller = this.owner;
                 this._facedown = false;
                 this.hiddenForController = false;
                 break;
 
             case ZoneName.Resource:
-                this.controller = this.owner;
+                this._controller = this.owner;
                 this._facedown = true;
                 this.hiddenForController = false;
                 break;
 
             case ZoneName.Deck:
-                this.controller = this.owner;
+                this._controller = this.owner;
                 this._facedown = true;
                 this.hiddenForController = true;
                 break;
 
             case ZoneName.Hand:
-                this.controller = this.owner;
+                this._controller = this.owner;
                 this._facedown = false;
                 this.hiddenForController = false;
                 break;
 
             case ZoneName.Discard:
             case ZoneName.OutsideTheGame:
-                this.controller = this.owner;
+                this._controller = this.owner;
                 this._facedown = false;
                 this.hiddenForController = false;
                 break;
@@ -654,17 +654,6 @@ export class Card extends OngoingEffectSource {
                 action.limit.reset();
             }
         }
-    }
-
-    public setDefaultController(player) {
-        this.defaultController = player;
-    }
-
-    public getModifiedController() {
-        if (EnumHelpers.isArena(this.zoneName)) {
-            return this.mostRecentOngoingEffect(EffectName.TakeControl) || this.defaultController;
-        }
-        return this.owner;
     }
 
     public isResource() {
