@@ -1,6 +1,6 @@
 import { GameSystem } from '../core/gameSystem/GameSystem';
 import { AbilityContext } from '../core/ability/AbilityContext';
-import { Location, WildcardLocation } from '../core/Constants';
+import { ZoneName, PlayType, WildcardZoneName } from '../core/Constants';
 
 // import { AddTokenAction, AddTokenProperties } from './AddTokenAction';
 import { AttachUpgradeSystem, IAttachUpgradeProperties } from './AttachUpgradeSystem';
@@ -72,6 +72,7 @@ import { ILookMoveDeckCardsTopOrBottomProperties, LookMoveDeckCardsTopOrBottomSy
 import { DiscardFromDeckSystem, IDiscardFromDeckProperties } from './DiscardFromDeckSystem';
 import { DiscardCardsFromHand, IDiscardCardsFromHandProperties } from './DiscardCardsFromHand';
 import { DiscardEntireHandSystem, IDiscardEntireHandSystemProperties } from './DiscardEntireHandSystem';
+import { ISystemArrayOrFactory } from '../core/gameSystem/AggregateSystem';
 // import { TakeControlAction, TakeControlProperties } from './TakeControlAction';
 // import { TriggerAbilityAction, TriggerAbilityProperties } from './TriggerAbilityAction';
 // import { TurnCardFacedownAction, TurnCardFacedownProperties } from './TurnCardFacedownAction';
@@ -161,7 +162,7 @@ export function moveToBottomOfDeck<TContext extends AbilityContext = AbilityCont
     return new MoveCardSystem<TContext>(
         GameSystem.appendToPropertiesOrPropertyFactory<IMoveCardProperties, 'destination' | 'bottom'>(
             propertyFactory,
-            { destination: Location.Deck, bottom: true }
+            { destination: ZoneName.Deck, bottom: true }
         )
     );
 }
@@ -170,7 +171,7 @@ export function moveToTopOfDeck<TContext extends AbilityContext = AbilityContext
     return new MoveCardSystem<TContext>(
         GameSystem.appendToPropertiesOrPropertyFactory<IMoveCardProperties, 'destination' | 'bottom'>(
             propertyFactory,
-            { destination: Location.Deck, bottom: false }
+            { destination: ZoneName.Deck, bottom: false }
         )
     );
 }
@@ -179,7 +180,7 @@ export function moveToDeck<TContext extends AbilityContext = AbilityContext>(pro
     return new MoveCardSystem<TContext>(
         GameSystem.appendToPropertiesOrPropertyFactory<IMoveCardProperties, 'destination'>(
             propertyFactory,
-            { destination: Location.Deck }
+            { destination: ZoneName.Deck }
         )
     );
 }
@@ -202,6 +203,14 @@ export function payResourceCost<TContext extends AbilityContext = AbilityContext
         GameSystem.appendToPropertiesOrPropertyFactory<IExhaustResourcesProperties, 'isCost'>(
             propertyFactory,
             { isCost: true }
+        )
+    );
+}
+export function playCardFromOutOfPlay<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<Omit<IPlayCardProperties, 'playType' | 'optional'>, TContext> = {}): PlayCardSystem<TContext> {
+    return new PlayCardSystem<TContext>(
+        GameSystem.appendToPropertiesOrPropertyFactory<IPlayCardProperties, 'playType'>(
+            propertyFactory,
+            { playType: PlayType.PlayFromOutOfPlay }
         )
     );
 }
@@ -251,7 +260,7 @@ export function returnToHand<TContext extends AbilityContext = AbilityContext>(p
     return new MoveCardSystem<TContext>(
         GameSystem.appendToPropertiesOrPropertyFactory<IMoveCardProperties, 'destination'>(
             propertyFactory,
-            { destination: Location.Hand }
+            { destination: ZoneName.Hand }
         )
     );
 }
@@ -405,13 +414,10 @@ export function selectCard<TContext extends AbilityContext = AbilityContext>(pro
 // export function selectToken(propertyFactory: PropsFactory<SelectTokenProperties>): GameSystem {
 //     return new SelectTokenAction(propertyFactory);
 // }
-export function sequential<TContext extends AbilityContext = AbilityContext>(gameSystems: GameSystem<TContext>[]): GameSystem<TContext> {
+export function sequential<TContext extends AbilityContext = AbilityContext>(gameSystems: ISystemArrayOrFactory<TContext>): GameSystem<TContext> {
     return new SequentialSystem<TContext>(gameSystems);
 } // takes an array of gameActions, not a propertyFactory
-// export function sequentialContext(propertyFactory: PropsFactory<SequentialContextProperties>): GameSystem {
-//     return new SequentialContextAction(propertyFactory);
-// }
-export function simultaneous<TContext extends AbilityContext = AbilityContext>(gameSystems: (GameSystem<TContext>)[], ignoreTargetingRequirements = null): GameSystem<TContext> {
+export function simultaneous<TContext extends AbilityContext = AbilityContext>(gameSystems: ISystemArrayOrFactory<TContext>, ignoreTargetingRequirements = null): GameSystem<TContext> {
     return new SimultaneousGameSystem<TContext>(gameSystems, ignoreTargetingRequirements);
 }
 
