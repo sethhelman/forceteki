@@ -2,7 +2,7 @@ import * as CostLibrary from '../../costs/CostLibrary';
 import { resourceCard } from '../../gameSystems/GameSystemLibrary';
 import { IActionTargetResolver } from '../../TargetInterfaces';
 import { Card } from '../card/Card';
-import { KeywordName, PhaseName, PlayType, Stage } from '../Constants';
+import { EffectName, KeywordName, PhaseName, PlayType, Stage } from '../Constants';
 import { ICost } from '../cost/ICost';
 import { AbilityContext } from './AbilityContext';
 import PlayerAction from './PlayerAction';
@@ -70,6 +70,18 @@ export abstract class PlayCardAction extends PlayerAction {
     public override getAdjustedCost(context) {
         const resourceCost = this.cost.find((cost) => cost.getAdjustedCost);
         return resourceCost ? resourceCost.getAdjustedCost(context) : 0;
+    }
+
+    public override getCosts(context, playCosts=true){
+        let costs = super.getCosts(context, playCosts);
+        if (!context.subResolution && playCosts && context.player.hasOngoingEffect(EffectName.AdditionalPlayCost)) {
+            const additionalPlayCosts = context.player
+                .getOngoingEffectValues(EffectName.AdditionalPlayCost)
+                .map((effect) => effect(context));
+            console.log("toto3", additionalPlayCosts.length, playCosts)
+            return costs.concat(...additionalPlayCosts);
+        }
+        return costs;
     }
 
     public generateSmuggleEvent(context: PlayCardContext) {
