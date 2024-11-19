@@ -1,10 +1,11 @@
 describe('Take control of a card', function() {
     integration(function(contextRef) {
         describe('When a player takes control of a unit in the arena,', function() {
-            it('all targeting and abilities should respect the controller change', function () {
+            beforeEach(function () {
                 contextRef.setupTest({
                     phase: 'action',
                     player1: {
+                        hand: ['waylay'],
                         leader: { card: 'emperor-palpatine#galactic-ruler', exhausted: true },
                     },
                     player2: {
@@ -12,7 +13,9 @@ describe('Take control of a card', function() {
                         hand: ['strike-true']
                     }
                 });
+            });
 
+            it('all targeting and abilities should respect the controller change', function () {
                 const { context } = contextRef;
 
                 // flip Palpatine to take control of Lom Pyke
@@ -45,7 +48,21 @@ describe('Take control of a card', function() {
                 context.player2.clickCard(context.strikeTrue);
                 // wampa selected automatically as only legal target
                 context.player2.clickCard(context.lomPyke);
-                expect(context.lomPyke).toBeInZone('discard', context.player1);
+                expect(context.lomPyke).toBeInZone('discard', context.player2);
+            });
+
+            it('and it is returned to hand, it should return to its owner\'s hand', function () {
+                const { context } = contextRef;
+
+                // flip Palpatine to take control of Lom Pyke
+                context.player1.clickCard(context.emperorPalpatine);
+                expect(context.lomPyke.controller).toBe(context.player1Object);
+
+                context.player2.passAction();
+
+                context.player1.clickCard(context.waylay);
+                context.player1.clickCard(context.lomPyke);
+                expect(context.lomPyke).toBeInZone('hand', context.player2);
             });
         });
     });

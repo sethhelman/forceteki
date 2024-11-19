@@ -28,7 +28,7 @@ const { cards } = require('../cards/Index.js');
 // const ConflictFlow = require('./gamesteps/conflict/conflictflow');
 // const MenuCommands = require('./MenuCommands');
 
-const { EventName, ZoneName, TokenName, Trait } = require('./Constants.js');
+const { EventName, ZoneName, TokenName, Trait, WildcardZoneName } = require('./Constants.js');
 const { BaseStepWithPipeline } = require('./gameSteps/BaseStepWithPipeline.js');
 const { default: Shield } = require('../cards/01_SOR/tokens/Shield.js');
 const { StateWatcherRegistrar } = require('./stateWatcher/StateWatcherRegistrar.js');
@@ -310,6 +310,23 @@ class Game extends EventEmitter {
     //     this.allCards.push(token);
     //     return token;
     // }
+
+    /**
+     * Return the `Zone` object corresponding to the arena type
+     * @param {ZoneName.SpaceArena | ZoneName.GroundArena | WildcardZoneName.AnyArena} arenaName
+     */
+    getArena(arenaName) {
+        switch (arenaName) {
+            case ZoneName.GroundArena:
+                return this.groundArena;
+            case ZoneName.SpaceArena:
+                return this.spaceArena;
+            case WildcardZoneName.AnyArena:
+                return this.allArenas;
+            default:
+                Contract.fail(`Unknown arena enum value: ${arenaName}`);
+        }
+    }
 
     get actions() {
         return GameSystems;

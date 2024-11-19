@@ -75,7 +75,7 @@ export class PlayableOrDeployableCard extends Card {
         this._exhausted = false;
     }
 
-    public override moveTo(targetZone: MoveZoneDestination, resetController = false): void {
+    public override moveTo(targetZone: MoveZoneDestination, resetController?: boolean): void {
         // If this card is a resource and it is ready, try to ready another resource instead
         // and exhaust this one. This should be the desired behavior for most cases.
         if (this.zoneName === ZoneName.Resource && !this.exhausted) {
