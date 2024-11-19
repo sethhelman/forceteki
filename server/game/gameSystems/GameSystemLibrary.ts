@@ -162,7 +162,7 @@ export function moveCard<TContext extends AbilityContext = AbilityContext>(prope
     return new MoveCardSystem<TContext>(propertyFactory);
 }
 
-export function moveToBottomOfDeck<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<ICardTargetSystemProperties, TContext>): CardTargetSystem<TContext> {
+export function moveToBottomOfDeck<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<ICardTargetSystemProperties, TContext> = {}): CardTargetSystem<TContext> {
     return new MoveCardSystem<TContext>(
         GameSystem.appendToPropertiesOrPropertyFactory<IMoveCardProperties, 'destination'>(
             propertyFactory,
