@@ -8,14 +8,21 @@ describe('Restock', function() {
                         hand: ['restock'],
                         discard: ['pyke-sentinel', 'atst', 'battlefield-marine', 'resupply'],
                     },
+                    player2: {
+                        discard: ['consular-security-force', 'specforce-soldier', 'echo-base-defender']
+                    }
                 });
             });
 
-            it('should return up to 4 card from discard to bottom of deck', function () {
+            it('should return up to 4 card from our discard to bottom of deck', function () {
                 const { context } = contextRef;
 
                 // play restock
                 context.player1.clickCard(context.restock);
+
+                expect(context.player1).toHaveExactPromptButtons(['Your discard', 'Opponent discard']);
+                context.player1.clickPrompt('Your discard');
+
                 expect(context.player1).toBeAbleToSelectExactly([context.pykeSentinel, context.atst, context.battlefieldMarine, context.resupply, context.restock]);
 
                 // select cards
@@ -33,25 +40,27 @@ describe('Restock', function() {
                 expect(context.pykeSentinel).toBeInZone('discard');
             });
 
-            it('should return up to 4 card from discard to bottom of deck (select only 3)', function () {
+            it('should return up to 4 card from opponent discard to bottom of deck', function () {
                 const { context } = contextRef;
 
                 // play restock
                 context.player1.clickCard(context.restock);
-                expect(context.player1).toBeAbleToSelectExactly([context.pykeSentinel, context.atst, context.battlefieldMarine, context.resupply, context.restock]);
+
+                expect(context.player1).toHaveExactPromptButtons(['Your discard', 'Opponent discard']);
+                context.player1.clickPrompt('Opponent discard');
+
+                expect(context.player1).toBeAbleToSelectExactly([context.consularSecurityForce, context.specforceSoldier, context.echoBaseDefender]);
 
                 // select cards
-                context.player1.clickCard(context.resupply);
-                context.player1.clickCard(context.restock);
-                context.player1.clickCard(context.battlefieldMarine);
+                context.player1.clickCard(context.consularSecurityForce);
+                context.player1.clickCard(context.specforceSoldier);
+                context.player1.clickCard(context.echoBaseDefender);
                 context.player1.clickPrompt('Done');
 
                 // selected cards should be in bottom on deck
-                expect(context.battlefieldMarine).toBeInBottomOfDeck(context.player1, 3);
-                expect(context.resupply).toBeInBottomOfDeck(context.player1, 3);
-                expect(context.restock).toBeInBottomOfDeck(context.player1, 3);
-                expect(context.pykeSentinel).toBeInZone('discard');
-                expect(context.atst).toBeInZone('discard');
+                expect(context.consularSecurityForce).toBeInBottomOfDeck(context.player2, 3);
+                expect(context.specforceSoldier).toBeInBottomOfDeck(context.player2, 3);
+                expect(context.echoBaseDefender).toBeInBottomOfDeck(context.player2, 3);
             });
         });
     });
