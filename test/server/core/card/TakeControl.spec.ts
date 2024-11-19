@@ -8,7 +8,8 @@ describe('Take control of a card', function() {
                         leader: { card: 'emperor-palpatine#galactic-ruler', exhausted: true },
                     },
                     player2: {
-                        groundArena: [{ card: 'lom-pyke#dealer-in-truths', damage: 1 }, 'wampa']
+                        groundArena: [{ card: 'lom-pyke#dealer-in-truths', damage: 1 }, 'wampa'],
+                        hand: ['strike-true']
                     }
                 });
 
@@ -27,12 +28,24 @@ describe('Take control of a card', function() {
                 // - player 1 makes the selections for his ability
                 // - target lists correctly identify friendly vs opponent units for player 1
                 context.player1.clickCard(context.lomPyke);
-                context.player1.clickCard(context.p2Base);
+                context.player1.clickCard(context.wampa);
+
                 context.player1.clickPrompt('Give a Shield token to an enemy unit');
                 expect(context.wampa).toHaveExactUpgradeNames(['shield']);
                 expect(context.player1).toBeAbleToSelectExactly([context.lomPyke, context.emperorPalpatine]);
-                context.player1.clickCard(context.lomPyke);
-                expect(context.lomPyke).toHaveExactUpgradeNames(['shield']);
+                context.player1.clickCard(context.emperorPalpatine);
+                expect(context.emperorPalpatine).toHaveExactUpgradeNames(['shield']);
+
+                expect(context.wampa.isUpgraded()).toBeFalse();
+                expect(context.lomPyke.damage).toBe(5);
+
+                // player2 uses Strike True to confirm that:
+                // - friendly / opponent unit lists work correctly
+                // - Lom Pyke goes to player1's discard on defeat
+                context.player2.clickCard(context.strikeTrue);
+                // wampa selected automatically as only legal target
+                context.player2.clickCard(context.lomPyke);
+                expect(context.lomPyke).toBeInZone('discard', context.player1);
             });
         });
     });

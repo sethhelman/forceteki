@@ -36,11 +36,11 @@ export class DefeatCardSystem<TContext extends AbilityContext = AbilityContext, 
 
         if (event.card.isToken()) {
             // move the token out of the play area so that effect cleanup happens, then remove it from all card lists
-            event.card.moveTo(ZoneName.OutsideTheGame);
+            event.card.moveTo(ZoneName.OutsideTheGame, true);
         } else if (event.card.isLeader()) {
             event.card.undeploy();
         } else {
-            event.card.moveTo(ZoneName.Discard);
+            event.card.moveTo(ZoneName.Discard, true);
         }
     }
 

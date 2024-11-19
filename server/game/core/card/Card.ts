@@ -443,7 +443,12 @@ export class Card extends OngoingEffectSource {
 
 
     // ******************************************* ZONE MANAGEMENT *******************************************
-    public moveTo(targetZone: MoveZoneDestination) {
+    /**
+     * @param targetZone Zone to move to
+     * @param resetController If true, sets `card.controller = card.owner`. Intended for resetting controller
+     * when e.g. a defeated unit is moved to discard.
+     */
+    public moveTo(targetZone: MoveZoneDestination, resetController = false) {
         Contract.assertNotNullLike(this._zone, `Attempting to move card ${this.internalName} before initializing zone`);
 
         const originalZone = this.zoneName;
@@ -463,6 +468,10 @@ export class Card extends OngoingEffectSource {
             } else {
                 prevZone.removeCard(this);
             }
+        }
+
+        if (resetController) {
+            this._controller = this.owner;
         }
 
         this.addSelfToZone(targetZone);
