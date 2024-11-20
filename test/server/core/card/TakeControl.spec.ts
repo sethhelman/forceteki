@@ -215,6 +215,98 @@ describe('Take control of a card', function() {
                 expect(context.emperorPalpatine).toHaveExactUpgradeNames(['experience']);
                 expect(context.bailOrgana.exhausted).toBeTrue();
             });
+
+            it('its original controller should be able to take control back', function () {
+                contextRef.setupTest({
+                    phase: 'action',
+                    player1: {
+                        leader: { card: 'emperor-palpatine#galactic-ruler', exhausted: true }
+                    },
+                    player2: {
+                        leader: { card: 'emperor-palpatine#galactic-ruler', exhausted: true },
+                        groundArena: [{ card: 'wampa', damage: 1 }]
+                    }
+                });
+
+                const { context } = contextRef;
+
+                const p1Palpatine = context.player1.findCardByName('emperor-palpatine#galactic-ruler');
+                const p2Palpatine = context.player2.findCardByName('emperor-palpatine#galactic-ruler');
+
+                // player1 flip Palpatine to take control of Wampa
+                context.player1.clickCard(p1Palpatine);
+                expect(context.wampa.controller).toBe(context.player1Object);
+
+                // player2 flip Palpatine to take control back
+                context.player2.clickCard(p2Palpatine);
+
+                // player 1 cannot attack with lost unit
+                expect(context.wampa).not.toHaveAvailableActionWhenClickedBy(context.player1);
+                context.player1.passAction();
+
+                context.player2.clickCard(context.wampa);
+                context.player2.clickCard(context.p1Base);
+
+                expect(context.p1Base.damage).toBe(4);
+            });
+        });
+
+        it('and it\'s a duplicate of another unique unit, the unique rule should be triggered to defeat one of the copies', function () {
+            contextRef.setupTest({
+                phase: 'action',
+                player1: {
+                    leader: { card: 'emperor-palpatine#galactic-ruler', exhausted: true },
+                    groundArena: ['lom-pyke#dealer-in-truths']
+                },
+                player2: {
+                    groundArena: [{ card: 'lom-pyke#dealer-in-truths', damage: 1 }]
+                }
+            });
+
+            const { context } = contextRef;
+
+            const p1LomPyke = context.player1.findCardByName('lom-pyke#dealer-in-truths');
+            const p2LomPyke = context.player2.findCardByName('lom-pyke#dealer-in-truths');
+
+            // flip Palpatine to take control of Lom Pyke
+            context.player1.clickCard(context.emperorPalpatine);
+
+            expect(context.player1).toHavePrompt('Choose which copy of Lom Pyke, Dealer in Truths to defeat');
+            expect(context.player1).toBeAbleToSelectExactly([p1LomPyke, p2LomPyke]);
+
+            // defeat resolves
+            context.player1.clickCard(p2LomPyke);
+            expect(p1LomPyke).toBeInZone('groundArena');
+            expect(p2LomPyke).toBeInZone('discard');
+
+            expect(context.player2).toBeActivePlayer();
+        });
+
+        it('and it already controls that unit, nothing happens', function () {
+            contextRef.setupTest({
+                phase: 'action',
+                player1: {
+                    leader: { card: 'emperor-palpatine#galactic-ruler', exhausted: true },
+                    groundArena: [{ card: 'battlefield-marine', damage: 1 }]
+                },
+                player2: {
+                    groundArena: [{ card: 'wampa', damage: 1 }]
+                }
+            });
+
+            const { context } = contextRef;
+
+            // flip Palpatine to take control of Lom Pyke
+            context.player1.clickCard(context.emperorPalpatine);
+            expect(context.player1).toBeAbleToSelectExactly([context.wampa, context.battlefieldMarine]);
+            context.player1.clickCard(context.battlefieldMarine);
+            expect(context.battlefieldMarine.controller).toBe(context.player1Object);
+
+            context.player2.passAction();
+
+            context.player1.clickCard(context.battlefieldMarine);
+            context.player1.clickCard(context.p2Base);
+            expect(context.p2Base.damage).toBe(3);
         });
     });
 });
