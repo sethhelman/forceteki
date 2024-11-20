@@ -1,60 +1,53 @@
 describe('Emperor Palpatine, Galactic Ruler', function() {
     integration(function(contextRef) {
-        // describe('Palpatine\'s undeployed ability', function() {
-        //     beforeEach(function () {
-        //         contextRef.setupTest({
-        //             phase: 'action',
-        //             player1: {
-        //                 groundArena: ['atst', 'battlefield-marine'],
-        //                 spaceArena: ['tieln-fighter'],
-        //                 leader: 'grand-moff-tarkin#oversector-governor'
-        //             },
-        //             player2: {
-        //                 groundArena: ['wampa'],
-        //                 spaceArena: ['tie-advanced']
-        //             }
-        //         });
-        //     });
+        it('Palpatine\'s undeployed ability should deal 1 damage and draw a card at the cost of defeating a friendly, exhausting self, and paying 1 resource', function () {
+            contextRef.setupTest({
+                phase: 'action',
+                player1: {
+                    leader: 'emperor-palpatine#galactic-ruler',
+                    groundArena: ['battlefield-marine'],
+                    spaceArena: [{ card: 'tie-advanced', upgrades: ['shield'] }],
+                    resources: 5
+                },
+                player2: {
+                    groundArena: ['wampa', 'atst'],
+                }
+            });
 
-        //     it('should give a friendly imperial unit an experience token', function () {
-        //         const { context } = contextRef;
+            const { context } = contextRef;
 
-        //         context.player1.clickCard(context.grandMoffTarkin);
-        //         context.player1.clickPrompt('Give an experience token to an Imperial unit');
-        //         expect(context.player1).toBeAbleToSelectExactly([context.atst, context.tielnFighter]);
+            context.player1.clickCard(context.emperorPalpatine);
+            expect(context.player1).toBeAbleToSelectExactly([context.battlefieldMarine, context.tieAdvanced]);
+            expect(context.player1).not.toHavePassAbilityButton();
 
-        //         context.player1.clickCard(context.atst);
-        //         expect(context.grandMoffTarkin.exhausted).toBe(true);
-        //         expect(context.atst).toHaveExactUpgradeNames(['experience']);
-        //         expect(context.player1.exhaustedResourceCount).toBe(1);
-        //     });
-        // });
+            context.player1.clickCard(context.tieAdvanced);
+            expect(context.tieAdvanced).toBeInZone('discard');
+            expect(context.emperorPalpatine.exhausted).toBeTrue();
+            expect(context.player1.exhaustedResourceCount).toBe(1);
 
-        // describe('Tarkin\'s undeployed ability', function() {
-        //     beforeEach(function () {
-        //         contextRef.setupTest({
-        //             phase: 'action',
-        //             player1: {
-        //                 groundArena: ['battlefield-marine'],
-        //                 leader: 'grand-moff-tarkin#oversector-governor'
-        //             },
-        //             player2: {
-        //                 groundArena: ['wampa'],
-        //             }
-        //         });
-        //     });
+            expect(context.player1).toBeAbleToSelectExactly([context.battlefieldMarine, context.wampa, context.atst]);
+            expect(context.player1).not.toHavePassAbilityButton();
+            context.player1.clickCard(context.atst);
+            expect(context.atst.damage).toBe(1);
+            expect(context.player1.handSize).toBe(1);
+        });
 
-        //     it('can be activated with no target', function () {
-        //         const { context } = contextRef;
+        it('Palpatine\'s undeployed ability should not be able to activate if there are no friendly units', function () {
+            contextRef.setupTest({
+                phase: 'action',
+                player1: {
+                    leader: 'emperor-palpatine#galactic-ruler',
+                    resources: 5
+                },
+                player2: {
+                    groundArena: ['wampa', 'atst'],
+                }
+            });
 
-        //         context.player1.clickCard(context.grandMoffTarkin);
-        //         context.player1.clickPrompt('Give an experience token to an Imperial unit');
+            const { context } = contextRef;
 
-        //         expect(context.player2).toBeActivePlayer();
-        //         expect(context.grandMoffTarkin.exhausted).toBe(true);
-        //         expect(context.player1.exhaustedResourceCount).toBe(1);
-        //     });
-        // });
+            expect(context.emperorPalpatine).not.toHaveAvailableActionWhenClickedBy(context.player1);
+        });
 
         it('Palpatine\'s on-deploy ability should take control of a damaged unit', function () {
             contextRef.setupTest({
