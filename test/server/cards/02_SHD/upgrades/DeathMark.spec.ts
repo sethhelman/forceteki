@@ -8,7 +8,7 @@ describe('Death Mark', function() {
                         hand: ['vanquish']
                     },
                     player2: {
-                        spaceArena: [{ card: 'restored-arc170', upgrades: ['death-mark'] }],
+                        spaceArena: [{ card: 'restored-arc170', upgrades: ['death-mark'] }, 'cartel-spacer'],
                     }
                 });
 
