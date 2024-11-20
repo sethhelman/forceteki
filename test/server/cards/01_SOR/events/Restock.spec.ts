@@ -30,6 +30,7 @@ describe('Restock', function() {
                 context.player1.clickCard(context.restock);
                 context.player1.clickCard(context.battlefieldMarine);
                 context.player1.clickCard(context.atst);
+                context.player1.clickCardNonChecking(context.pykeSentinel);
                 context.player1.clickPrompt('Done');
 
                 // selected cards should be in bottom on deck
