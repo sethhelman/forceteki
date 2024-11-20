@@ -45,8 +45,10 @@ export default class EmperorPalpatineGalacticRuler extends LeaderUnitCard {
 
         this.addOnAttackAbility({
             title: 'Defeat another friendly unit',
+            optional: true,
             targetResolver: {
                 cardTypeFilter: WildcardCardType.Unit,
+                controller: RelativePlayer.Self,
                 cardCondition: (card, context) => card !== context.source,
                 immediateEffect: AbilityHelper.immediateEffects.defeat()
             },
