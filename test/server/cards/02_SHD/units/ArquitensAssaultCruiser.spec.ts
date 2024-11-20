@@ -6,10 +6,15 @@ describe('Arquitens Assault Cruiser', function() {
                     phase: 'action',
                     player1: {
                         hand: ['arquitens-assault-cruiser'],
-                        groundArena: ['battlefield-marine']
+                        spaceArena: ['tie-advanced']
                     },
                     player2: {
-                        spaceArena: ['tieln-fighter', 'gideons-light-cruiser#dark-troopers-station']
+                        spaceArena: [
+                            'tieln-fighter',
+                            'gideons-light-cruiser#dark-troopers-station',
+                            'cartel-spacer',
+                            'imperial-interceptor'
+                        ]
                     }
                 });
             });
@@ -19,6 +24,7 @@ describe('Arquitens Assault Cruiser', function() {
 
                 const reset = (passAction = true) => {
                     context.setDamage(context.arquitensAssaultCruiser, 0);
+                    context.arquitensAssaultCruiser.exhausted = false;
                     if (passAction) {
                         context.player2.passAction();
                     }
@@ -29,47 +35,35 @@ describe('Arquitens Assault Cruiser', function() {
                 context.player1.clickPrompt('Ambush');
                 context.player1.clickCard(context.tielnFighter);
                 expect(context.tielnFighter).toBeInZone('resource', context.player1);
+                expect(context.tielnFighter.exhausted).toBeTrue();
                 expect(context.arquitensAssaultCruiser.damage).toBe(2);
                 expect(context.player2).toBeActivePlayer();
 
                 reset();
 
-                // // CASE 2: Mace attacks and does not defeat, ability does not trigger
-                // context.maceWindu.exhausted = false;
-                // context.player1.clickCard(context.maceWindu);
-                // context.player1.clickCard(context.atst);
-                // expect(context.atst.damage).toBe(5);
-                // expect(context.maceWindu.damage).toBe(6);
-                // expect(context.maceWindu.exhausted).toBeTrue();
+                // CASE 2: Arquitens attacks and does not defeat, ability does not trigger
+                context.player1.clickCard(context.arquitensAssaultCruiser);
+                context.player1.clickCard(context.gideonsLightCruiser);
+                expect(context.gideonsLightCruiser).toBeInZone('spaceArena');
+                expect(context.gideonsLightCruiser.damage).toBe(7);
+                expect(context.arquitensAssaultCruiser.damage).toBe(7);
 
-                // reset(false);
+                reset(false);
 
-                // // CASE 3: Enemy attacks into Mace and dies, ability doesn't trigger
-                // context.maceWindu.exhausted = true;
-                // context.player2.clickCard(context.atst);
-                // context.player2.clickCard(context.maceWindu);
-                // expect(context.atst).toBeInZone('discard');
-                // expect(context.maceWindu.damage).toBe(6);
-                // expect(context.maceWindu.exhausted).toBeTrue();
+                // CASE 3: Enemy attacks into Arquitens and dies, ability doesn't trigger
+                context.player2.clickCard(context.cartelSpacer);
+                context.player2.clickCard(context.arquitensAssaultCruiser);
+                expect(context.cartelSpacer).toBeInZone('discard');
+                expect(context.arquitensAssaultCruiser.damage).toBe(2);
 
-                // reset(false);
+                reset(false);
 
-                // // CASE 4: friendly unit trades with enemy unit, Mace ability does not trigger
-                // context.maceWindu.exhausted = true;
-                // context.player1.clickCard(context.battlefieldMarine);
-                // context.player1.clickCard(context.mandalorianWarrior);
-                // expect(context.battlefieldMarine).toBeInZone('discard');
-                // expect(context.mandalorianWarrior).toBeInZone('discard');
-                // expect(context.maceWindu.exhausted).toBeTrue();
-
-                // reset();
-
-                // // CASE 5: Mace dies while attacking, ability fizzles
-                // context.maceWindu.exhausted = false;
-                // context.player1.clickCard(context.maceWindu);
-                // context.player1.clickCard(context.atatSuppressor);
-                // expect(context.maceWindu).toBeInZone('discard');
-                // expect(context.atatSuppressor.damage).toBe(5);
+                // CASE 4: friendly unit trades with enemy unit, Arquitens ability does not trigger
+                expect(context.player1).toBeActivePlayer();
+                context.player1.clickCard(context.tieAdvanced);
+                context.player1.clickCard(context.imperialInterceptor);
+                expect(context.tieAdvanced).toBeInZone('discard');
+                expect(context.imperialInterceptor).toBeInZone('discard');
             });
         });
 
