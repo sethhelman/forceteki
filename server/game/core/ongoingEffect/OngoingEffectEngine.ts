@@ -65,7 +65,7 @@ export class OngoingEffectEngine {
             return {
                 title: context.source.title + '\'s effect' + (targets.length === 1 ? ' on ' + targets[0].name : ''),
                 handler: () => {
-                    // TODO The below line was setting the target to the card originating the effect, even for player effects
+                    // TODO Ensure the below line doesn't break anything for a CardTargetSystem delayed effect
                     properties.immediateEffect.setDefaultTargetFn(() => targets);
                     if (properties.message && properties.immediateEffect.hasLegalTarget(context)) {
                         let messageArgs = properties.messageArgs || [];
@@ -85,7 +85,9 @@ export class OngoingEffectEngine {
             this.unapplyAndRemove((effect) => effectsToRemove.includes(effect));
         }
         if (effectTriggers.length > 0) {
-            this.game.openSimultaneousEffectWindow(effectTriggers);
+            effectTriggers.forEach((trigger) => {
+                trigger.handler();
+            });
         }
     }
 

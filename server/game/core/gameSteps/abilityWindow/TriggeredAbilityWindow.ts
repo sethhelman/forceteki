@@ -37,7 +37,6 @@ export class TriggeredAbilityWindow extends BaseStep {
 
     public constructor(
         game: Game,
-        // TODO Remove DelayedEffect here once we have a Simultaneous Effect Window
         private readonly triggerAbilityType: AbilityType.Triggered | AbilityType.ReplacementEffect | AbilityType.DelayedEffect,
         private readonly eventWindow?: EventWindow,
         private readonly eventsToExclude = []
