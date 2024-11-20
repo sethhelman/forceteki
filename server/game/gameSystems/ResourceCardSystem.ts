@@ -101,6 +101,6 @@ export class ResourceCardSystem<TContext extends AbilityContext = AbilityContext
     }
 
     private getResourceControllingPlayer(properties: IResourceCardProperties, context: TContext) {
-        return properties.targetPlayer === RelativePlayer.Self ? context.source.controller : context.source.controller.opponent;
+        return properties.targetPlayer === RelativePlayer.Self ? context.player : context.player.opponent;
     }
 }
