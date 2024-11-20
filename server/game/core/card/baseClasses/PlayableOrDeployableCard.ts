@@ -118,7 +118,7 @@ export class PlayableOrDeployableCard extends Card {
             // register this transition with the engine so it can do uniqueness check if needed
             this.game.registerMovedCard(this);
         } else {
-            this.moveTo(moveDestination);
+            this.moveTo(moveDestination, false);
         }
 
         // update the context of all constant abilities so they are aware of the new controller

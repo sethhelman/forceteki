@@ -74,7 +74,7 @@ import { DiscardCardsFromHand, IDiscardCardsFromHandProperties } from './Discard
 import { DiscardEntireHandSystem, IDiscardEntireHandSystemProperties } from './DiscardEntireHandSystem';
 import { ISystemArrayOrFactory } from '../core/gameSystem/AggregateSystem';
 import { CardAttackLastingEffectSystem, ICardAttackLastingEffectProperties } from './CardAttackLastingEffectSystem';
-import { ITakeControlProperties, TakeControlSystem } from './TakeControlSystem';
+import { ITakeControlProperties, TakeControlOfUnitSystem } from './TakeControlOfUnitSystem';
 // import { TakeControlAction, TakeControlProperties } from './TakeControlAction';
 // import { TriggerAbilityAction, TriggerAbilityProperties } from './TriggerAbilityAction';
 // import { TurnCardFacedownAction, TurnCardFacedownProperties } from './TurnCardFacedownAction';
@@ -270,8 +270,8 @@ export function reveal<TContext extends AbilityContext = AbilityContext>(propert
 // export function sacrifice(propertyFactory: PropsFactory<DiscardFromPlayProperties> = {}): CardGameAction {
 //     return new DiscardFromPlayAction(propertyFactory, true);
 // }
-export function takeControl<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<ITakeControlProperties, TContext>) {
-    return new TakeControlSystem(propertyFactory);
+export function takeControlOfUnit<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<ITakeControlProperties, TContext>) {
+    return new TakeControlOfUnitSystem(propertyFactory);
 }
 // export function triggerAbility(propertyFactory: PropsFactory<TriggerAbilityProperties>): GameSystem {
 //     return new TriggerAbilityAction(propertyFactory);

@@ -39,7 +39,7 @@ export default class EmperorPalpatineGalacticRuler extends LeaderUnitCard {
             },
             targetResolver: {
                 cardCondition: (card) => card.isNonLeaderUnit() && card.damage > 0,
-                immediateEffect: AbilityHelper.immediateEffects.takeControl((context) => ({ newController: context.source.controller }))
+                immediateEffect: AbilityHelper.immediateEffects.takeControlOfUnit((context) => ({ newController: context.source.controller }))
             }
         });
 

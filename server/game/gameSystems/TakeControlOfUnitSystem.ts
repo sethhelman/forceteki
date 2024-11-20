@@ -13,7 +13,7 @@ export interface ITakeControlProperties extends ICardTargetSystemProperties {
  * Used for taking control of a unit, upgrade, or resource without making any other change.
  * For taking control while moving / resourcing / playing etc., see the `underControlOf` property of the relevant system.
  */
-export class TakeControlSystem<TContext extends AbilityContext = AbilityContext, TProperties extends ITakeControlProperties = ITakeControlProperties> extends CardTargetSystem<TContext, TProperties> {
+export class TakeControlOfUnitSystem<TContext extends AbilityContext = AbilityContext, TProperties extends ITakeControlProperties = ITakeControlProperties> extends CardTargetSystem<TContext, TProperties> {
     public override readonly name = 'ready';
     public override readonly eventName = EventName.OnTakeControl;
     protected override readonly targetTypeFilter = [WildcardCardType.Unit, CardType.Event, WildcardCardType.Upgrade];
