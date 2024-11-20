@@ -28,7 +28,7 @@ const { cards } = require('../cards/Index.js');
 // const ConflictFlow = require('./gamesteps/conflict/conflictflow');
 // const MenuCommands = require('./MenuCommands');
 
-const { EventName, ZoneName, TokenName, Trait } = require('./Constants.js');
+const { EventName, ZoneName, TokenName, Trait, AbilityType } = require('./Constants.js');
 const { BaseStepWithPipeline } = require('./gameSteps/BaseStepWithPipeline.js');
 const { default: Shield } = require('../cards/01_SOR/tokens/Shield.js');
 const { StateWatcherRegistrar } = require('./stateWatcher/StateWatcherRegistrar.js');
@@ -40,6 +40,8 @@ const { Card } = require('./card/Card.js');
 const { GroundArenaZone } = require('./zone/GroundArenaZone.js');
 const { SpaceArenaZone } = require('./zone/SpaceArenaZone.js');
 const { AllArenasZone } = require('./zone/AllArenasZone.js');
+const { SimultaneousEffectWindow } = require('./gameSteps/SimultaneousEffectWindow.js');
+const { TriggeredAbilityWindow } = require('./gameSteps/abilityWindow/TriggeredAbilityWindow.js');
 
 class Game extends EventEmitter {
     constructor(details, options = {}) {
@@ -871,10 +873,15 @@ class Game extends EventEmitter {
     }
 
     openSimultaneousEffectWindow(choices) {
-        throw new Error('Simultaneous effects not implemented yet');
+        // TODO Implement Simultaneous Effect Window
+
+        // throw new Error('Simultaneous effects not implemented yet');
         // let window = new SimultaneousEffectWindow(this);
         // choices.forEach((choice) => window.addToWindow(choice));
         // this.queueStep(window);
+
+        let window = new TriggeredAbilityWindow(this, AbilityType.DelayedEffect);
+        this.queueStep(window);
     }
 
     /**
