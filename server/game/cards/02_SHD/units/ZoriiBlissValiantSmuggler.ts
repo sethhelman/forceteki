@@ -1,6 +1,6 @@
 import AbilityHelper from '../../../AbilityHelper';
 import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
-import { Duration, RelativePlayer, ZoneName } from '../../../core/Constants';
+import { Duration, PhaseName, RelativePlayer } from '../../../core/Constants';
 
 export default class ZoriiBlissValiantSmuggler extends NonLeaderUnitCard {
     protected override getImplementationId () {
@@ -21,7 +21,7 @@ export default class ZoriiBlissValiantSmuggler extends NonLeaderUnitCard {
                     effect: AbilityHelper.ongoingEffects.delayedEffect({
                         title: 'Discard a card from your hand',
                         when: {
-                            onPhaseEnded: () => true
+                            onPhaseStarted: (context) => context.phase === PhaseName.Regroup
                         },
                         immediateEffect: AbilityHelper.immediateEffects.discardCardsFromOwnHand((context) => ({
                             amount: 1,
