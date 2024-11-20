@@ -355,8 +355,8 @@ export function forThisPhasePlayerEffect<TContext extends AbilityContext = Abili
 export function readyResources<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IReadyResourcesSystemProperties, TContext>): GameSystem<TContext> {
     return new ReadyResourcesSystem<TContext>(propertyFactory);
 }
-export function playerLastingEffect(propertyFactory: PropsFactory<IPlayerLastingEffectProperties>): GameSystem {
-    return new PlayerLastingEffectSystem(propertyFactory);
+export function playerLastingEffect<TContext extends AbilityContext = AbilityContext>(propertyFactory: PropsFactory<IPlayerLastingEffectProperties>): GameSystem<TContext> {
+    return new PlayerLastingEffectSystem<TContext>(propertyFactory);
 }
 
 // //////////////

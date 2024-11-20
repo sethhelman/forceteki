@@ -63,10 +63,11 @@ export class OngoingEffectEngine {
             const context = effect.context;
             const targets = effect.targets;
             return {
-                title: context.source.name + '\'s effect' + (targets.length === 1 ? ' on ' + targets[0].name : ''),
+                title: context.source.title + '\'s effect' + (targets.length === 1 ? ' on ' + targets[0].name : ''),
                 handler: () => {
-                    properties.gameAction.setDefaultTarget(() => targets);
-                    if (properties.message && properties.gameAction.hasLegalTarget(context)) {
+                    // TODO The below line was setting the target to the card originating the effect, even for player effects
+                    properties.immediateEffect.setDefaultTargetFn(() => targets);
+                    if (properties.message && properties.immediateEffect.hasLegalTarget(context)) {
                         let messageArgs = properties.messageArgs || [];
                         if (typeof messageArgs === 'function') {
                             messageArgs = messageArgs(context, targets);
@@ -74,7 +75,7 @@ export class OngoingEffectEngine {
                         this.game.addMessage(properties.message, ...messageArgs);
                     }
                     const actionEvents = [];
-                    properties.gameAction.queueGenerateEventGameSteps(actionEvents, context);
+                    properties.immediateEffect.queueGenerateEventGameSteps(actionEvents, context);
                     this.game.queueSimpleStep(() => this.game.openEventWindow(actionEvents), 'openDelayedActionsWindow');
                     this.game.queueSimpleStep(() => this.game.resolveGameState(true), 'resolveGameState');
                 }

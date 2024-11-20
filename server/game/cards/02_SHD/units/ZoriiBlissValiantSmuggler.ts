@@ -1,6 +1,6 @@
 import AbilityHelper from '../../../AbilityHelper';
 import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
-import { Duration, ZoneName } from '../../../core/Constants';
+import { Duration, RelativePlayer, ZoneName } from '../../../core/Constants';
 
 export default class ZoriiBlissValiantSmuggler extends NonLeaderUnitCard {
     protected override getImplementationId () {
@@ -15,14 +15,18 @@ export default class ZoriiBlissValiantSmuggler extends NonLeaderUnitCard {
             title: 'Draw a card. At the start of the regroup phase, discard a card from your hand',
             immediateEffect: AbilityHelper.immediateEffects.simultaneous([
                 AbilityHelper.immediateEffects.draw(),
-                AbilityHelper.immediateEffects.cardLastingEffect({
+                AbilityHelper.immediateEffects.playerLastingEffect({
                     duration: Duration.UntilEndOfRound,
+                    targetPlayer: RelativePlayer.Self,
                     effect: AbilityHelper.ongoingEffects.delayedEffect({
                         title: 'Discard a card from your hand',
                         when: {
                             onPhaseEnded: () => true
                         },
-                        immediateEffect: AbilityHelper.immediateEffects.discardCardsFromOwnHand({ amount: 1 })
+                        immediateEffect: AbilityHelper.immediateEffects.discardCardsFromOwnHand((context) => ({
+                            amount: 1,
+                            target: context.source.controller
+                        }))
                     })
                 })
             ])

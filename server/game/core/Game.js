@@ -880,8 +880,12 @@ class Game extends EventEmitter {
         // choices.forEach((choice) => window.addToWindow(choice));
         // this.queueStep(window);
 
-        let window = new TriggeredAbilityWindow(this, AbilityType.DelayedEffect);
-        this.queueStep(window);
+        // TODO Remove this if the below is correct
+        // let window = new TriggeredAbilityWindow(this, AbilityType.DelayedEffect);
+        // this.queueStep(window);
+        choices.forEach((choice) => {
+            choice.handler();
+        });
     }
 
     /**
