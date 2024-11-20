@@ -13,7 +13,8 @@ describe('Take control of a card', function() {
                             { card: 'lom-pyke#dealer-in-truths', damage: 1, exhausted: true, upgrades: ['academy-training'] },
                             'wampa', 'atat-suppressor'
                         ],
-                        hand: ['strike-true', 'vanquish']
+                        hand: ['strike-true', 'vanquish'],
+                        leader: 'finn#this-is-a-rescue'
                     }
                 });
 
@@ -27,10 +28,16 @@ describe('Take control of a card', function() {
                 const { context } = contextRef;
 
                 expect(context.lomPyke.controller).toBe(context.player1Object);
-                expect(context.lomPyke.upgrades).toContain(context.academyTraining);
+                expect(context.lomPyke).toHaveExactUpgradeNames(['academy-training']);
                 expect(context.academyTraining.controller).toBe(context.player2Object); // TODO THIS PR: Finn
                 expect(context.lomPyke.exhausted).toBeTrue();
                 expect(context.lomPyke.damage).toBe(1);
+
+                // activate Finn, then Academy Training is automatically targeted since it is still friendly
+                context.player2.setResourceCount(3);
+                context.player2.clickCard(context.finn);
+                expect(context.lomPyke).toHaveExactUpgradeNames(['shield']);
+                expect(context.player1).toBeActivePlayer();
             });
 
             it('all targeting and abilities should respect the controller change', function () {
