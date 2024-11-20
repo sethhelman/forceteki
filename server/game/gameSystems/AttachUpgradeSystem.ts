@@ -37,6 +37,7 @@ export class AttachUpgradeSystem<TContext extends AbilityContext = AbilityContex
         // attachTo manages all of the unattach and move zone logic
         upgradeCard.attachTo(parentCard);
 
+        // TODO: add a system for taking control of upgrades
         // if (properties.takeControl) {
         //     upgradeCard.controller = event.context.player;
         //     upgradeCard.updateConstantAbilityContexts();

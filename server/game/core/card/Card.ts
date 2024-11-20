@@ -444,6 +444,8 @@ export class Card extends OngoingEffectSource {
 
     // ******************************************* ZONE MANAGEMENT *******************************************
     /**
+     * Moves a card to a new zone, optionally resetting the card's controller back to its owner.
+     *
      * @param targetZone Zone to move to
      * @param resetController If true (default behavior), sets `card.controller = card.owner` on move. Set to
      * false for a hypothetical situation where a controlled opponent unit is being moved between zones and

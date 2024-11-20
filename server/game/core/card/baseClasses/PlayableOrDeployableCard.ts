@@ -97,6 +97,15 @@ export class PlayableOrDeployableCard extends Card {
         this._exhausted = enabledStatus ? true : null;
     }
 
+    /**
+     * The passed player takes control of this card. If `moveTo` is provided, the card will be moved to that zone under the
+     * player's control. If not, it will move to the same zone type it currently occupies but under the new controller.
+     *
+     * For example, if the card is current in the resource zone and `moveTo` is not provided, it will move to the new
+     * controller's resource zone.
+     *
+     * If `newController` is the same as the current controller, nothing happens.
+     */
     public takeControl(newController: Player, moveTo: ZoneName.SpaceArena | ZoneName.GroundArena | ZoneName.Resource = null) {
         if (newController === this.controller) {
             return;
