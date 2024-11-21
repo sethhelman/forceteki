@@ -24,7 +24,7 @@ export default class RicketyQuadjumper extends NonLeaderUnitCard {
             ifYouDo: (context) => ({
                 title: 'Give an experience token to another unit',
                 immediateEffect: AbilityHelper.immediateEffects.conditional({
-                    condition: !context.events[0].card.isUnit(),
+                    condition: !context.events[0].card.isUnit(), // need to confirm that this function exists and what it is
                     onTrue: AbilityHelper.immediateEffects.selectCard({
                         innerSystem: AbilityHelper.immediateEffects.giveExperience()
                     }),
