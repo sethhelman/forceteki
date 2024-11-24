@@ -1,6 +1,6 @@
 import AbilityHelper from '../../../AbilityHelper';
 import { NonLeaderUnitCard } from '../../../core/card/NonLeaderUnitCard';
-import { RelativePlayer, ZoneName, TargetMode } from '../../../core/Constants';
+import { RelativePlayer, ZoneName, TargetMode, CardType } from '../../../core/Constants';
 
 export default class RicketyQuadjumper extends NonLeaderUnitCard {
     protected override getImplementationId() {
@@ -21,18 +21,20 @@ export default class RicketyQuadjumper extends NonLeaderUnitCard {
                 zoneFilter: ZoneName.Deck,
                 immediateEffect: AbilityHelper.immediateEffects.reveal(),
             },
-            ifYouDo: (context) => ({
-                title: 'Give an experience token to another unit',
+            ifYouDo: {
+                title: 'Give an Experience token to another unit.',
                 immediateEffect: AbilityHelper.immediateEffects.conditional({
-                    condition: !context.events[0].card.isUnit(), // need to confirm that this function exists and what it is
+                    condition: !CardType.BasicUnit,
                     onTrue: AbilityHelper.immediateEffects.selectCard({
-                        innerSystem: AbilityHelper.immediateEffects.giveExperience()
+                        cardCondition: (card, context) => card !== context.source,
+                        cardTypeFilter: CardType.BasicUnit || CardType.LeaderUnit || CardType.TokenUnit,
+                        innerSystem: AbilityHelper.immediateEffects.giveExperience({ amount: 1 })
                     }),
                     onFalse: AbilityHelper.immediateEffects.noAction()
                 })
-            })
-        },
-        );
+            }
+        });
     }
 }
+
 RicketyQuadjumper.implemented = true;
