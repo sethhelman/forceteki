@@ -22,18 +22,17 @@ export default class RicketyQuadjumper extends NonLeaderUnitCard {
                 immediateEffect: AbilityHelper.immediateEffects.reveal(),
             },
             ifYouDo: {
-                title: 'Give an Experience token to another unit.',
+                title: 'Give an experience token to another unit',
                 immediateEffect: AbilityHelper.immediateEffects.conditional({
-                    condition: !CardType.BasicUnit,
+                    condition: !CardType.BasicUnit, // need to confirm that this function exists and what it is
                     onTrue: AbilityHelper.immediateEffects.selectCard({
-                        cardCondition: (card, context) => card !== context.source,
-                        cardTypeFilter: CardType.BasicUnit || CardType.LeaderUnit || CardType.TokenUnit,
-                        innerSystem: AbilityHelper.immediateEffects.giveExperience({ amount: 1 })
+                        innerSystem: AbilityHelper.immediateEffects.giveExperience()
                     }),
                     onFalse: AbilityHelper.immediateEffects.noAction()
                 })
             }
-        });
+        },
+        );
     }
 }
 
