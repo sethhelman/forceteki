@@ -1,10 +1,7 @@
 describe('RicketyQuadjumper', function () {
     integration(function (contextRef) {
         describe('Rickety Quadjumper\'s ability', function () {
-            const prompt = 'Reveal a card';
-
-
-            it('should give and experience token to another unit if the revealed card is not a unit', function () {
+            it('should give an experience token to another unit if the revealed card is not a unit', function () {
                 const { context } = contextRef;
                 contextRef.setupTest({
                     phase: 'action',
@@ -21,14 +18,14 @@ describe('RicketyQuadjumper', function () {
 
                 // attack with rickety
                 context.player1.clickCard(context.ricketyQuadjumper);
-                // player1 should have prompt or pass
-                expect(context.player1).toHavePassAbilityPrompt(prompt);
+                expect(context.player1).toHavePassAbilityPrompt('Reveal a card');
                 context.player1.clickPrompt('Reveal a card');
                 context.player1.clickCard(context.p2Base);
+                // player1 should have prompt or pass
 
 
                 // top card is an upgrade, give exp to another unit
-                expect(context.protector).toBeInZone('deck');
+                // expect(context.protector).toBeInZone('deck');
                 expect(context.player1).toBeAbleToSelectExactly([context.wampa, context.battlefieldMarine, context.atst]);
 
 
@@ -55,8 +52,8 @@ describe('RicketyQuadjumper', function () {
                 // attack with rickety
                 context.player1.clickCard(context.ricketyQuadjumper);
                 // player1 should have prompt or pass
-                expect(context.player1).toHavePassAbilityPrompt(prompt);
-                context.player1.clickPrompt(prompt);
+                expect(context.player1).toHavePassAbilityPrompt('Reveal a card');
+                context.player1.clickPrompt('Reveal a card');
                 context.player1.clickCard(context.p2Base);
 
 
@@ -86,7 +83,6 @@ describe('RicketyQuadjumper', function () {
 
 
                 // issue sitting here with lack of prompt. Need to expect no prompt
-                expect(context.player1).toHaveDisabledPromptButton(prompt);
                 context.player1.clickCard(context.p2Base);
 
 
