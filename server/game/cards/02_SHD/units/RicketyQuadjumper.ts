@@ -20,9 +20,11 @@ export default class RicketyQuadjumper extends NonLeaderUnitCard {
                 title: 'Give an experience token to another unit',
                 targetResolver: {
                     cardCondition: (card) => card.isEvent() || card.isUpgrade(),
-                    immediateEffect: AbilityHelper.immediateEffects.selectCard({
+                    immediateEffect: AbilityHelper.immediateEffects.giveExperience()
+
+                    /* immediateEffect: AbilityHelper.immediateEffects.selectCard({
                         innerSystem: AbilityHelper.immediateEffects.giveExperience()
-                    }),
+                    }), */
                 },
             }
         });
