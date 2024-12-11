@@ -28,8 +28,8 @@ describe('RicketyQuadjumper', function () {
                 expect(context.player1).toBeAbleToSelectExactly([context.wampa, context.battlefieldMarine, context.atst]);
 
 
-                context.player2.clickCard(context.battlefieldMarine);
-                expect(context.battlefieldMarine.experience).toBe(1);
+                context.player1.clickCard(context.battlefieldMarine);
+                expect(context.battlefieldMarine).toHaveExactUpgradeNames(['experience']);
             });
 
 
