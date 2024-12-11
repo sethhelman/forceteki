@@ -18,6 +18,7 @@ describe('RicketyQuadjumper', function () {
 
                 // attack with rickety
                 context.player1.clickCard(context.ricketyQuadjumper);
+                context.player1.clickCard(context.p2Base);
 
                 // player1 should have prompt or pass
                 expect(context.player1).toHavePassAbilityPrompt('Reveal a card');
@@ -50,6 +51,7 @@ describe('RicketyQuadjumper', function () {
 
                 // attack with rickety
                 context.player1.clickCard(context.ricketyQuadjumper);
+                context.player1.clickCard(context.p2Base);
                 // player1 should have prompt or pass
                 expect(context.player1).toHavePassAbilityPrompt('Reveal a card');
                 context.player1.clickPrompt('Reveal a card');
@@ -78,6 +80,7 @@ describe('RicketyQuadjumper', function () {
 
                 // attack with rickety
                 context.player1.clickCard(context.ricketyQuadjumper);
+                context.player1.clickCard(context.p2Base);
 
 
                 expect(context.player2).toBeActivePlayer();
