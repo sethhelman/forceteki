@@ -14,11 +14,10 @@ export default class RicketyQuadjumper extends NonLeaderUnitCard {
             title: 'Reveal a card',
             optional: true,
             immediateEffect: AbilityHelper.immediateEffects.reveal((context) => ({ target: context.source.controller.getTopCardOfDeck() })),
-
-            ifYouDo: (context) => ({
+            ifYouDo: (ifYouDoContext) => ({
                 title: 'Deal 2 damage to a ground unit',
                 immediateEffect: AbilityHelper.immediateEffects.conditional({
-                    condition: !context.events[0].cards[0].isUnit(),
+                    condition: !ifYouDoContext.events[0].cards[0].isUnit(),
                     onTrue: AbilityHelper.immediateEffects.selectCard({
                         cardCondition: (card, context) => card !== context.source,
                         innerSystem: AbilityHelper.immediateEffects.giveExperience(),
