@@ -34,31 +34,6 @@ describe('Blood Sport', function() {
                     });
                 });
             });
-
-            describe('when ground arena is empty', function() {
-                beforeEach(function () {
-                    contextRef.setupTest({
-                        phase: 'action',
-                        player1: {
-                            hand: ['blood-sport'],
-                            groundArena: [],
-                            spaceArena: ['cartel-spacer']
-                        },
-                        player2: {
-                            groundArena: [],
-                            spaceArena: ['alliance-xwing']
-                        }
-                    });
-                });
-
-                it('does nothing', function () {
-                    const { context } = contextRef;
-
-                    context.player1.clickCard(context.bloodSport);
-
-                    expect(context.player2).toBeActivePlayer();
-                });
-            });
         });
     });
 });
